@@ -7,7 +7,6 @@ const authenticateToken = (req, res, next) => {
     logger.error('Access denied or No token');
     return res.status(401).json({ message: 'Access denied. No token provided.' });
   }
-
   const decoded = verifyToken(token);
   if (!decoded) {
     logger.error('Invalid or expired token');

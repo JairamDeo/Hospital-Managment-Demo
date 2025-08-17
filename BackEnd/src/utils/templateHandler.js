@@ -4,7 +4,7 @@ import fs from 'fs';
 import handlebars from 'handlebars';
 import { sendEmail } from './sendMail.js';
 import { fileURLToPath } from 'url';
-import { Links } from '../utils/constants.js';
+
 
 // Define __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 const templatesPath = path.join(__dirname, '../templates'); // Adjust the relative path
 
 export const sendEmailTemplate = async ({data, templateName, subject}) => {
-    console.log(data,"data");
+
     // Read the HTML template from the templates folder
     const filePath = path.join(templatesPath, templateName);
     let emailContent = fs.readFileSync(filePath, 'utf8');
@@ -21,7 +21,7 @@ export const sendEmailTemplate = async ({data, templateName, subject}) => {
     const template = handlebars.compile(emailContent);
     
     // Generate HTML with user data
-    const html = template({ name: data.name, website_link:Links.WEBSITE, ...data });
+    const html = template({ ...data });
 
     console.log(html);
     // Send the email

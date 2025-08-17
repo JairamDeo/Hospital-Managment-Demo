@@ -1,5 +1,6 @@
 # Log files
-# logs/
+logs/*
 node_modules/
 .env
 upload/*
+
