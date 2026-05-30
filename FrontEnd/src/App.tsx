@@ -1,18 +1,18 @@
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/context/ToastContext';
+import { ToastContainer } from '@/components/ui/Toast';
+import { AppRoutes } from '@/routes/AppRoutes';
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginForm from "./auth/Login";
-
-
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginForm/>} />
-  
-      </Routes>
-    </Router>
-  );
-};
+const App = () => (
+  <BrowserRouter>
+    <ToastProvider>
+      <AuthProvider>
+        <AppRoutes />
+        <ToastContainer />
+      </AuthProvider>
+    </ToastProvider>
+  </BrowserRouter>
+);
 
 export default App;
-

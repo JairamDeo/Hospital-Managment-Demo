@@ -4,18 +4,13 @@ import { EMAIL_TEMPLATES, EMAIL_SUBJECTS, ErrorMessages, CLIENT } from '../utils
 import User from '../models/user.model.js';
 import Module from '../models/module.js';
 import userAccess from '../models/userAccess.model.js';
-import bcrypt from "bcrypt";
-
+import { logger } from '../utils/logger.js';
 
 // Service to create a new user
 export const createUser = async (userData) => {
   const user = new User(userData);
-  //generate a random password if not provided
-  const salt = await bcrypt.genSalt(10);
-  const password = Math.random().toString(36).slice(-8); // Generate a random password
-  console.log('Generated Password:', password);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  user.password = hashedPassword;
+  const password = Math.random().toString(36).slice(-8);
+  user.password = password;
   // send welcome email if email is provided
   if (user.email) {
     // const MailData = { name: user.name, email: user.email };

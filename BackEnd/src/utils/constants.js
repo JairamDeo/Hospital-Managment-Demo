@@ -48,11 +48,28 @@ export const ErrorMessages = {
     GOOGLE_RECAPTCHA_ERROR: 'Google Recaptcha Token Missing',
     GOOGLE_RECAPTCHA_INVALID: 'Google Recaptcha Token Invalid',
     PATIENT_NOT_FOUND: 'Patient not found',
-    INVALID_CREDENTIALS: 'Invalid mobile number or password',
+    INVALID_CREDENTIALS: 'Invalid email or password',
     INVALID_USERNAME: 'Invalid mobile number',
     INVALID_PASSWORD: 'Invalid password',
     USER_NOT_FOUND: 'User not found',
+    ACCESS_DENIED: 'Access denied',
   };
+
+export const ADMIN_MESSAGES = {
+  LOGIN_SUCCESS: 'Login successful',
+  PROFILE_FETCHED: 'Admin profile fetched successfully',
+  OTP_SENT: 'OTP sent to registered mobile number',
+  OTP_RESENT: 'New OTP sent successfully',
+  OTP_VERIFIED: 'OTP verified successfully',
+  OTP_EXPIRED: 'OTP has expired. Please request a new one',
+  OTP_INVALID: 'Invalid OTP',
+  MOBILE_NOT_REGISTERED: 'Mobile number not registered',
+  RESEND_COOLDOWN: 'Please wait before requesting another OTP',
+  PASSWORD_RESET_SUCCESS: 'Password reset successfully',
+  RESET_TOKEN_INVALID: 'Reset session expired. Please start again',
+  ACCOUNT_INACTIVE: 'Account is inactive. Contact support',
+  SMS_SEND_FAILED: 'Failed to send OTP SMS. Please try again later',
+};
 
 
 export const PATIENT_MESSAGES = {
