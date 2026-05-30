@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { appointmentDetailPath } from '@/constants/routes';
 import type { Appointment, AppointmentStatus } from '@/pages/appointments/data/mockAppointments';
 
 interface Props {
@@ -16,11 +18,12 @@ export const ScheduleListItem = ({ appointment }: Props) => {
   const isCheckedIn = appointment.status === 'In';
 
   return (
-    <div
-      className={`flex h-[68px] shrink-0 items-center gap-3 rounded-lg border border-border-sage bg-white px-3 transition-colors hover:bg-sage-mist/40 ${
+    <Link
+      to={appointmentDetailPath(appointment.id)}
+      className={`flex h-[68px] shrink-0 cursor-pointer items-center gap-3 rounded-lg border border-border-sage bg-white px-3 transition-colors hover:border-sage-pale hover:bg-sage-mist/60 ${
         isCheckedIn
           ? 'border-l-[3px] border-l-sage-deep bg-sage-mist/30 pl-[calc(0.75rem-3px)]'
-          : 'border-l-[3px] border-l-transparent'
+          : 'border-l-[3px] border-l-transparent hover:border-l-sage-deep'
       }`}
     >
       <div className="flex w-11 shrink-0 flex-col items-center text-center">
@@ -50,7 +53,7 @@ export const ScheduleListItem = ({ appointment }: Props) => {
       >
         {appointment.status}
       </span>
-    </div>
+    </Link>
   );
 };
 

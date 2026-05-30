@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { MOCK_INVOICES } from '@/pages/billing/data/mockBilling';
+import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
 import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
 import { MOCK_STAFF } from '@/pages/staff/data/mockStaff';
 import {
@@ -16,12 +17,14 @@ import {
   invoiceDetailPath,
   patientDetailPath,
   staffDetailPath,
+  appointmentDetailPath,
 } from '@/constants/routes';
 
 export type SearchResultType =
   | 'patient'
   | 'staff'
   | 'invoice'
+  | 'appointment'
   | 'page';
 
 export interface SearchResult {
@@ -48,6 +51,7 @@ export const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: Lucide
   patient: { label: 'Patients', icon: Users, tone: 'bg-pink-50 text-pink-600' },
   staff: { label: 'Staff', icon: UserCog, tone: 'bg-violet-50 text-violet-600' },
   invoice: { label: 'Invoices', icon: Receipt, tone: 'bg-amber-50 text-amber-600' },
+  appointment: { label: 'Appointments', icon: CalendarDays, tone: 'bg-blue-50 text-blue-600' },
   page: { label: 'Pages', icon: LayoutDashboard, tone: 'bg-sage-mist text-sage-deep' },
 };
 
@@ -73,6 +77,13 @@ const buildIndex = (): SearchResult[] => [
     title: `#${inv.id}`,
     subtitle: `${inv.patientName} · ${inv.treatment}`,
     href: invoiceDetailPath(inv.id),
+  })),
+  ...MOCK_APPOINTMENTS.map((a) => ({
+    id: `appointment-${a.id}`,
+    type: 'appointment' as const,
+    title: a.id,
+    subtitle: `${a.patientName} · ${a.type}`,
+    href: appointmentDetailPath(a.id),
   })),
 ];
 

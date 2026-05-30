@@ -6,6 +6,7 @@ import { ROUTES } from '@/constants/routes';
 import { getPatientById } from '@/pages/patients/data/mockPatientDetails';
 import { getStaffById } from '@/pages/staff/data/mockStaffDetails';
 import { getInvoiceById } from '@/pages/billing/data/mockInvoiceDetails';
+import { getAppointmentById } from '@/pages/appointments/data/mockAppointmentDetails';
 
 const titles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -35,6 +36,10 @@ const LayoutContent = () => {
   const invoiceId = invoiceMatch?.[1];
   const invoice = invoiceId ? getInvoiceById(invoiceId) : null;
 
+  const appointmentMatch = pathname.match(/^\/appointments\/([^/]+)$/);
+  const appointmentId = appointmentMatch?.[1];
+  const appointment = appointmentId ? getAppointmentById(appointmentId) : null;
+
   const headerProps = patient
     ? {
         breadcrumbs: [
@@ -56,7 +61,14 @@ const LayoutContent = () => {
               { label: `#${invoice.id}` },
             ],
           }
-        : { title: titles[pathname] || 'Dashboard' };
+        : appointment
+          ? {
+              breadcrumbs: [
+                { label: 'Appointments', href: ROUTES.APPOINTMENTS },
+                { label: appointment.id },
+              ],
+            }
+          : { title: titles[pathname] || 'Dashboard' };
 
   const isDashboard = pathname === '/dashboard';
   const isFixedHeightPage =

@@ -13,6 +13,7 @@ const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const PatientsPage = lazy(() => import('@/pages/patients/PatientsPage'));
 const PatientDetailPage = lazy(() => import('@/pages/patients/PatientDetailPage'));
 const AppointmentsPage = lazy(() => import('@/pages/appointments/AppointmentsPage'));
+const AppointmentDetailPage = lazy(() => import('@/pages/appointments/AppointmentDetailPage'));
 const PanchakarmaPage = lazy(() => import('@/pages/panchakarma/PanchakarmaPage'));
 const PharmacyPage = lazy(() => import('@/pages/pharmacy/PharmacyPage'));
 const StaffPage = lazy(() => import('@/pages/staff/StaffPage'));
@@ -56,6 +57,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.PATIENTS} element={withSuspense(<PatientsPage />)} />
       <Route path={ROUTES.PATIENT_DETAIL} element={withSuspense(<PatientDetailPage />)} />
       <Route path={ROUTES.APPOINTMENTS} element={withSuspense(<AppointmentsPage />)} />
+      <Route path={ROUTES.APPOINTMENT_DETAIL} element={withSuspense(<AppointmentDetailPage />)} />
       <Route path={ROUTES.PANCHAKARMA} element={withSuspense(<PanchakarmaPage />)} />
       <Route path={ROUTES.PHARMACY} element={withSuspense(<PharmacyPage />)} />
       <Route path={ROUTES.STAFF} element={withSuspense(<StaffPage />)} />

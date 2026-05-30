@@ -1,16 +1,31 @@
 import { Users, UserPlus, CalendarCheck, Activity, Sprout, FlaskConical, Droplets, Flower2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AppointmentRow } from '@/components/dashboard/AppointmentRow';
 import { PharmacyItem } from '@/components/dashboard/PharmacyItem';
+import { ROUTES } from '@/constants/routes';
+import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
 
-const appointments = [
-  { time: '10:30 AM', name: 'Rahul Singh', type: 'General Consult', status: 'Upcoming' as const, initials: 'RS', avatarClass: 'bg-blue-100 text-blue-700' },
-  { time: '11:00 AM', name: 'Priya Mehta', type: 'Panchakarma Follow-up', status: 'Checked In' as const, initials: 'PM', avatarClass: 'bg-pink-100 text-pink-700' },
-  { time: '11:45 AM', name: 'Amit Verma', type: 'Lab Review', status: 'Upcoming' as const, initials: 'AV', avatarClass: 'bg-amber-100 text-amber-800' },
-  { time: '12:30 PM', name: 'Sunita Rao', type: 'Diet Consultation', status: 'Checked In' as const, initials: 'SR', avatarClass: 'bg-violet-100 text-violet-700' },
-];
+const formatDisplayTime = (time: string) => {
+  const [hStr, mStr] = time.split(':');
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+};
+
+const dashboardAppointments = MOCK_APPOINTMENTS.slice(0, 4).map((a) => ({
+  appointmentId: a.id,
+  time: formatDisplayTime(a.time),
+  name: a.patientName,
+  type: a.type,
+  status: (a.status === 'In' ? 'Checked In' : 'Upcoming') as 'Upcoming' | 'Checked In',
+  initials: a.initials,
+  avatarClass: a.avatarClass,
+}));
 
 const inventory = [
   { name: 'Ashwagandha Powder', unitsRemaining: 215, maxUnits: 500, status: 'Low' as const, icon: Sprout },
@@ -58,16 +73,16 @@ export const DashboardPage = () => {
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
               Today&apos;s Appointments
             </h3>
-            <button
-              type="button"
+            <Link
+              to={ROUTES.APPOINTMENTS}
               className="cursor-pointer rounded-full border border-border-sage px-3 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist"
             >
               List view
-            </button>
+            </Link>
           </div>
           <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
-            {appointments.map((a) => (
-              <AppointmentRow key={a.time + a.name} {...a} />
+            {dashboardAppointments.map((a) => (
+              <AppointmentRow key={a.appointmentId} {...a} />
             ))}
           </div>
         </section>

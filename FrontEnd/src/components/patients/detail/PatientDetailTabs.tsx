@@ -73,7 +73,7 @@ export const PatientDetailTabs = ({ patient }: Props) => {
           </div>
         ) : null}
         {activeTab === 'appointments' ? (
-          <PatientAppointmentsTab appointments={patient.appointments} />
+          <PatientAppointmentsTab appointments={patient.appointments} patientId={patient.id} />
         ) : null}
         {activeTab === 'prescriptions' ? (
           <PatientPrescriptionsTab prescriptions={patient.prescriptions} />

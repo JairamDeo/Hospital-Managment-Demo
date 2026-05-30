@@ -1,4 +1,4 @@
-import { ROUTES } from '@/constants/routes';
+import { ROUTES, appointmentDetailPath } from '@/constants/routes';
 
 export type NotificationType = 'appointment' | 'billing' | 'pharmacy' | 'panchakarma' | 'patient';
 
@@ -20,7 +20,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'Priya Sharma — Panchakarma follow-up at 11:00 AM today.',
     time: '10 min ago',
     read: false,
-    href: ROUTES.APPOINTMENTS,
+    href: appointmentDetailPath('APT-002'),
   },
   {
     id: 'n-2',

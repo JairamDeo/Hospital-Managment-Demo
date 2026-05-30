@@ -5,6 +5,7 @@ export const ROUTES = {
   PATIENTS: '/patients',
   PATIENT_DETAIL: '/patients/:patientId',
   APPOINTMENTS: '/appointments',
+  APPOINTMENT_DETAIL: '/appointments/:appointmentId',
   PANCHAKARMA: '/panchakarma',
   PHARMACY: '/pharmacy',
   STAFF: '/staff',
@@ -19,3 +20,4 @@ export const ROUTES = {
 export const patientDetailPath = (patientId: string) => `/patients/${patientId}`;
 export const staffDetailPath = (staffId: string) => `/staff/${staffId}`;
 export const invoiceDetailPath = (invoiceId: string) => `/billing/${invoiceId}`;
+export const appointmentDetailPath = (appointmentId: string) => `/appointments/${appointmentId}`;

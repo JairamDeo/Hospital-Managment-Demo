@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react';
 import { Download, Eye, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { appointmentDetailPath } from '@/constants/routes';
+import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
 import type {
   PatientAppointment,
   PatientDocument,
@@ -46,9 +49,15 @@ const INV_STATUS: Record<PatientInvoice['status'], string> = {
 
 export const PatientAppointmentsTab = ({
   appointments,
+  patientId,
 }: {
   appointments: PatientAppointment[];
-}) => (
+  patientId: string;
+}) => {
+  const navigate = useNavigate();
+  const linkedAppt = MOCK_APPOINTMENTS.find((a) => a.patientId === patientId);
+
+  return (
   <TableShell>
     <thead>
       <tr className="border-b border-border-sage bg-cream/60">
@@ -59,24 +68,35 @@ export const PatientAppointmentsTab = ({
       </tr>
     </thead>
     <tbody>
-      {appointments.map((a) => (
-        <tr key={a.id} className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30">
-          <td className="px-4 py-3">
-            <p className="text-sm font-medium text-ink">{a.date}</p>
-            <p className="text-xs text-ink-ghost">{a.time}</p>
-          </td>
-          <td className="px-4 py-3 text-sm text-ink-soft">{a.type}</td>
-          <td className="px-4 py-3 text-sm font-medium text-ink">{a.doctor}</td>
-          <td className="px-4 py-3">
-            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${APPT_STATUS[a.status]}`}>
-              {a.status}
-            </span>
-          </td>
-        </tr>
-      ))}
+      {appointments.map((a, index) => {
+        const href = index === 0 && linkedAppt ? appointmentDetailPath(linkedAppt.id) : null;
+
+        return (
+          <tr
+            key={a.id}
+            onClick={href ? () => navigate(href) : undefined}
+            className={`border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30 ${
+              href ? 'cursor-pointer' : ''
+            }`}
+          >
+            <td className="px-4 py-3">
+              <p className="text-sm font-medium text-ink">{a.date}</p>
+              <p className="text-xs text-ink-ghost">{a.time}</p>
+            </td>
+            <td className="px-4 py-3 text-sm text-ink-soft">{a.type}</td>
+            <td className="px-4 py-3 text-sm font-medium text-ink">{a.doctor}</td>
+            <td className="px-4 py-3">
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${APPT_STATUS[a.status]}`}>
+                {a.status}
+              </span>
+            </td>
+          </tr>
+        );
+      })}
     </tbody>
   </TableShell>
-);
+  );
+};
 
 export const PatientPrescriptionsTab = ({ prescriptions }: { prescriptions: Prescription[] }) => (
   <TableShell>

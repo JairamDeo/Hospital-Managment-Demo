@@ -1,4 +1,8 @@
+import { Link } from 'react-router-dom';
+import { appointmentDetailPath } from '@/constants/routes';
+
 interface AppointmentRowProps {
+  appointmentId: string;
   time: string;
   name: string;
   type: string;
@@ -16,6 +20,7 @@ const parseTime = (time: string) => {
 };
 
 export const AppointmentRow = ({
+  appointmentId,
   time,
   name,
   type,
@@ -27,7 +32,8 @@ export const AppointmentRow = ({
   const isCheckedIn = status === 'Checked In';
 
   return (
-    <div
+    <Link
+      to={appointmentDetailPath(appointmentId)}
       className={`group flex h-[60px] shrink-0 cursor-pointer items-center gap-3 rounded-lg border border-border-sage bg-white px-3 transition-all duration-200 hover:border-sage-pale hover:bg-sage-mist/70 active:bg-sage-mist ${
         isCheckedIn
           ? 'border-l-[3px] border-l-sage-deep bg-sage-mist/50 pl-[calc(0.75rem-3px)]'
@@ -65,6 +71,6 @@ export const AppointmentRow = ({
       >
         {status}
       </span>
-    </div>
+    </Link>
   );
 };
