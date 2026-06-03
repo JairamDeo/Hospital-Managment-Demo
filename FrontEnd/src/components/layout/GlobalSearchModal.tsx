@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import {
   QUICK_LINKS,
   TYPE_CONFIG,
@@ -17,8 +18,9 @@ export const GlobalSearchModal = ({ open, onClose }: Props) => {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
+  const { patients } = useAdminPatientsList();
 
-  const results = useMemo(() => searchGlobal(query), [query]);
+  const results = useMemo(() => searchGlobal(query, patients), [query, patients]);
 
   useEffect(() => {
     if (!open) {

@@ -9,6 +9,7 @@ import {
   BarChart3,
   Receipt,
   Settings,
+  Database,
   TreePine,
   LogOut,
   X,
@@ -18,20 +19,22 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSidebar } from '@/context/SidebarContext';
 import { getInitials, formatDisplayName } from '@/utils/helpers';
 import { useToast } from '@/hooks/useToast';
+import { usePatientNavStats } from '@/hooks/usePatientNavStats';
 
-const mainNav = [
-  { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
-  { to: ROUTES.PATIENTS, label: 'Patients', icon: Users, badge: '1,452' },
-  { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarDays, badge: '22' },
-  { to: ROUTES.PANCHAKARMA, label: 'Panchakarma', icon: Leaf },
+const mainNavBase = [
+  { to: ROUTES.ADMIN_DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
+  { to: ROUTES.ADMIN_PATIENTS, label: 'Patients', icon: Users },
+  { to: ROUTES.ADMIN_APPOINTMENTS, label: 'Appointments', icon: CalendarDays, badge: '22' },
+  { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf },
 ];
 
 const manageNav = [
-  { to: ROUTES.PHARMACY, label: 'Pharmacy', icon: Pill },
-  { to: ROUTES.STAFF, label: 'Staff', icon: UserCog },
-  { to: ROUTES.ANALYTICS, label: 'Analytics', icon: BarChart3 },
-  { to: ROUTES.BILLING, label: 'Billing', icon: Receipt },
-  { to: ROUTES.SETTINGS, label: 'Settings', icon: Settings },
+  { to: ROUTES.ADMIN_MASTER_DATA, label: 'Master Data', icon: Database },
+  { to: ROUTES.ADMIN_PHARMACY, label: 'Pharmacy', icon: Pill },
+  { to: ROUTES.ADMIN_STAFF, label: 'Staff', icon: UserCog },
+  { to: ROUTES.ADMIN_ANALYTICS, label: 'Analytics', icon: BarChart3 },
+  { to: ROUTES.ADMIN_BILLING, label: 'Billing', icon: Receipt },
+  { to: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Settings },
 ];
 
 const NavItem = ({
@@ -76,6 +79,10 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
+  const { badge: patientBadge } = usePatientNavStats();
+  const mainNav = mainNavBase.map((item) =>
+    item.to === ROUTES.ADMIN_PATIENTS ? { ...item, badge: patientBadge } : item
+  );
   const { user, logout } = useAuth();
   const { isCollapsed, closeMobile } = useSidebar();
   const { showToast } = useToast();
@@ -88,7 +95,7 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
     logout();
     showToast('Logged out successfully', 'success');
     closeMobile();
-    navigate(ROUTES.LOGIN);
+    navigate(ROUTES.ADMIN_LOGIN);
   };
 
   const initials = getInitials(user?.firstName, user?.lastName);

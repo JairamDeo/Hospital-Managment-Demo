@@ -1,4 +1,4 @@
-import type { Patient } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 
 export const exportPatientsCsv = (patients: Patient[], filename = 'patients.csv') => {
   const headers = [

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { MOCK_INVOICES } from '@/pages/billing/data/mockBilling';
 import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import { MOCK_STAFF } from '@/pages/staff/data/mockStaff';
 import {
   ROUTES,
@@ -36,15 +36,15 @@ export interface SearchResult {
 }
 
 const PAGE_RESULTS: SearchResult[] = [
-  { id: 'page-dashboard', type: 'page', title: 'Dashboard', subtitle: 'Clinic overview', href: ROUTES.DASHBOARD },
-  { id: 'page-patients', type: 'page', title: 'Patients', subtitle: 'Patient registry', href: ROUTES.PATIENTS },
-  { id: 'page-appointments', type: 'page', title: 'Appointments', subtitle: 'Schedule & calendar', href: ROUTES.APPOINTMENTS },
-  { id: 'page-panchakarma', type: 'page', title: 'Panchakarma', subtitle: 'Therapy programs', href: ROUTES.PANCHAKARMA },
-  { id: 'page-pharmacy', type: 'page', title: 'Pharmacy', subtitle: 'Inventory & stock', href: ROUTES.PHARMACY },
-  { id: 'page-staff', type: 'page', title: 'Staff', subtitle: 'Team directory', href: ROUTES.STAFF },
-  { id: 'page-analytics', type: 'page', title: 'Analytics', subtitle: 'Reports & KPIs', href: ROUTES.ANALYTICS },
-  { id: 'page-billing', type: 'page', title: 'Billing', subtitle: 'Invoices & payments', href: ROUTES.BILLING },
-  { id: 'page-settings', type: 'page', title: 'Settings', subtitle: 'Clinic preferences', href: ROUTES.SETTINGS },
+  { id: 'page-dashboard', type: 'page', title: 'Dashboard', subtitle: 'Clinic overview', href: ROUTES.ADMIN_DASHBOARD },
+  { id: 'page-patients', type: 'page', title: 'Patients', subtitle: 'Patient registry', href: ROUTES.ADMIN_PATIENTS },
+  { id: 'page-appointments', type: 'page', title: 'Appointments', subtitle: 'Schedule & calendar', href: ROUTES.ADMIN_APPOINTMENTS },
+  { id: 'page-panchakarma', type: 'page', title: 'Panchakarma', subtitle: 'Therapy programs', href: ROUTES.ADMIN_PANCHAKARMA },
+  { id: 'page-pharmacy', type: 'page', title: 'Pharmacy', subtitle: 'Inventory & stock', href: ROUTES.ADMIN_PHARMACY },
+  { id: 'page-staff', type: 'page', title: 'Staff', subtitle: 'Team directory', href: ROUTES.ADMIN_STAFF },
+  { id: 'page-analytics', type: 'page', title: 'Analytics', subtitle: 'Reports & KPIs', href: ROUTES.ADMIN_ANALYTICS },
+  { id: 'page-billing', type: 'page', title: 'Billing', subtitle: 'Invoices & payments', href: ROUTES.ADMIN_BILLING },
+  { id: 'page-settings', type: 'page', title: 'Settings', subtitle: 'Clinic preferences', href: ROUTES.ADMIN_SETTINGS },
 ];
 
 export const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: LucideIcon; tone: string }> = {
@@ -55,9 +55,9 @@ export const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: Lucide
   page: { label: 'Pages', icon: LayoutDashboard, tone: 'bg-sage-mist text-sage-deep' },
 };
 
-const buildIndex = (): SearchResult[] => [
+export const buildSearchIndex = (patients: Patient[] = []): SearchResult[] => [
   ...PAGE_RESULTS,
-  ...MOCK_PATIENTS.map((p) => ({
+  ...patients.map((p) => ({
     id: `patient-${p.id}`,
     type: 'patient' as const,
     title: p.name,
@@ -87,13 +87,12 @@ const buildIndex = (): SearchResult[] => [
   })),
 ];
 
-const SEARCH_INDEX = buildIndex();
-
-export const searchGlobal = (query: string, limit = 12): SearchResult[] => {
+export const searchGlobal = (query: string, patients: Patient[] = [], limit = 12): SearchResult[] => {
+  const index = buildSearchIndex(patients);
   const q = query.trim().toLowerCase();
   if (!q) return PAGE_RESULTS.slice(0, 6);
 
-  return SEARCH_INDEX.filter(
+  return index.filter(
     (item) =>
       item.title.toLowerCase().includes(q) ||
       item.subtitle.toLowerCase().includes(q) ||
@@ -102,8 +101,8 @@ export const searchGlobal = (query: string, limit = 12): SearchResult[] => {
 };
 
 export const QUICK_LINKS = [
-  { label: 'Patients', href: ROUTES.PATIENTS, icon: Users },
-  { label: 'Appointments', href: ROUTES.APPOINTMENTS, icon: CalendarDays },
-  { label: 'Pharmacy', href: ROUTES.PHARMACY, icon: Pill },
-  { label: 'Panchakarma', href: ROUTES.PANCHAKARMA, icon: Leaf },
+  { label: 'Patients', href: ROUTES.ADMIN_PATIENTS, icon: Users },
+  { label: 'Appointments', href: ROUTES.ADMIN_APPOINTMENTS, icon: CalendarDays },
+  { label: 'Pharmacy', href: ROUTES.ADMIN_PHARMACY, icon: Pill },
+  { label: 'Panchakarma', href: ROUTES.ADMIN_PANCHAKARMA, icon: Leaf },
 ];

@@ -28,7 +28,7 @@ export const EnterMobileStep = ({ mobile, setMobile, error, loading, onSubmit }:
       error={error}
     />
     <Button type="submit" className="w-full" isLoading={loading}>
-      Continue
+      Send OTP
     </Button>
   </form>
 );

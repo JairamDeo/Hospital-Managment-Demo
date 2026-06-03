@@ -13,8 +13,14 @@
 
   input,
   button,
-  textarea {
+  textarea,
+  select {
     @apply font-sans;
+  }
+
+  /* Keep dropdown options readable (not grayed like disabled) */
+  select.form-field-select option {
+    @apply bg-white text-ink;
   }
 
   button:not(:disabled),

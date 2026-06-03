@@ -1,89 +1,230 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
   Leaf,
-  Package,
+  Loader2,
   Plus,
-  Search,
   Siren,
-  Sprout,
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AddPharmacyItemModal } from '@/components/modals/AddPharmacyItemModal';
+import { ImportPharmacyModal } from '@/components/modals/ImportPharmacyModal';
+import { ExportPharmacyMenu } from '@/components/pharmacy/ExportPharmacyMenu';
 import { PharmacyStatCard } from '@/components/pharmacy/PharmacyStatCard';
 import { InventoryTable } from '@/components/pharmacy/InventoryTable';
+import { PharmacyInventoryFilters } from '@/components/pharmacy/PharmacyInventoryFilters';
 import { StockAlertsPanel } from '@/components/pharmacy/StockAlertsPanel';
 import { MonthlyUsagePanel } from '@/components/pharmacy/MonthlyUsagePanel';
+import { StaffPagination } from '@/components/staff/StaffPagination';
 import { useToast } from '@/hooks/useToast';
-import {
-  MOCK_INVENTORY,
-  MOCK_MONTHLY_USAGE,
-  MOCK_STOCK_ALERTS,
-  PHARMACY_STATS,
-  emptyPharmacyItemForm,
-  getStockStatus,
-  type InventoryFilter,
-  type PharmacyItem,
-  type PharmacyItemFormValues,
-} from './data/mockPharmacy';
+import { pharmacyService } from '@/services/pharmacy/pharmacy.service';
+import { masterService } from '@/services/master/master.service';
+import { getApiErrorMessage } from '@/utils/helpers';
+import { getPharmacyItemIcon } from '@/utils/pharmacyIcon';
+import type { MasterItem } from '@/types/api.types';
+import type {
+  MonthlyUsageItem,
+  PharmacyItemApi,
+  PharmacyItemFormValues,
+  PharmacyItemView,
+  PharmacyImportSummary,
+  PharmacyPagination,
+  PharmacyStats,
+  PharmacyStockFilter,
+  StockAlert,
+} from '@/types/pharmacy.types';
+import { emptyPharmacyItemForm, PHARMACY_PAGE_SIZE } from '@/types/pharmacy.types';
+
+const mapItem = (api: PharmacyItemApi): PharmacyItemView => ({
+  ...api,
+  id: api.itemCode,
+  icon: getPharmacyItemIcon(api.name, api.category),
+});
+
+const defaultPagination = (): PharmacyPagination => ({
+  page: 1,
+  limit: PHARMACY_PAGE_SIZE,
+  total: 0,
+  totalPages: 1,
+});
 
 export const PharmacyPage = () => {
-  const [items, setItems] = useState<PharmacyItem[]>(MOCK_INVENTORY);
+  const [items, setItems] = useState<PharmacyItemView[]>([]);
+  const [pagination, setPagination] = useState<PharmacyPagination>(defaultPagination);
+  const [stats, setStats] = useState<PharmacyStats>({ totalItems: 0, lowStock: 0, critical: 0 });
+  const [alerts, setAlerts] = useState<StockAlert[]>([]);
+  const [monthlyUsage, setMonthlyUsage] = useState<MonthlyUsageItem[]>([]);
+  const [categories, setCategories] = useState<MasterItem[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [units, setUnits] = useState<MasterItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<InventoryFilter>('all');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [stockFilter, setStockFilter] = useState<PharmacyStockFilter>('all');
+  const [categoryId, setCategoryId] = useState('');
+  const [brand, setBrand] = useState('');
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importSummary, setImportSummary] = useState<PharmacyImportSummary | null>(null);
   const [formInitial, setFormInitial] = useState(emptyPharmacyItemForm());
   const { showToast } = useToast();
 
-  const filtered = useMemo(() => {
-    let list = [...items];
-    if (filter === 'critical') list = list.filter((i) => i.status === 'Critical');
-    if (filter === 'low') list = list.filter((i) => i.status === 'Low');
-    const q = search.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (i) =>
-          i.name.toLowerCase().includes(q) ||
-          i.category.toLowerCase().includes(q) ||
-          i.subtitle.toLowerCase().includes(q)
-      );
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, stockFilter, categoryId, brand]);
+
+  const applyOverview = useCallback(
+    (data: {
+      items?: PharmacyItemApi[];
+      pagination?: PharmacyPagination;
+      stats?: PharmacyStats;
+      alerts?: StockAlert[];
+      monthlyUsage?: MonthlyUsageItem[];
+      filterOptions?: { brands?: string[] };
+    }) => {
+      if (data.items) setItems(data.items.map(mapItem));
+      if (data.pagination) setPagination(data.pagination);
+      if (data.stats) setStats(data.stats);
+      if (data.alerts) setAlerts(data.alerts);
+      if (data.monthlyUsage) setMonthlyUsage(data.monthlyUsage);
+      if (data.filterOptions?.brands) setBrands(data.filterOptions.brands);
+    },
+    []
+  );
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [overviewRes, categoriesRes, unitsRes] = await Promise.all([
+        pharmacyService.getOverview({
+          page,
+          limit: PHARMACY_PAGE_SIZE,
+          search: debouncedSearch,
+          stockFilter,
+          categoryId: categoryId || undefined,
+          brand: brand || undefined,
+        }),
+        masterService.listPharmacyCategories(true),
+        masterService.listPharmacyUnits(true),
+      ]);
+      applyOverview(overviewRes.data.res ?? {});
+      setCategories(categoriesRes.data.res?.items ?? []);
+      setUnits(unitsRes.data.res?.items ?? []);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setLoading(false);
     }
-    return list;
-  }, [items, search, filter]);
+  }, [applyOverview, brand, categoryId, debouncedSearch, page, showToast, stockFilter]);
 
-  const handleReorder = (item: PharmacyItem) => {
-    showToast(`Reorder placed for ${item.name}`, 'success');
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleExportCsv = async () => {
+    setExporting(true);
+    try {
+      await pharmacyService.exportCsv();
+      showToast('CSV export downloaded', 'success');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const handleImport = () => {
-    showToast('Import feature coming soon', 'success');
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      await pharmacyService.exportPdf();
+      showToast('PDF export downloaded', 'success');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setExporting(false);
+    }
   };
 
-  const handleAdd = (values: PharmacyItemFormValues) => {
-    const level = Math.round((values.stock / values.maxStock) * 100);
-    const status = getStockStatus(level);
-    const newItem: PharmacyItem = {
-      id: `PH-${String(items.length + 1).padStart(3, '0')}`,
-      name: values.name.trim(),
-      subtitle: `${values.category} · New`,
-      category: values.category,
-      stock: values.stock,
-      maxStock: values.maxStock,
-      level,
-      status,
-      icon: Sprout,
-    };
-    setItems((prev) => [newItem, ...prev]);
-    setModalOpen(false);
-    showToast(`${newItem.name} added to inventory`, 'success');
+  const handleDownloadTemplate = async () => {
+    try {
+      await pharmacyService.downloadImportTemplate();
+      showToast('Template downloaded', 'success');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    }
   };
 
-  const filters: { id: InventoryFilter; label: string; activeClass?: string }[] = [
-    { id: 'critical', label: `Critical (${PHARMACY_STATS.critical})`, activeClass: 'border-danger/40 bg-danger-bg text-danger' },
-    { id: 'low', label: 'Low Stock', activeClass: 'border-warning/40 bg-warning-bg text-warning' },
-    { id: 'all', label: 'All Items', activeClass: 'border-sage-deep bg-sage-mist text-sage-deep' },
-  ];
+  const handleImportFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast('Only CSV files are allowed for import', 'error');
+      return;
+    }
+    setImporting(true);
+    try {
+      const { data } = await pharmacyService.importCsv(file);
+      applyOverview(data.res ?? {});
+      setImportSummary(data.res?.summary ?? null);
+      setPage(1);
+      setSearch('');
+      setDebouncedSearch('');
+      setStockFilter('all');
+      setCategoryId('');
+      setBrand('');
+      const s = data.res?.summary;
+      showToast(
+        data.message ||
+          `Import done: ${s?.created ?? 0} created, ${s?.updated ?? 0} updated`,
+        s?.failed ? 'error' : 'success'
+      );
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleAdd = async (values: PharmacyItemFormValues) => {
+    setSaving(true);
+    try {
+      const { data } = await pharmacyService.createItem(values);
+      applyOverview(data.res ?? {});
+      setPage(1);
+      setSearch('');
+      setDebouncedSearch('');
+      setStockFilter('all');
+      setCategoryId('');
+      setBrand('');
+      setModalOpen(false);
+      showToast(data.message || `${values.name.trim()} added to inventory`, 'success');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openAddModal = () => {
+    setFormInitial(emptyPharmacyItemForm());
+    setModalOpen(true);
+  };
+
+  const activeCategories = categories.filter((c) => c.active !== false);
+
+  const resetPage = () => setPage(1);
+
+  const { total, totalPages, page: currentPage } = pagination;
+  const from = total ? (currentPage - 1) * PHARMACY_PAGE_SIZE + 1 : 0;
+  const to = Math.min(currentPage * PHARMACY_PAGE_SIZE, total);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -93,105 +234,112 @@ export const PharmacyPage = () => {
             Herb & Medicine Inventory
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {PHARMACY_STATS.totalItems} items · {PHARMACY_STATS.lowStock} low stock ·{' '}
-            {PHARMACY_STATS.critical} critical alerts
+            {stats.totalItems} items · {stats.lowStock} low stock · {stats.critical} critical alerts
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button variant="secondary" className="gap-2 rounded-lg px-4 py-2" onClick={handleImport}>
+          <ExportPharmacyMenu
+            onExportCsv={handleExportCsv}
+            onExportPdf={handleExportPdf}
+            disabled={exporting}
+          />
+          <Button
+            variant="secondary"
+            className="gap-2 rounded-lg px-4 py-2"
+            onClick={() => {
+              setImportSummary(null);
+              setImportOpen(true);
+            }}
+          >
             <Upload className="h-4 w-4" strokeWidth={1.75} />
             Import
           </Button>
-          <Button
-            className="gap-2 rounded-lg px-4 py-2"
-            onClick={() => {
-              setFormInitial(emptyPharmacyItemForm());
-              setModalOpen(true);
-            }}
-          >
+          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openAddModal}>
             <Plus className="h-4 w-4" strokeWidth={2} />
-            Add Item
+            Add Inventory Item
           </Button>
         </div>
       </div>
 
-      <div className="mb-3 grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-3 grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-3">
         <PharmacyStatCard
           label="Total Items"
-          value={PHARMACY_STATS.totalItems}
+          value={stats.totalItems}
           subLabel="In inventory"
           icon={Leaf}
           iconClass="bg-success-bg text-success"
         />
         <PharmacyStatCard
           label="Low Stock"
-          value={PHARMACY_STATS.lowStock}
-          subLabel="Need reorder"
+          value={stats.lowStock}
+          subLabel="Below comfortable level"
           icon={AlertTriangle}
           iconClass="bg-warning-bg text-warning"
         />
         <PharmacyStatCard
           label="Critical"
-          value={PHARMACY_STATS.critical}
-          subLabel="Urgent reorder"
+          value={stats.critical}
+          subLabel="Needs attention"
           icon={Siren}
           iconClass="bg-danger-bg text-danger"
-        />
-        <PharmacyStatCard
-          label="Pending Orders"
-          value={PHARMACY_STATS.pendingOrders}
-          subLabel="In transit"
-          icon={Package}
-          iconClass="bg-amber-100 text-amber-800"
         />
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden xl:grid-cols-[1fr_280px]">
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
-          <div className="shrink-0 border-b border-border-sage p-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="relative max-w-md flex-1">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-ghost"
-                  strokeWidth={1.75}
-                />
-                <input
-                  type="search"
-                  placeholder="Search medicines..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-full border border-border-sage bg-white py-2 pl-10 pr-4 text-sm text-ink outline-none placeholder:text-ink-ghost focus:border-sage focus:ring-2 focus:ring-sage-pale"
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {filters.map((f) => {
-                  const active = filter === f.id;
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setFilter(f.id)}
-                      className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                        active
-                          ? f.activeClass
-                          : 'border-border-sage bg-white text-ink-soft hover:bg-sage-mist/60'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="relative z-20 shrink-0 overflow-visible border-b border-border-sage p-4">
+            <PharmacyInventoryFilters
+              search={search}
+              onSearchChange={(v) => {
+                setSearch(v);
+                resetPage();
+              }}
+              stockFilter={stockFilter}
+              onStockFilterChange={(v) => {
+                setStockFilter(v);
+                resetPage();
+              }}
+              categoryId={categoryId}
+              onCategoryChange={(id) => {
+                setCategoryId(id);
+                resetPage();
+              }}
+              brand={brand}
+              onBrandChange={(v) => {
+                setBrand(v);
+                resetPage();
+              }}
+              categories={activeCategories}
+              brands={brands}
+              stats={stats}
+            />
           </div>
-          <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
-            <InventoryTable items={filtered} onReorder={handleReorder} />
+          <div className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-soft">
+                <Loader2 className="h-5 w-5 animate-spin text-sage-deep" />
+                Loading inventory…
+              </div>
+            ) : (
+              <InventoryTable items={items} />
+            )}
           </div>
+          {!loading && total > 0 ? (
+            <StaffPagination
+              from={from}
+              to={to}
+              total={total}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              entityLabel="items"
+            />
+          ) : null}
         </div>
 
         <aside className="flex min-h-0 flex-col gap-3 overflow-hidden">
-          <StockAlertsPanel alerts={MOCK_STOCK_ALERTS} className="min-h-0 flex-1" />
-          <MonthlyUsagePanel items={MOCK_MONTHLY_USAGE} className="min-h-0 flex-1" />
+          <StockAlertsPanel alerts={alerts} className="min-h-0 flex-1" />
+          <MonthlyUsagePanel items={monthlyUsage} className="min-h-0 flex-1" />
         </aside>
       </div>
 
@@ -199,8 +347,20 @@ export const PharmacyPage = () => {
         key={modalOpen ? 'open' : 'closed'}
         open={modalOpen}
         initial={formInitial}
+        categories={categories}
+        units={units}
+        saving={saving}
         onClose={() => setModalOpen(false)}
         onSubmit={handleAdd}
+      />
+
+      <ImportPharmacyModal
+        open={importOpen}
+        uploading={importing}
+        lastSummary={importSummary}
+        onClose={() => setImportOpen(false)}
+        onDownloadTemplate={handleDownloadTemplate}
+        onImport={handleImportFile}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import type { TreatmentRecord } from '@/pages/patients/data/mockPatientDetails';
+import type { TreatmentRecord } from '@/types/patientDetail.types';
 
 const STATUS_STYLES = {
   Active: 'bg-success-bg text-success ring-success/20',

@@ -100,3 +100,1123 @@
 2026-05-31 01:29:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-05-31 01:42:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-05-31 01:42:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-05-31 01:53:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-05-31 01:53:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-05-31 01:54:59 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 919876543210
+2026-05-31 01:55:04 [info] [_stream_transform.js:166 - Transform._read] Static OTP used for admin reset: 9876543210
+2026-05-31 01:56:25 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-05-31 02:16:33 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-01 22:02:51 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-01 22:03:10 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-06-01 22:03:10 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-06-01 22:03:38 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-01 22:06:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-01 22:06:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-01 22:06:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-01 22:06:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-01 22:09:57 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 18:43:36 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 19:02:37 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 19:03:14 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 918830973046
+2026-06-02 19:03:18 [info] [_stream_transform.js:166 - Transform._read] Customer logged in: 8830973046
+2026-06-02 19:03:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 19:03:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:52:38 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 21:53:41 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 918830973046
+2026-06-02 21:53:47 [info] [_stream_transform.js:166 - Transform._read] Customer logged in: 8830973046
+2026-06-02 21:54:50 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 21:54:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:54:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:56:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:56:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:57:22 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-02 21:58:44 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 21:58:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:58:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:58:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:58:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:59:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:59:25 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 21:59:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:59:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 21:59:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:00:06 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 22:00:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:00:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:00:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:00:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:00:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:02:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:26:10 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-02 22:27:23 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 918830973046
+2026-06-02 22:27:32 [info] [_stream_transform.js:166 - Transform._read] Customer logged in: 8830973046
+2026-06-02 22:28:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:28:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-02 22:29:45 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 00:43:13 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:46:57 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 00:49:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 00:49:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 00:49:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 00:49:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 00:54:22 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:54:29 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:54:38 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:54:49 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:54:55 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:55:05 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:55:26 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:55:40 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 00:55:41 [info] [_stream_transform.js:166 - Transform._read] Seeded default Prakriti master data
+2026-06-03 00:55:42 [info] [_stream_transform.js:166 - Transform._read] Seeded default Treatment master data
+2026-06-03 00:55:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:02 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:02 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:02 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:02 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:01:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:03:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:04:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:12 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:05:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:06:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:43 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:08:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:11:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:12:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:12:38 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:12:38 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:13:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:15:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:15:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:15:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:15:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:18:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:18:26 [error] [_stream_transform.js:166 - Transform._read] Create patient error: patientQuery(...).findById is not a function
+2026-06-03 01:18:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:18:58 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:21:37 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:22:20 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:22:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:22:58 [error] [_stream_transform.js:166 - Transform._read] Create patient error: patientQuery(...).findById is not a function
+2026-06-03 01:23:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:25:56 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:26:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:26:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:27:08 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 918830973046
+2026-06-03 01:29:16 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:29:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:29:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:34 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP SMS queued for 918830973045
+2026-06-03 01:30:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:30:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:31:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:35:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:44:56 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:45:02 [info] [_stream_transform.js:166 - Transform._read] Seeded default pharmacy categories
+2026-06-03 01:45:03 [info] [_stream_transform.js:166 - Transform._read] Seeded default pharmacy inventory items
+2026-06-03 01:45:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:45:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:45:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:45:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:47:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:48:05 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:49:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:49:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:49:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:49:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:50:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:51:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:51:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:51:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:51:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:53:39 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 01:53:41 [info] [_stream_transform.js:166 - Transform._read] Seeded default pharmacy units
+2026-06-03 01:57:40 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 01:57:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:57:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:58:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 01:59:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:02:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:02:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:02:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:03:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:04:45 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:04:46 [info] [_stream_transform.js:166 - Transform._read] Migrated 6 pharmacy item(s) to packQuantity + unit
+2026-06-03 02:04:53 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:05:23 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:05:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:05:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:15 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:08:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:28 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:08:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:08:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:09:00 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:09:32 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:10:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:11:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:18:22 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:18:26 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:18:36 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:19:11 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:19:20 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:19:45 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:21:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:09 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:21:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:21:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:42 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:24:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:26:04 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:26:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:27:59 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:28:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:31:12 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:31:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:31:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:31:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:31:39 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:32:07 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:32:35 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:32:40 [info] [_stream_transform.js:166 - Transform._read] Migrated 61 pharmacy item(s)
+2026-06-03 02:34:37 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 02:34:54 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 02:34:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:34:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:34:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:34:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:34:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:34:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:35:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 02:41:23 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 10:41:41 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 10:42:12 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 10:45:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:01:48 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 22:02:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:02:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:03:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:03:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:20 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:04:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:38 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:38 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:38 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:05:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:07:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:08:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:15:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:16:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:24:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:25:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 22:27:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:05:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:16:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:23:32 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:23:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:23:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:23:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:24:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:25:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:26:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:16 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:27:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:31 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:27:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:28:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:30:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:30:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:30:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:30:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:36:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:38:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:40:10 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:40:24 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:41:48 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:42:43 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:42:50 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:47 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:44:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:44:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:45:41 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:45:54 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-03 23:53:01 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:57:30 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:57:58 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-03 23:58:18 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:00:30 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:00:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:00:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:17 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:51 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:01:52 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:03:08 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:03:37 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:03:38 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: HmsPatient validation failed: clinicalProfile: Cast to Embedded failed for value "[Function: jairamClinical]" (type function) at path "clinicalProfile" because of "ObjectExpectedError"
+ValidationError: HmsPatient validation failed: clinicalProfile: Cast to Embedded failed for value "[Function: jairamClinical]" (type function) at path "clinicalProfile" because of "ObjectExpectedError"
+    at Document.invalidate (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\document.js:3351:32)
+    at model.$set (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\document.js:1486:12)
+    at model.set [as clinicalProfile] (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\helpers\document\compile.js:205:19)
+    at Object.assign (<anonymous>)
+    at seedHmsPatients (file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/seed/seedHmsPatients.js:376:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/app.js:60:3
+2026-06-04 00:08:08 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:08:10 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: HmsPatient validation failed: clinicalProfile: Cast to Embedded failed for value "[Function: jairamClinical]" (type function) at path "clinicalProfile" because of "ObjectExpectedError"
+ValidationError: HmsPatient validation failed: clinicalProfile: Cast to Embedded failed for value "[Function: jairamClinical]" (type function) at path "clinicalProfile" because of "ObjectExpectedError"
+    at Document.invalidate (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\document.js:3351:32)
+    at model.$set (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\document.js:1486:12)
+    at model.set [as clinicalProfile] (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\lib\helpers\document\compile.js:205:19)
+    at Object.assign (<anonymous>)
+    at seedHmsPatients (file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/seed/seedHmsPatients.js:376:14)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/app.js:60:3
+2026-06-04 00:10:33 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:10:36 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 6 created, 1 updated (7 total)
+2026-06-04 00:12:51 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:12:57 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:13:11 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-04 00:13:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:15 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:16 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:13:23 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:14:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:14:20 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:14:20 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:14:20 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:17:24 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:25 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:20:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:45 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:21:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:21:48 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:22:45 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:22:48 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:23:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:23:14 [error] [_stream_transform.js:166 - Transform._read] View prescription PDF error: Request failed with status code 401
+2026-06-04 00:24:16 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:24:25 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:24:28 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:24:55 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:25:00 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:29 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:25:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:26:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:31 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:27:39 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:44 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:27:46 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:26 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:29:31 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:29:49 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:11 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:30:12 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:31:52 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:31:55 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:33:52 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:33:54 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:34:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:06 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:07 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:08 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:13 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:34:14 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:18 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:36:20 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:37:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:37:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:37:45 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:42 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:43 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:48 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:53 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:38:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:39:10 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:41:35 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:42:58 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:43:00 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:45:25 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-04 00:45:27 [info] [_stream_transform.js:166 - Transform._read] HMS patients seed: 0 created, 7 updated (7 total)
+2026-06-04 00:45:56 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: admin@ayurvedahealth.com
+2026-06-04 00:45:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:45:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:45:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:45:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:45:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:45:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:04 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:05 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:46:09 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:47:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:47:03 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:55 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:56 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:51:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:52:19 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:53:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-04 00:53:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied

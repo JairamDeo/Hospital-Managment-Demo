@@ -1,6 +1,6 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import type { Patient } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import { PrakritiBadge } from '@/components/patients/PrakritiBadge';
 import { PatientStatusBadge } from '@/components/patients/PatientStatusBadge';
 

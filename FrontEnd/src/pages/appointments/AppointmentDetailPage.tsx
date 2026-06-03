@@ -11,21 +11,22 @@ import {
   MOCK_APPOINTMENTS,
   type AppointmentFormValues,
 } from './data/mockAppointments';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 
 export const AppointmentDetailPage = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
+  const { patients } = useAdminPatientsList();
   const { showToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [appointments, setAppointments] = useState(MOCK_APPOINTMENTS);
 
   const appointment = useMemo(() => {
     const base = appointments.find((a) => a.id === appointmentId);
-    return base ? buildAppointmentDetail(base) : null;
-  }, [appointmentId, appointments]);
+    return base ? buildAppointmentDetail(base, patients) : null;
+  }, [appointmentId, appointments, patients]);
 
   if (!appointmentId || !appointment) {
-    return <Navigate to={ROUTES.APPOINTMENTS} replace />;
+    return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
   }
 
   const formInitial: AppointmentFormValues = {
@@ -37,7 +38,7 @@ export const AppointmentDetailPage = () => {
   };
 
   const handleEditSubmit = (values: AppointmentFormValues) => {
-    const patient = MOCK_PATIENTS.find((p) => p.id === values.patientId);
+    const patient = patients.find((p) => p.id === values.patientId);
     if (!patient) return;
 
     setAppointments((prev) =>
@@ -95,6 +96,7 @@ export const AppointmentDetailPage = () => {
         key={`edit-${appointment.id}`}
         open={editOpen}
         initial={formInitial}
+        patients={patients}
         onClose={() => setEditOpen(false)}
         onSubmit={handleEditSubmit}
       />

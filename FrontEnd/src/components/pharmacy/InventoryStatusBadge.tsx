@@ -1,4 +1,4 @@
-import type { StockStatus } from '@/pages/pharmacy/data/mockPharmacy';
+import type { StockStatus } from '@/types/pharmacy.types';
 
 const styles: Record<StockStatus, string> = {
   Critical: 'bg-danger-bg text-danger',
@@ -6,8 +6,18 @@ const styles: Record<StockStatus, string> = {
   OK: 'bg-success-bg text-success',
 };
 
-export const InventoryStatusBadge = ({ status }: { status: StockStatus }) => (
-  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles[status]}`}>
-    {status}
-  </span>
-);
+const normalizeStatus = (status: string | undefined): StockStatus => {
+  if (status === 'Critical' || status === 'Low' || status === 'OK') return status;
+  return 'OK';
+};
+
+export const InventoryStatusBadge = ({ status }: { status: StockStatus | string }) => {
+  const safe = normalizeStatus(status);
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${styles[safe]}`}
+    >
+      {safe}
+    </span>
+  );
+};

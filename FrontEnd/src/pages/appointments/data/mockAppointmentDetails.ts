@@ -1,4 +1,4 @@
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import { MOCK_STAFF } from '@/pages/staff/data/mockStaff';
 import {
   MOCK_APPOINTMENTS,
@@ -314,9 +314,12 @@ const paymentForStatus = (status: AppointmentStatus): AppointmentDetail['payment
   return 'Pending';
 };
 
-export const buildAppointmentDetail = (base: Appointment): AppointmentDetail => {
+export const buildAppointmentDetail = (
+  base: Appointment,
+  patientList: Patient[] = []
+): AppointmentDetail => {
   const index = MOCK_APPOINTMENTS.findIndex((a) => a.id === base.id);
-  const patient = MOCK_PATIENTS.find((p) => p.id === base.patientId);
+  const patient = patientList.find((p) => p.id === base.patientId);
   const staff = assignStaff(base.type, index >= 0 ? index : 0);
   const override = DETAIL_OVERRIDES[base.id];
 

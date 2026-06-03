@@ -34,7 +34,7 @@ export const LoginPage = () => {
     try {
       const msg = await login(email.trim().toLowerCase(), password);
       showToast(msg || 'Login successful', 'success');
-      navigate(ROUTES.DASHBOARD);
+      navigate(ROUTES.ADMIN_DASHBOARD);
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Invalid email or password'), 'error');
     } finally {
@@ -69,7 +69,7 @@ export const LoginPage = () => {
         />
         <div className="flex justify-end">
           <Link
-            to={ROUTES.FORGOT_PASSWORD}
+            to={ROUTES.ADMIN_FORGOT_PASSWORD}
             className="text-sm font-medium text-sage-deep hover:text-sage-mid"
           >
             Forgot password?
@@ -78,6 +78,12 @@ export const LoginPage = () => {
         <Button type="submit" className="w-full" isLoading={loading}>
           Sign In
         </Button>
+        <p className="text-center text-xs text-ink-ghost">
+          Patient portal?{' '}
+          <Link to={ROUTES.CUSTOMER_WELCOME} className="font-semibold text-sage-deep hover:underline">
+            Patient login
+          </Link>
+        </p>
       </form>
     </AuthLayout>
   );

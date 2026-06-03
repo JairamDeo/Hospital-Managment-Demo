@@ -13,7 +13,7 @@ export const AccessDeniedPage = () => (
       You do not have permission to view this page. Please sign in with an authorized admin
       account.
     </p>
-    <Link to={ROUTES.LOGIN} className="mt-8">
+    <Link to={ROUTES.ADMIN_LOGIN} className="mt-8">
       <Button>Go to Login</Button>
     </Link>
   </div>

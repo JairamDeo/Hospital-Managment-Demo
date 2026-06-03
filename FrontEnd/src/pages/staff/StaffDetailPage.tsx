@@ -22,7 +22,7 @@ export const StaffDetailPage = () => {
   }, [staffId, staffList]);
 
   if (!staffId || !staff) {
-    return <Navigate to={ROUTES.STAFF} replace />;
+    return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
   }
 
   const formInitial = staffToForm(staff);

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import {
   MOCK_THERAPISTS,
   PROGRAM_DAY_OPTIONS,
@@ -14,11 +14,12 @@ import {
 interface Props {
   open: boolean;
   initial: ScheduleProgramFormValues;
+  patients: Patient[];
   onClose: () => void;
   onSubmit: (values: ScheduleProgramFormValues) => void;
 }
 
-export const ScheduleProgramModal = ({ open, initial, onClose, onSubmit }: Props) => {
+export const ScheduleProgramModal = ({ open, initial, patients, onClose, onSubmit }: Props) => {
   const [form, setForm] = useState<ScheduleProgramFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof ScheduleProgramFormValues, string>>>({});
 
@@ -70,7 +71,7 @@ export const ScheduleProgramModal = ({ open, initial, onClose, onSubmit }: Props
             className={`${formSelectClass} ${errors.patientId ? 'border-danger' : ''}`}
           >
             <option value="">Select patient</option>
-            {MOCK_PATIENTS.map((p) => (
+            {patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.id})
               </option>

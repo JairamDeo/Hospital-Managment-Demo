@@ -1,4 +1,4 @@
-import type { StockAlert } from '@/pages/pharmacy/data/mockPharmacy';
+import type { StockAlert } from '@/types/pharmacy.types';
 
 interface Props {
   alerts: StockAlert[];

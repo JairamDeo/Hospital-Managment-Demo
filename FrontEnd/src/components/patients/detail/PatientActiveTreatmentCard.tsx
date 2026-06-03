@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Leaf } from 'lucide-react';
-import type { ActiveTreatment } from '@/pages/patients/data/mockPatientDetails';
+import type { ActiveTreatment } from '@/types/patientDetail.types';
 
 interface Props {
   treatment: ActiveTreatment;

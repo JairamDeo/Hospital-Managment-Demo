@@ -3,79 +3,78 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { ROUTES } from '@/constants/routes';
-import { getPatientById } from '@/pages/patients/data/mockPatientDetails';
 import { getStaffById } from '@/pages/staff/data/mockStaffDetails';
 import { getInvoiceById } from '@/pages/billing/data/mockInvoiceDetails';
 import { getAppointmentById } from '@/pages/appointments/data/mockAppointmentDetails';
 
 const titles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/patients': 'Patients',
-  '/appointments': 'Appointments',
-  '/panchakarma': 'Panchakarma',
-  '/pharmacy': 'Pharmacy',
-  '/staff': 'Staff',
-  '/analytics': 'Analytics',
-  '/billing': 'Billing',
-  '/settings': 'Settings',
+  [ROUTES.ADMIN_DASHBOARD]: 'Dashboard',
+  [ROUTES.ADMIN_PATIENTS]: 'Patients',
+  [ROUTES.ADMIN_APPOINTMENTS]: 'Appointments',
+  [ROUTES.ADMIN_PANCHAKARMA]: 'Panchakarma',
+  [ROUTES.ADMIN_PHARMACY]: 'Pharmacy',
+  [ROUTES.ADMIN_STAFF]: 'Staff',
+  [ROUTES.ADMIN_ANALYTICS]: 'Analytics',
+  [ROUTES.ADMIN_BILLING]: 'Billing',
+  [ROUTES.ADMIN_SETTINGS]: 'Settings',
 };
 
 const LayoutContent = () => {
   const { pathname } = useLocation();
   const { isMobileOpen, closeMobile } = useSidebar();
 
-  const patientMatch = pathname.match(/^\/patients\/([^/]+)$/);
-  const patientId = patientMatch?.[1];
-  const patient = patientId ? getPatientById(patientId) : null;
+  const patientMatch = pathname.match(/^\/admin\/patients\/([^/]+)$/);
+  const patientId = patientMatch?.[1] ? decodeURIComponent(patientMatch[1]) : undefined;
+  const patientBreadcrumbLabel = patientId ? decodeURIComponent(patientId) : null;
 
-  const staffMatch = pathname.match(/^\/staff\/([^/]+)$/);
+  const staffMatch = pathname.match(/^\/admin\/staff\/([^/]+)$/);
   const staffId = staffMatch?.[1];
   const staffMember = staffId ? getStaffById(staffId) : null;
 
-  const invoiceMatch = pathname.match(/^\/billing\/([^/]+)$/);
+  const invoiceMatch = pathname.match(/^\/admin\/billing\/([^/]+)$/);
   const invoiceId = invoiceMatch?.[1];
   const invoice = invoiceId ? getInvoiceById(invoiceId) : null;
 
-  const appointmentMatch = pathname.match(/^\/appointments\/([^/]+)$/);
+  const appointmentMatch = pathname.match(/^\/admin\/appointments\/([^/]+)$/);
   const appointmentId = appointmentMatch?.[1];
   const appointment = appointmentId ? getAppointmentById(appointmentId) : null;
 
-  const headerProps = patient
+  const headerProps = patientBreadcrumbLabel
     ? {
         breadcrumbs: [
-          { label: 'Patients', href: ROUTES.PATIENTS },
-          { label: patient.name },
+          { label: 'Patients', href: ROUTES.ADMIN_PATIENTS },
+          { label: patientBreadcrumbLabel },
         ],
       }
     : staffMember
       ? {
           breadcrumbs: [
-            { label: 'Staff', href: ROUTES.STAFF },
+            { label: 'Staff', href: ROUTES.ADMIN_STAFF },
             { label: staffMember.name },
           ],
         }
       : invoice
         ? {
             breadcrumbs: [
-              { label: 'Billing', href: ROUTES.BILLING },
+              { label: 'Billing', href: ROUTES.ADMIN_BILLING },
               { label: `#${invoice.id}` },
             ],
           }
         : appointment
           ? {
               breadcrumbs: [
-                { label: 'Appointments', href: ROUTES.APPOINTMENTS },
+                { label: 'Appointments', href: ROUTES.ADMIN_APPOINTMENTS },
                 { label: appointment.id },
               ],
             }
           : { title: titles[pathname] || 'Dashboard' };
 
-  const isDashboard = pathname === '/dashboard';
+  const isDashboard = pathname === ROUTES.ADMIN_DASHBOARD;
   const isFixedHeightPage =
     isDashboard ||
-    pathname === '/appointments' ||
-    pathname === '/panchakarma' ||
-    pathname === '/pharmacy';
+    pathname === ROUTES.ADMIN_APPOINTMENTS ||
+    pathname === ROUTES.ADMIN_PANCHAKARMA ||
+    pathname === ROUTES.ADMIN_PHARMACY;
 
   return (
     <div className="flex h-screen overflow-hidden bg-cream">

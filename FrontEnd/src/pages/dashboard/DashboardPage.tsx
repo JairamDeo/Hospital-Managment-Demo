@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Users, UserPlus, CalendarCheck, Activity, Sprout, FlaskConical, Droplets, Flower2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AppointmentRow } from '@/components/dashboard/AppointmentRow';
@@ -36,6 +38,22 @@ const inventory = [
 
 export const DashboardPage = () => {
   const { user } = useAuth();
+  const [patientTotal, setPatientTotal] = useState(0);
+  const [newThisWeek, setNewThisWeek] = useState(0);
+
+  useEffect(() => {
+    patientAdminService
+      .getStats()
+      .then(({ data }) => {
+        setPatientTotal(data.res?.stats?.total ?? 0);
+        setNewThisWeek(data.res?.stats?.newThisWeek ?? 0);
+      })
+      .catch(() => {
+        setPatientTotal(0);
+        setNewThisWeek(0);
+      });
+  }, []);
+
   const name = formatDisplayName(user?.firstName, user?.lastName, user?.name);
   const initials = getInitials(user?.firstName, user?.lastName);
   const hour = new Date().getHours();
@@ -61,8 +79,20 @@ export const DashboardPage = () => {
       </p>
 
       <div className="mb-4 grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Patients" value="1,452" subLabel="+5%" icon={Users} showTrend className="bg-sage-deep" />
-        <StatCard label="New Registrations" value="48" subLabel="Today" icon={UserPlus} className="bg-[#2a6b54]" />
+        <StatCard
+          label="Total Patients"
+          value={patientTotal.toLocaleString('en-IN')}
+          subLabel="Registered"
+          icon={Users}
+          className="bg-sage-deep"
+        />
+        <StatCard
+          label="New This Week"
+          value={String(newThisWeek)}
+          subLabel="Last 7 days"
+          icon={UserPlus}
+          className="bg-[#2a6b54]"
+        />
         <StatCard label="Today's Visits" value="22" subLabel="Scheduled" icon={CalendarCheck} className="bg-sage-mid" />
         <StatCard label="Active Treatments" value="98" subLabel="Ongoing" icon={Activity} className="bg-sage-light" />
       </div>
@@ -74,7 +104,7 @@ export const DashboardPage = () => {
               Today&apos;s Appointments
             </h3>
             <Link
-              to={ROUTES.APPOINTMENTS}
+              to={ROUTES.ADMIN_APPOINTMENTS}
               className="cursor-pointer rounded-full border border-border-sage px-3 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist"
             >
               List view

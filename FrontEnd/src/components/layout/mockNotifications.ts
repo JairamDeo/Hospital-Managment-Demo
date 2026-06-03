@@ -29,7 +29,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'INV-1019 for Arjun Patel (₹1,500) is overdue by 3 days.',
     time: '1 hr ago',
     read: false,
-    href: '/billing/INV-1019',
+    href: '/admin/billing/INV-1019',
   },
   {
     id: 'n-3',
@@ -38,7 +38,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'Brahmi Oil is down to 45 units — reorder recommended.',
     time: '2 hrs ago',
     read: false,
-    href: ROUTES.PHARMACY,
+    href: ROUTES.ADMIN_PHARMACY,
   },
   {
     id: 'n-4',
@@ -47,7 +47,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'Vamana therapy Day 3 completed for Priya Sharma.',
     time: '3 hrs ago',
     read: false,
-    href: ROUTES.PANCHAKARMA,
+    href: ROUTES.ADMIN_PANCHAKARMA,
   },
   {
     id: 'n-5',
@@ -56,7 +56,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'Rahul Singh (AH-10024) added to the patient registry.',
     time: 'Yesterday',
     read: true,
-    href: '/patients/AH-10024',
+    href: '/admin/patients/AH-10024',
   },
   {
     id: 'n-6',
@@ -65,7 +65,7 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: '₹12,500 received for INV-1024 via UPI.',
     time: 'Yesterday',
     read: true,
-    href: '/billing/INV-1024',
+    href: '/admin/billing/INV-1024',
   },
   {
     id: 'n-7',
@@ -74,6 +74,6 @@ export const MOCK_NOTIFICATIONS: AppNotification[] = [
     message: 'Dr. Rekha Nair marked 2 afternoon slots as available.',
     time: '2 days ago',
     read: true,
-    href: ROUTES.APPOINTMENTS,
+    href: ROUTES.ADMIN_APPOINTMENTS,
   },
 ];

@@ -7,7 +7,7 @@ import { ActiveProgramsTable } from '@/components/panchakarma/ActiveProgramsTabl
 import { TherapistsPanel } from '@/components/panchakarma/TherapistsPanel';
 import { TreatmentRoomsPanel } from '@/components/panchakarma/TreatmentRoomsPanel';
 import { useToast } from '@/hooks/useToast';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import {
   MOCK_ACTIVE_PROGRAMS,
   MOCK_ROOMS,
@@ -20,6 +20,7 @@ import {
 } from './data/mockPanchakarma';
 
 export const PanchakarmaPage = () => {
+  const { patients } = useAdminPatientsList();
   const [programs, setPrograms] = useState<ActiveProgram[]>(MOCK_ACTIVE_PROGRAMS);
   const [modalOpen, setModalOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyScheduleProgramForm());
@@ -31,7 +32,7 @@ export const PanchakarmaPage = () => {
   };
 
   const handleCreate = (values: ScheduleProgramFormValues) => {
-    const patient = MOCK_PATIENTS.find((p) => p.id === values.patientId);
+    const patient = patients.find((p) => p.id === values.patientId);
     if (!patient) return;
 
     const newProgram: ActiveProgram = {
@@ -106,6 +107,7 @@ export const PanchakarmaPage = () => {
         key={modalOpen ? 'open' : 'closed'}
         open={modalOpen}
         initial={formInitial}
+        patients={patients}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}
       />

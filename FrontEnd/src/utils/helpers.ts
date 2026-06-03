@@ -14,18 +14,62 @@ export const formatDisplayName = (
   return name || 'Admin';
 };
 
+const TECHNICAL_PATTERNS = [
+  /is not a function/i,
+  /Cannot read propert/i,
+  /Unexpected token/i,
+  /Internal Server Error/i,
+];
+
+const isTechnicalMessage = (message: string) =>
+  TECHNICAL_PATTERNS.some((pattern) => pattern.test(message));
+
+const normalizeMessage = (message: unknown, fallback: string): string => {
+  if (Array.isArray(message)) {
+    const joined = message
+      .map((part) => (typeof part === 'string' ? part.trim() : ''))
+      .filter(Boolean)
+      .join(' ');
+    return joined || fallback;
+  }
+  if (typeof message === 'string') {
+    const trimmed = message.trim();
+    if (!trimmed || isTechnicalMessage(trimmed)) return fallback;
+    return trimmed;
+  }
+  return fallback;
+};
+
 export const getApiErrorMessage = (error: unknown, fallback = 'Something went wrong') => {
   if (error && typeof error === 'object') {
     const ax = error as {
-      response?: { data?: { message?: string } };
+      response?: { data?: { message?: string | string[] }; status?: number };
       code?: string;
       message?: string;
     };
-    if (ax.response?.data?.message) return ax.response.data.message;
+
+    if (ax.response?.data?.message) {
+      return normalizeMessage(ax.response.data.message, fallback);
+    }
+
+    if (ax.response?.status === 400) {
+      return 'Please check the form fields and try again.';
+    }
+    if (ax.response?.status === 409) {
+      return normalizeMessage(ax.response.data?.message, fallback);
+    }
+    if (ax.response?.status === 404) {
+      return 'Record not found. It may have been removed.';
+    }
+
     if (ax.code === 'ERR_NETWORK' || ax.message === 'Network Error') {
-      return 'Cannot reach server. Start backend: cd BackEnd && npm run dev (check PORT in .env)';
+      return 'Cannot reach server. Start the backend and try again.';
     }
   }
-  if (error instanceof Error) return error.message;
+
+  if (error instanceof Error) {
+    return normalizeMessage(error.message, fallback);
+  }
+
   return fallback;
 };

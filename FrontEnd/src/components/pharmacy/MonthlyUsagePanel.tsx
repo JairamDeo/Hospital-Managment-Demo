@@ -1,4 +1,4 @@
-import type { MonthlyUsageItem } from '@/pages/pharmacy/data/mockPharmacy';
+import type { MonthlyUsageItem } from '@/types/pharmacy.types';
 import { StockLevelBar } from './StockLevelBar';
 
 interface Props {

@@ -19,7 +19,7 @@ export const InvoiceDetailPage = () => {
   }, [invoiceId]);
 
   if (!invoiceId || !invoice) {
-    return <Navigate to={ROUTES.BILLING} replace />;
+    return <Navigate to={ROUTES.ADMIN_BILLING} replace />;
   }
 
   return (

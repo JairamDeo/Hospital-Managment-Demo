@@ -1,9 +1,11 @@
 import { Activity, Heart, Scale, Thermometer } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { PatientVitals } from '@/pages/patients/data/mockPatientDetails';
+import type { PatientVitals } from '@/types/patientDetail.types';
 
 interface Props {
   vitals: PatientVitals;
+  /** Sidebar uses 2×2 grid so values are not truncated */
+  layout?: 'row' | 'sidebar';
 }
 
 const VITAL_CONFIG: {
@@ -18,23 +20,40 @@ const VITAL_CONFIG: {
   { key: 'bmi', label: 'BMI', icon: Scale, tone: 'text-violet-600 bg-violet-50' },
 ];
 
-export const PatientVitalsRow = ({ vitals }: Props) => (
-  <div className="grid grid-cols-4 gap-2 sm:gap-3">
-    {VITAL_CONFIG.map(({ key, label, icon: Icon, tone }) => (
-      <div
-        key={key}
-        className="min-w-0 rounded-2xl border border-border-sage bg-white px-2.5 py-3 shadow-sm sm:px-4"
-      >
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg sm:h-7 sm:w-7 ${tone}`}>
-            <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.25} />
-          </span>
-          <span className="truncate text-[9px] font-bold uppercase tracking-wider text-ink-ghost sm:text-[10px]">
-            {label}
-          </span>
+export const PatientVitalsRow = ({ vitals, layout = 'row' }: Props) => {
+  const isSidebar = layout === 'sidebar';
+
+  return (
+    <div
+      className={
+        isSidebar
+          ? 'grid grid-cols-2 gap-2'
+          : 'grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3'
+      }
+    >
+      {VITAL_CONFIG.map(({ key, label, icon: Icon, tone }) => (
+        <div
+          key={key}
+          className="min-w-0 rounded-xl border border-border-sage bg-white px-3 py-2.5 shadow-sm"
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tone}`}
+            >
+              <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              {label}
+            </span>
+          </div>
+          <p
+            className={`mt-1.5 font-semibold text-ink ${isSidebar ? 'text-sm leading-snug' : 'text-base'}`}
+            title={vitals[key]}
+          >
+            {vitals[key]}
+          </p>
         </div>
-        <p className="mt-1.5 truncate text-sm font-semibold text-ink sm:mt-2 sm:text-base">{vitals[key]}</p>
-      </div>
-    ))}
-  </div>
-);
+      ))}
+    </div>
+  );
+};

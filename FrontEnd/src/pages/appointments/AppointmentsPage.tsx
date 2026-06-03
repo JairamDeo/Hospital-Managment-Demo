@@ -7,7 +7,7 @@ import { AppointmentStatsCards } from '@/components/appointments/AppointmentStat
 import { ScheduleListItem } from '@/components/appointments/ScheduleListItem';
 import { ViewSwitcher, type CalendarView } from '@/components/appointments/ViewSwitcher';
 import { useToast } from '@/hooks/useToast';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import {
   APPOINTMENT_STATS,
   MOCK_APPOINTMENTS,
@@ -19,6 +19,7 @@ import {
 const SELECTED_DATE = '2023-10-26';
 
 export const AppointmentsPage = () => {
+  const { patients } = useAdminPatientsList();
   const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
   const [view, setView] = useState<CalendarView>('month');
   const [month, setMonth] = useState(9);
@@ -45,7 +46,7 @@ export const AppointmentsPage = () => {
   };
 
   const handleCreate = (values: AppointmentFormValues) => {
-    const patient = MOCK_PATIENTS.find((p) => p.id === values.patientId);
+    const patient = patients.find((p) => p.id === values.patientId);
     if (!patient) return;
 
     const newAppt: Appointment = {
@@ -142,6 +143,7 @@ export const AppointmentsPage = () => {
         key={modalOpen ? 'open' : 'closed'}
         open={modalOpen}
         initial={formInitial}
+        patients={patients}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}
       />

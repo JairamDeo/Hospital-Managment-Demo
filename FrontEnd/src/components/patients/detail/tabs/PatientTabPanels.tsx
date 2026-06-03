@@ -1,16 +1,12 @@
 import type { ReactNode } from 'react';
 import { Download, Eye, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { appointmentDetailPath } from '@/constants/routes';
-import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
 import type {
   PatientAppointment,
   PatientDocument,
   PatientInvoice,
   LabReport,
-  Prescription,
-} from '@/pages/patients/data/mockPatientDetails';
-import { formatPatientRupee } from '@/pages/patients/data/mockPatientDetails';
+} from '@/types/patientDetail.types';
+import { formatPatientRupee } from '@/types/patientDetail.types';
 
 const TableShell = ({ children }: { children: ReactNode }) => (
   <div className="overflow-x-auto rounded-xl border border-border-sage">
@@ -30,11 +26,6 @@ const APPT_STATUS: Record<PatientAppointment['status'], string> = {
   Cancelled: 'bg-danger-bg text-danger',
 };
 
-const RX_STATUS: Record<Prescription['status'], string> = {
-  Active: 'bg-success-bg text-success',
-  Completed: 'bg-sage-mist text-ink-soft',
-};
-
 const LAB_STATUS: Record<LabReport['status'], string> = {
   Normal: 'bg-success-bg text-success',
   Abnormal: 'bg-warning-bg text-warning',
@@ -49,14 +40,9 @@ const INV_STATUS: Record<PatientInvoice['status'], string> = {
 
 export const PatientAppointmentsTab = ({
   appointments,
-  patientId,
 }: {
   appointments: PatientAppointment[];
-  patientId: string;
 }) => {
-  const navigate = useNavigate();
-  const linkedAppt = MOCK_APPOINTMENTS.find((a) => a.patientId === patientId);
-
   return (
   <TableShell>
     <thead>
@@ -68,16 +54,10 @@ export const PatientAppointmentsTab = ({
       </tr>
     </thead>
     <tbody>
-      {appointments.map((a, index) => {
-        const href = index === 0 && linkedAppt ? appointmentDetailPath(linkedAppt.id) : null;
-
-        return (
+      {appointments.map((a) => (
           <tr
             key={a.id}
-            onClick={href ? () => navigate(href) : undefined}
-            className={`border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30 ${
-              href ? 'cursor-pointer' : ''
-            }`}
+            className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30"
           >
             <td className="px-4 py-3">
               <p className="text-sm font-medium text-ink">{a.date}</p>
@@ -91,46 +71,13 @@ export const PatientAppointmentsTab = ({
               </span>
             </td>
           </tr>
-        );
-      })}
+      ))}
     </tbody>
   </TableShell>
   );
 };
 
-export const PatientPrescriptionsTab = ({ prescriptions }: { prescriptions: Prescription[] }) => (
-  <TableShell>
-    <thead>
-      <tr className="border-b border-border-sage bg-cream/60">
-        <Th>Medicine</Th>
-        <Th>Dosage</Th>
-        <Th>Frequency</Th>
-        <Th>Duration</Th>
-        <Th>Prescribed</Th>
-        <Th>Status</Th>
-      </tr>
-    </thead>
-    <tbody>
-      {prescriptions.map((rx) => (
-        <tr key={rx.id} className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30">
-          <td className="px-4 py-3">
-            <p className="text-sm font-semibold text-ink">{rx.medicine}</p>
-            <p className="text-xs text-ink-ghost">{rx.prescribedBy}</p>
-          </td>
-          <td className="px-4 py-3 text-sm text-ink-soft">{rx.dosage}</td>
-          <td className="px-4 py-3 text-sm text-ink-soft">{rx.frequency}</td>
-          <td className="px-4 py-3 text-sm text-ink-soft">{rx.duration}</td>
-          <td className="px-4 py-3 text-sm text-ink-ghost">{rx.date}</td>
-          <td className="px-4 py-3">
-            <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${RX_STATUS[rx.status]}`}>
-              {rx.status}
-            </span>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </TableShell>
-);
+export { PatientPrescriptionsTab } from './PatientPrescriptionsTab';
 
 export const PatientLabReportsTab = ({ reports }: { reports: LabReport[] }) => (
   <TableShell>

@@ -1,5 +1,5 @@
 import { Eye, SquarePen } from 'lucide-react';
-import type { Patient } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import { PrakritiBadge } from './PrakritiBadge';
 import { PatientStatusBadge } from './PatientStatusBadge';
 

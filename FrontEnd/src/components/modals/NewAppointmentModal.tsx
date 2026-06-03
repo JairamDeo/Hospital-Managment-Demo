@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
-import { MOCK_PATIENTS } from '@/pages/patients/data/mockPatients';
+import type { Patient } from '@/types/patient.types';
 import {
   APPOINTMENT_TYPE_OPTIONS,
   TIME_SLOTS,
@@ -12,11 +12,12 @@ import {
 interface Props {
   open: boolean;
   initial: AppointmentFormValues;
+  patients: Patient[];
   onClose: () => void;
   onSubmit: (values: AppointmentFormValues) => void;
 }
 
-export const NewAppointmentModal = ({ open, initial, onClose, onSubmit }: Props) => {
+export const NewAppointmentModal = ({ open, initial, patients, onClose, onSubmit }: Props) => {
   const [form, setForm] = useState<AppointmentFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof AppointmentFormValues, string>>>({});
 
@@ -64,7 +65,7 @@ export const NewAppointmentModal = ({ open, initial, onClose, onSubmit }: Props)
             className={`${formSelectClass} ${errors.patientId ? 'border-danger' : ''}`}
           >
             <option value="">Select patient</option>
-            {MOCK_PATIENTS.map((p) => (
+            {patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.id})
               </option>

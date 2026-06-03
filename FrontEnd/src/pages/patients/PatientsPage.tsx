@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, FileSpreadsheet, FileText, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -8,31 +8,21 @@ import { PatientPagination } from '@/components/patients/PatientPagination';
 import { PatientFormModal } from '@/components/modals/PatientFormModal';
 import { useToast } from '@/hooks/useToast';
 import { patientDetailPath } from '@/constants/routes';
-import {
-  MOCK_PATIENTS,
-  PATIENT_STATS,
-  type PrakritiType,
-  type Patient,
-  type PatientFormValues,
-} from './data/mockPatients';
+import type { Patient, PatientFormValues, PatientStats } from '@/types/patient.types';
 import {
   emptyPatientForm,
-  formToPatient,
-  generatePatientId,
-  patientToForm,
+  hmsToPatient,
   sortPatients,
   SORT_LABELS,
   type SortOption,
 } from '@/utils/patientHelpers';
 import { exportPatientsCsv, exportPatientsPdf } from '@/utils/patientExport';
+import { patientAdminService } from '@/services/patient/patientAdmin.service';
+import { masterService } from '@/services/master/master.service';
+import { getApiErrorMessage } from '@/utils/helpers';
+import type { MasterItem } from '@/types/api.types';
 
 const PAGE_SIZE = 6;
-const PRAKRITI_FILTERS: Array<'All Patients' | PrakritiType> = [
-  'All Patients',
-  'Vata',
-  'Pitta',
-  'Kapha',
-];
 
 const SORT_OPTIONS: SortOption[] = [
   'name-asc',
@@ -44,23 +34,70 @@ const SORT_OPTIONS: SortOption[] = [
   'status',
 ];
 
-type ModalMode = 'add' | 'edit' | null;
+type ModalMode = 'add' | null;
+
+const defaultStats = (): PatientStats => ({ total: 0, newThisWeek: 0 });
 
 export const PatientsPage = () => {
   const navigate = useNavigate();
-  const [patients, setPatients] = useState<Patient[]>(MOCK_PATIENTS);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [stats, setStats] = useState<PatientStats>(defaultStats());
+  const [prakritiMasters, setPrakritiMasters] = useState<MasterItem[]>([]);
+  const [treatmentMasters, setTreatmentMasters] = useState<MasterItem[]>([]);
+  const [listLoading, setListLoading] = useState(false);
+
   const [search, setSearch] = useState('');
-  const [prakritiFilter, setPrakritiFilter] = useState<'All Patients' | PrakritiType>('All Patients');
+  const [prakritiFilter, setPrakritiFilter] = useState<string>('All Patients');
   const [sortBy, setSortBy] = useState<SortOption>('visit-newest');
   const [page, setPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [formInitial, setFormInitial] = useState<PatientFormValues>(emptyPatientForm());
   const [exportOpen, setExportOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
+
+  const activePrakriti = useMemo(
+    () => prakritiMasters.filter((p) => p.active),
+    [prakritiMasters]
+  );
+  const activeTreatments = useMemo(
+    () => treatmentMasters.filter((t) => t.active),
+    [treatmentMasters]
+  );
+
+  const loadData = useCallback(async () => {
+    setListLoading(true);
+    try {
+      const [patRes, statsRes, pRes, tRes] = await Promise.all([
+        patientAdminService.list(),
+        patientAdminService.getStats(),
+        masterService.listPrakriti(),
+        masterService.listTreatments(),
+      ]);
+      setPatients((patRes.data.res?.patients ?? []).map(hmsToPatient));
+      setStats(statsRes.data.res?.stats ?? defaultStats());
+      setPrakritiMasters(pRes.data.res?.items ?? []);
+      setTreatmentMasters(tRes.data.res?.items ?? []);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setListLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const prakritiFilters = useMemo(() => {
+    const fromPatients = [...new Set(patients.map((p) => p.prakriti).filter(Boolean))];
+    const fromMaster = activePrakriti.map((p) => p.name);
+    const unique = [...new Set([...fromPatients, ...fromMaster])];
+    return ['All Patients', ...unique];
+  }, [patients, activePrakriti]);
 
   const filtered = useMemo(() => {
     let list = [...patients];
@@ -89,7 +126,6 @@ export const PatientsPage = () => {
 
   const openAdd = () => {
     setFormInitial(emptyPatientForm());
-    setSelectedPatient(null);
     setModalMode('add');
   };
 
@@ -98,28 +134,33 @@ export const PatientsPage = () => {
   };
 
   const openEdit = (p: Patient) => {
-    setSelectedPatient(p);
-    setFormInitial(patientToForm(p));
-    setModalMode('edit');
+    navigate(`${patientDetailPath(p.id)}#patient-info`);
   };
 
-  const closeModal = () => {
-    setModalMode(null);
-    setSelectedPatient(null);
-  };
+  const closeModal = () => setModalMode(null);
 
-  const handleFormSubmit = (values: PatientFormValues) => {
-    if (modalMode === 'add') {
-      const id = generatePatientId(patients);
-      const newPatient = formToPatient(values, id);
-      setPatients((prev) => [newPatient, ...prev]);
-      showToast(`Patient ${newPatient.name} added (${id})`, 'success');
-    } else if (modalMode === 'edit' && selectedPatient) {
-      const updated = formToPatient(values, selectedPatient.id, selectedPatient);
-      setPatients((prev) => prev.map((p) => (p.id === selectedPatient.id ? updated : p)));
-      showToast('Patient updated successfully', 'success');
+  const handleFormSubmit = async (values: PatientFormValues) => {
+    setSubmitting(true);
+    try {
+      if (modalMode === 'add') {
+        const { data } = await patientAdminService.create(values);
+        const created = data.res?.patient;
+        if (created) {
+          setPatients((prev) => [hmsToPatient(created), ...prev]);
+          setStats((s) => ({ ...s, total: s.total + 1, newThisWeek: s.newThisWeek + 1 }));
+          showToast(`Patient ${created.name} added (${created.patientCode})`, 'success');
+        }
+      }
+      closeModal();
+      await loadData();
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(err, 'Could not save patient. Check required fields and try again.'),
+        'error'
+      );
+    } finally {
+      setSubmitting(false);
     }
-    closeModal();
   };
 
   const handleExport = (type: 'pdf' | 'csv') => {
@@ -141,8 +182,7 @@ export const PatientsPage = () => {
             Patient Registry
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {PATIENT_STATS.total.toLocaleString()} total patients ·{' '}
-            {PATIENT_STATS.newThisWeek} new this week
+            {stats.total.toLocaleString()} total patients · {stats.newThisWeek} new this week
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -202,7 +242,7 @@ export const PatientsPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex flex-wrap items-center gap-1.5">
-              {PRAKRITI_FILTERS.map((label) => {
+              {prakritiFilters.map((label) => {
                 const active = prakritiFilter === label;
                 return (
                   <button
@@ -257,6 +297,16 @@ export const PatientsPage = () => {
         </div>
 
         <PatientTable patients={pagePatients} onView={openView} onEdit={openEdit} />
+        {listLoading ? (
+          <p className="border-t border-border-sage px-4 py-2 text-center text-xs text-ink-ghost">
+            Loading patients…
+          </p>
+        ) : null}
+        {!listLoading && filtered.length === 0 ? (
+          <p className="border-t border-border-sage px-4 py-8 text-center text-sm text-ink-soft">
+            No patients yet. Add your first patient or restart the backend to run the seed.
+          </p>
+        ) : null}
 
         <PatientPagination
           from={from}
@@ -269,13 +319,16 @@ export const PatientsPage = () => {
       </div>
 
       <PatientFormModal
-        key={`${modalMode}-${selectedPatient?.id ?? 'new'}`}
-        open={modalMode === 'add' || modalMode === 'edit'}
-        mode={modalMode === 'edit' ? 'edit' : 'add'}
+        key="add-patient"
+        open={modalMode === 'add'}
+        mode="add"
         initial={formInitial}
-        patientId={selectedPatient?.id}
+        prakritiOptions={activePrakriti}
+        treatmentOptions={activeTreatments}
         onClose={closeModal}
-        onSubmit={handleFormSubmit}
+        onSubmit={(values) => {
+          if (!submitting) void handleFormSubmit(values);
+        }}
       />
     </div>
   );

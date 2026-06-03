@@ -6,6 +6,7 @@ const rawBase = (import.meta.env.VITE_BACKEND_URL ?? '/api').replace(/\/$/, '');
 export const API_BASE_URL = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
 
 export const AUTH_STORAGE_KEY = 'hms_admin_auth';
+export const PATIENT_AUTH_STORAGE_KEY = 'hms_patient_auth';
 
 export const OTP_LENGTH = 4;
 /** Fallback only — actual timers come from API (OTP_EXPIRY_SECONDS in backend .env) */

@@ -1,4 +1,4 @@
-import type { PatientStatus } from '@/pages/patients/data/mockPatients';
+import type { PatientStatus } from '@/types/patient.types';
 
 const styles: Record<PatientStatus, string> = {
   Active: 'bg-success-bg text-success',

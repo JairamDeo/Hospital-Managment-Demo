@@ -1,4 +1,11 @@
-import type { Patient, PatientFormValues, PrakritiType, PatientStatus } from '@/pages/patients/data/mockPatients';
+import type { HmsPatient } from '@/types/api.types';
+import type {
+  Patient,
+  PatientFormValues,
+  PatientProfileFormValues,
+  PatientStatus,
+} from '@/types/patient.types';
+import type { PatientDetail } from '@/types/patientDetail.types';
 
 const AVATAR_CLASSES = [
   'bg-blue-100 text-blue-700',
@@ -21,38 +28,50 @@ export const pickAvatarClass = (seed: string) => {
   return AVATAR_CLASSES[hash % AVATAR_CLASSES.length];
 };
 
-export const generatePatientId = (existing: Patient[]) => {
-  const nums = existing
-    .map((p) => parseInt(p.id.replace(/\D/g, ''), 10))
-    .filter((n) => !Number.isNaN(n));
-  const next = nums.length ? Math.max(...nums) + 1 : 10073;
-  return `AH-${next}`;
-};
-
-export const formatVisitDate = (iso: string) => {
+export const formatVisitDate = (iso: string | Date | undefined) => {
   if (!iso) return '—';
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
+  if (Number.isNaN(d.getTime())) return String(iso);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
 export const parseVisitToInput = (display: string) => {
   const d = new Date(display);
-  if (Number.isNaN(d.getTime())) return '';
+  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
   return d.toISOString().slice(0, 10);
 };
+
+export const hmsToPatient = (p: HmsPatient): Patient => ({
+  id: p.patientCode,
+  name: p.name,
+  prakritiId: p.prakritiId ?? '',
+  prakriti: p.prakritiName ?? p.prakriti ?? '—',
+  treatmentId: p.treatmentId ?? '',
+  treatment: p.treatmentName ?? p.treatment ?? '—',
+  age: p.age ?? 0,
+  lastVisit: formatVisitDate(p.lastVisit),
+  status: (p.recordStatus ?? p.status ?? 'Active') as PatientStatus,
+  mobile: p.mobile ?? p.mobileNumber ?? '',
+  email: p.email ?? '',
+  initials: getInitialsFromName(p.name),
+  avatarClass: pickAvatarClass(p.name),
+});
 
 export const formToPatient = (
   values: PatientFormValues,
   id: string,
-  existing?: Patient
+  existing?: Patient,
+  prakritiName?: string,
+  treatmentName?: string
 ): Patient => ({
   id,
   name: values.name.trim(),
-  prakriti: values.prakriti,
-  age: values.age,
+  prakritiId: values.prakritiId,
+  prakriti: prakritiName ?? existing?.prakriti ?? '—',
+  treatmentId: values.treatmentId,
+  treatment: treatmentName ?? existing?.treatment ?? '—',
+  age: values.age === '' ? 0 : values.age,
   lastVisit: formatVisitDate(values.lastVisit),
-  treatment: values.treatment.trim(),
   status: values.status,
   mobile: values.mobile.trim(),
   email: values.email.trim(),
@@ -62,36 +81,44 @@ export const formToPatient = (
 
 export const patientToForm = (p: Patient): PatientFormValues => ({
   name: p.name,
-  prakriti: p.prakriti,
+  prakritiId: p.prakritiId,
   age: p.age,
   lastVisit: parseVisitToInput(p.lastVisit),
-  treatment: p.treatment,
+  treatmentId: p.treatmentId,
   status: p.status,
   mobile: p.mobile ?? '',
   email: p.email ?? '',
 });
 
+export const detailToProfileForm = (p: PatientDetail): PatientProfileFormValues => ({
+  name: p.name,
+  age: p.age,
+  gender: p.gender || 'Not recorded',
+  bloodGroup: p.bloodGroup === '—' ? '' : p.bloodGroup,
+  email: p.email ?? '',
+  mobile: p.mobile ?? '',
+  city: p.city ?? '',
+  prakritiId: p.prakritiId,
+  treatmentId: p.treatmentId,
+  status: p.status,
+});
+
+export const GENDER_OPTIONS = ['Male', 'Female', 'Other', 'Not recorded'] as const;
+
+export const BLOOD_GROUP_OPTIONS = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] as const;
+
 export const emptyPatientForm = (): PatientFormValues => ({
   name: '',
-  prakriti: 'Vata',
-  age: 30,
+  prakritiId: '',
+  age: '',
   lastVisit: new Date().toISOString().slice(0, 10),
-  treatment: 'General Consult',
+  treatmentId: '',
   status: 'Active',
   mobile: '',
   email: '',
 });
 
-export const PRAKRITI_OPTIONS: PrakritiType[] = ['Vata', 'Pitta', 'Kapha'];
 export const STATUS_OPTIONS: PatientStatus[] = ['Active', 'Pending', 'Inactive'];
-
-export const TREATMENT_OPTIONS = [
-  'General Consult',
-  'Panchakarma',
-  'Follow-up',
-  'Diet Consult',
-  'Lab Review',
-];
 
 export type SortOption =
   | 'name-asc'

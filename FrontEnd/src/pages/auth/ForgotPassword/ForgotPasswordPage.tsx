@@ -109,7 +109,7 @@ export const ForgotPasswordPage = () => {
     try {
       const { data } = await authService.resetPassword(resetToken, password, confirm);
       showToast(data.message || 'Password reset successfully', 'success');
-      setTimeout(() => navigate(ROUTES.LOGIN), 500);
+      setTimeout(() => navigate(ROUTES.ADMIN_LOGIN), 500);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -120,7 +120,7 @@ export const ForgotPasswordPage = () => {
   return (
     <AuthLayout title={meta.title} subtitle={meta.subtitle}>
       <Link
-        to={step === 'mobile' ? ROUTES.LOGIN : '#'}
+        to={step === 'mobile' ? ROUTES.ADMIN_LOGIN : '#'}
         onClick={(e) => {
           if (step === 'otp') {
             e.preventDefault();
