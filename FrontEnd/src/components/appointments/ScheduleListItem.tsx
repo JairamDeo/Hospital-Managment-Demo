@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { appointmentDetailPath } from '@/constants/routes';
-import type { Appointment, AppointmentStatus } from '@/pages/appointments/data/mockAppointments';
+import type { Appointment, AppointmentStatus } from '@/types/appointment.types';
 
 interface Props {
   appointment: Appointment;

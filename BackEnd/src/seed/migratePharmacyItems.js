@@ -3,15 +3,15 @@ import PharmacyItem from '../models/pharmacyItem.model.js';
 import PharmacyUnitMaster from '../models/pharmacyUnitMaster.model.js';
 import { parseUnitSizeString } from '../utils/formatPackSize.js';
 import { logger } from '../utils/logger.js';
+import {
+  buildPharmacyPriceLookup,
+  PHARMACY_SEED_ITEMS,
+  resolveSeedSalePrice,
+} from './pharmacySeedDefaults.js';
 
-const FALLBACK_BY_NAME = {
-  'Brahmi Oil': { packQuantity: 200, unit: 'ml', company: 'Dabur India', bestBeforeMonths: 24 },
-  'Ashwagandha Powder': { packQuantity: 500, unit: 'g', company: 'Himalaya Wellness', bestBeforeMonths: 36 },
-  'Triphala Churna': { packQuantity: 250, unit: 'g', company: 'Baidyanath', bestBeforeMonths: 24 },
-  Chyawanprash: { packQuantity: 500, unit: 'g', company: 'Dabur India', bestBeforeMonths: 18 },
-  Shatavari: { packQuantity: 100, unit: 'g', company: 'Patanjali Ayurved', bestBeforeMonths: 24 },
-  'Amla Juice': { packQuantity: 1, unit: 'L', company: 'Patanjali Ayurved', bestBeforeMonths: 12 },
-};
+const FALLBACK_BY_NAME = Object.fromEntries(
+  PHARMACY_SEED_ITEMS.map((row) => [row.name, row])
+);
 
 const resolveUnitId = (byUnitName, unitName) => {
   if (!unitName) return null;
@@ -22,13 +22,15 @@ const resolveUnitId = (byUnitName, unitName) => {
   return null;
 };
 
-/** Backfill legacy pharmacy rows (pack/unit, company, shelf-life dates). */
+/** Backfill legacy pharmacy rows (pack/unit, company, shelf-life dates, sale prices). Run via npm run seed. */
 export const migratePharmacyItems = async () => {
   const units = await PharmacyUnitMaster.find().lean();
   const byUnitName = Object.fromEntries(units.map((u) => [u.name.toLowerCase(), u._id]));
+  const priceLookup = buildPharmacyPriceLookup();
 
   const items = await PharmacyItem.find().lean();
   let fixed = 0;
+  let pricesSet = 0;
 
   for (const item of items) {
     const fallback = FALLBACK_BY_NAME[item.name];
@@ -75,6 +77,12 @@ export const migratePharmacyItems = async () => {
       update.bestBeforeMonths = months;
     }
 
+    const needsPrice = item.salePrice == null || Number(item.salePrice) === 0;
+    if (needsPrice) {
+      update.salePrice = resolveSeedSalePrice(item, priceLookup);
+      pricesSet += 1;
+    }
+
     if (Object.keys(update).length === 0) continue;
 
     await PharmacyItem.updateOne(
@@ -88,6 +96,8 @@ export const migratePharmacyItems = async () => {
   }
 
   if (fixed > 0) {
-    logger.info(`Migrated ${fixed} pharmacy item(s)`);
+    logger.info(`Migrated ${fixed} pharmacy item(s); sale price set on ${pricesSet}`);
+  } else if (pricesSet === 0) {
+    logger.info('Pharmacy migration: all items already have sale prices');
   }
 };

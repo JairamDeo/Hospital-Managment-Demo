@@ -8,8 +8,8 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { MOCK_INVOICES } from '@/pages/billing/data/mockBilling';
-import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
+import type { Appointment } from '@/types/appointment.types';
+import type { Invoice } from '@/types/billing.types';
 import type { Patient } from '@/types/patient.types';
 import { MOCK_STAFF } from '@/pages/staff/data/mockStaff';
 import {
@@ -55,7 +55,11 @@ export const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: Lucide
   page: { label: 'Pages', icon: LayoutDashboard, tone: 'bg-sage-mist text-sage-deep' },
 };
 
-export const buildSearchIndex = (patients: Patient[] = []): SearchResult[] => [
+export const buildSearchIndex = (
+  patients: Patient[] = [],
+  appointments: Appointment[] = [],
+  invoices: Invoice[] = []
+): SearchResult[] => [
   ...PAGE_RESULTS,
   ...patients.map((p) => ({
     id: `patient-${p.id}`,
@@ -71,14 +75,14 @@ export const buildSearchIndex = (patients: Patient[] = []): SearchResult[] => [
     subtitle: `${s.role} · ${s.title}`,
     href: staffDetailPath(s.id),
   })),
-  ...MOCK_INVOICES.map((inv) => ({
+  ...invoices.map((inv) => ({
     id: `invoice-${inv.id}`,
     type: 'invoice' as const,
     title: `#${inv.id}`,
-    subtitle: `${inv.patientName} · ${inv.treatment}`,
+    subtitle: `${inv.patientName} · ${inv.feeType}`,
     href: invoiceDetailPath(inv.id),
   })),
-  ...MOCK_APPOINTMENTS.map((a) => ({
+  ...appointments.map((a) => ({
     id: `appointment-${a.id}`,
     type: 'appointment' as const,
     title: a.id,
@@ -87,17 +91,25 @@ export const buildSearchIndex = (patients: Patient[] = []): SearchResult[] => [
   })),
 ];
 
-export const searchGlobal = (query: string, patients: Patient[] = [], limit = 12): SearchResult[] => {
-  const index = buildSearchIndex(patients);
+export const searchGlobal = (
+  query: string,
+  patients: Patient[] = [],
+  appointments: Appointment[] = [],
+  invoices: Invoice[] = [],
+  limit = 12
+): SearchResult[] => {
+  const index = buildSearchIndex(patients, appointments, invoices);
   const q = query.trim().toLowerCase();
   if (!q) return PAGE_RESULTS.slice(0, 6);
 
-  return index.filter(
-    (item) =>
-      item.title.toLowerCase().includes(q) ||
-      item.subtitle.toLowerCase().includes(q) ||
-      item.href.toLowerCase().includes(q)
-  ).slice(0, limit);
+  return index
+    .filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.subtitle.toLowerCase().includes(q) ||
+        item.href.toLowerCase().includes(q)
+    )
+    .slice(0, limit);
 };
 
 export const QUICK_LINKS = [

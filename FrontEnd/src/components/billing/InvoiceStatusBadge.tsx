@@ -1,4 +1,4 @@
-import type { InvoiceStatus } from '@/pages/billing/data/mockBilling';
+import type { InvoiceStatus } from '@/types/billing.types';
 
 const styles: Record<InvoiceStatus, string> = {
   Paid: 'bg-success-bg text-success',

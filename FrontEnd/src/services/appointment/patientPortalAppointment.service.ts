@@ -2,13 +2,11 @@ import axiosInstance from '../http/axiosInstance';
 import type { ApiResponse, HmsAppointment } from '@/types/api.types';
 import type {
   AppointmentDoctor,
-  AppointmentType,
   DoctorAvailability,
 } from '@/types/appointment.types';
 
 export interface PatientBookAppointmentPayload {
   staffCode: string;
-  appointmentType: AppointmentType;
   date: string;
   timeSlot: string;
   notes?: string;

@@ -22,6 +22,7 @@ import { useSidebar } from '@/context/SidebarContext';
 import { getInitials, formatDisplayName } from '@/utils/helpers';
 import { useToast } from '@/hooks/useToast';
 import { usePatientNavStats } from '@/hooks/usePatientNavStats';
+import { useAppointmentNavStats } from '@/hooks/useAppointmentNavStats';
 import type { RbacModuleKey } from '@/types/rbac.types';
 
 type NavItemDef = {
@@ -40,7 +41,6 @@ const mainNavBase: NavItemDef[] = [
     label: 'Appointments',
     icon: CalendarDays,
     module: 'appointments',
-    badge: '22',
   },
   { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf, module: 'panchakarma' },
 ];
@@ -97,6 +97,7 @@ interface SidebarProps {
 
 export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
   const { badge: patientBadge } = usePatientNavStats();
+  const { badge: appointmentBadge } = useAppointmentNavStats();
   const { user, logout } = useAuth();
   const { canView, isStaff, staffCode } = usePermissions();
   const { isCollapsed, closeMobile } = useSidebar();
@@ -106,9 +107,11 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
   const filterNav = (items: NavItemDef[]) =>
     items
       .filter((item) => canView(item.module))
-      .map((item) =>
-        item.to === ROUTES.ADMIN_PATIENTS ? { ...item, badge: patientBadge } : item
-      );
+      .map((item) => {
+        if (item.to === ROUTES.ADMIN_PATIENTS) return { ...item, badge: patientBadge };
+        if (item.to === ROUTES.ADMIN_APPOINTMENTS) return { ...item, badge: appointmentBadge };
+        return item;
+      });
 
   const mainNav = filterNav(mainNavBase);
   const manageItems = filterNav(manageNav);

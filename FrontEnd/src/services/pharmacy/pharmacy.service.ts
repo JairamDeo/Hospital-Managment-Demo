@@ -76,6 +76,7 @@ class PharmacyService {
       bestBeforeMonths: values.bestBeforeMonths.trim()
         ? Number(values.bestBeforeMonths)
         : undefined,
+      salePrice: Number(values.salePrice),
     });
   }
 
@@ -114,6 +115,12 @@ class PharmacyService {
     >('/admin/pharmacy/import', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  }
+
+  getBillingItems() {
+    return axiosInstance.get<ApiResponse<{ items: PharmacyItemApi[] }>>(
+      '/admin/pharmacy/billing-items'
+    );
   }
 }
 

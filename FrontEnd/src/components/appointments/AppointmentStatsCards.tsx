@@ -9,7 +9,7 @@ const buildStats = (input: AppointmentStats) => [
   },
   {
     value: input.completed,
-    label: 'Completed',
+    label: 'Completed Today',
     accent: 'text-success',
     dot: 'bg-success',
   },

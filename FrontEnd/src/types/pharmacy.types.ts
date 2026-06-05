@@ -25,6 +25,7 @@ export interface PharmacyItemApi {
   stock: number;
   status: StockStatus;
   monthlyUsagePercent: number;
+  salePrice?: number;
 }
 
 export interface PharmacyItemView extends PharmacyItemApi {
@@ -77,6 +78,7 @@ export interface PharmacyItemFormValues {
   manufacturingDate: string;
   expiryDate: string;
   bestBeforeMonths: string;
+  salePrice: string;
 }
 
 export const emptyPharmacyItemForm = (): PharmacyItemFormValues => ({
@@ -89,5 +91,6 @@ export const emptyPharmacyItemForm = (): PharmacyItemFormValues => ({
   manufacturingDate: '',
   expiryDate: '',
   bestBeforeMonths: '',
+  salePrice: '',
 });
 

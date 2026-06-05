@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { AppointmentStatusBadge } from './AppointmentStatusBadge';
 import { patientDetailPath, staffDetailPath } from '@/constants/routes';
-import type { AppointmentDetail } from '@/pages/appointments/data/mockAppointmentDetails';
+import type { AppointmentDetail } from '@/types/appointmentDetail.types';
 
 interface Props {
   appointment: AppointmentDetail;
   onReschedule: () => void;
-  onEdit: () => void;
-  onCheckIn: () => void;
+  onEdit?: () => void;
 }
 
 const DetailCell = ({ label, value }: { label: string; value: string }) => (
@@ -19,17 +18,7 @@ const DetailCell = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const formatRupee = (amount: number) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(
-    amount
-  );
-
-export const AppointmentProfileCard = ({
-  appointment,
-  onReschedule,
-  onEdit,
-  onCheckIn,
-}: Props) => (
+export const AppointmentProfileCard = ({ appointment, onReschedule, onEdit }: Props) => (
   <div className="overflow-hidden rounded-2xl border border-border-sage bg-white shadow-sm">
     <div className="bg-gradient-to-b from-sage-mist/80 to-white px-5 pb-5 pt-6 text-center">
       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-deep text-white shadow-sm">
@@ -89,49 +78,24 @@ export const AppointmentProfileCard = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-border-sage bg-cream/40 px-3 py-2.5">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">Consultation Fee</p>
-          <p className="mt-0.5 font-serif text-lg font-semibold text-ink">{formatRupee(appointment.fee)}</p>
-        </div>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-            appointment.paymentStatus === 'Paid'
-              ? 'bg-success-bg text-success'
-              : appointment.paymentStatus === 'Waived'
-                ? 'bg-sage-mist text-ink-soft'
-                : 'bg-warning-bg text-warning'
-          }`}
-        >
-          {appointment.paymentStatus}
-        </span>
-      </div>
-
       <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-        {appointment.status === 'Soon' ? (
-          <Button
-            className="w-full whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-[1.4]"
-            onClick={onCheckIn}
-          >
-            Check In Patient
-          </Button>
-        ) : (
-          <Button
-            className="w-full whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-[1.4]"
-            onClick={onReschedule}
-          >
-            <CalendarCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
-            Reschedule
-          </Button>
-        )}
         <Button
-          variant="secondary"
-          className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-1"
-          onClick={onEdit}
+          className="w-full whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-[1.4]"
+          onClick={onReschedule}
         >
-          <SquarePen className="h-4 w-4 shrink-0" strokeWidth={2} />
-          Edit
+          <CalendarCheck className="h-4 w-4 shrink-0" strokeWidth={2} />
+          Reschedule
         </Button>
+        {onEdit ? (
+          <Button
+            variant="secondary"
+            className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-1"
+            onClick={onEdit}
+          >
+            <SquarePen className="h-4 w-4 shrink-0" strokeWidth={2} />
+            Edit
+          </Button>
+        ) : null}
       </div>
     </div>
   </div>

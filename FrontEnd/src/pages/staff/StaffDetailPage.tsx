@@ -2,31 +2,60 @@ import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
+import { staffAdminService } from '@/services/staff/staffAdmin.service';
 import { appointmentsToStaffAssignments } from '@/utils/appointmentHelpers';
 import { programsToStaffAssignments } from '@/utils/panchakarmaHelpers';
+import { hmsToStaffProfileCard } from '@/utils/staffDetailHelpers';
+import { getApiErrorMessage } from '@/utils/helpers';
 import type { StaffAssignment } from './data/mockStaffDetails';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
 import { StaffProfileCard } from '@/components/staff/detail/StaffProfileCard';
-import { StaffTodayScheduleCard } from '@/components/staff/detail/StaffTodayScheduleCard';
-import { StaffMetricsRow } from '@/components/staff/detail/StaffMetricsRow';
 import { StaffDetailTabs } from '@/components/staff/detail/StaffDetailTabs';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ROUTES } from '@/constants/routes';
-import { buildStaffDetail, staffToForm } from './data/mockStaffDetails';
-import { MOCK_STAFF, type StaffFormValues, type StaffMember } from './data/mockStaff';
+import type { StaffFormValues } from './data/mockStaff';
+import type { StaffProfileCardData } from '@/types/staffProfile.types';
 
 export const StaffDetailPage = () => {
   const { staffId } = useParams<{ staffId: string }>();
   const { showToast } = useToast();
+  const { isAdmin, isStaff, staffCode, canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
-  const [staffList, setStaffList] = useState(MOCK_STAFF);
+  const [staff, setStaff] = useState<StaffProfileCardData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [assignmentRows, setAssignmentRows] = useState<StaffAssignment[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [activityRefreshKey, setActivityRefreshKey] = useState(0);
 
-  const staff = useMemo(() => {
-    const base = staffList.find((s) => s.id === staffId);
-    return base ? buildStaffDetail(base) : null;
-  }, [staffId, staffList]);
+  const isOwnProfile = Boolean(isStaff && staffCode && staffId === staffCode);
+
+  useEffect(() => {
+    if (!staffId) return;
+    let cancelled = false;
+
+    const loadStaff = async () => {
+      setLoading(true);
+      try {
+        const { data } = await staffAdminService.get(staffId);
+        const member = data.res?.staff;
+        if (!member) throw new Error('Staff not found');
+        if (!cancelled) setStaff(hmsToStaffProfileCard(member));
+      } catch (err) {
+        if (!cancelled) {
+          showToast(getApiErrorMessage(err), 'error');
+          setStaff(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadStaff();
+    return () => {
+      cancelled = true;
+    };
+  }, [staffId, showToast]);
 
   useEffect(() => {
     if (!staffId || !staff) return;
@@ -59,9 +88,7 @@ export const StaffDetailPage = () => {
         }
 
         const results = await Promise.all(requests);
-        if (!cancelled) {
-          setAssignmentRows(results.flat());
-        }
+        if (!cancelled) setAssignmentRows(results.flat());
       } catch {
         if (!cancelled) setAssignmentRows([]);
       } finally {
@@ -75,24 +102,51 @@ export const StaffDetailPage = () => {
     };
   }, [staffId, staff]);
 
-  if (!staffId || !staff) {
+  const formInitial = useMemo(() => {
+    if (!staff) return undefined;
+    return {
+      name: staff.name,
+      role: staff.role,
+      title: staff.title,
+      shift: staff.shift,
+    } satisfies StaffFormValues;
+  }, [staff]);
+
+  if (!staffId) {
     return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
   }
 
-  const formInitial = staffToForm(staff);
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[1280px] py-16 text-center text-sm text-ink-soft">
+        Loading staff profile…
+      </div>
+    );
+  }
 
-  const handleEditSubmit = (values: StaffFormValues) => {
-    const updated: StaffMember = {
-      ...staff,
-      name: values.name.trim(),
-      role: values.role,
-      title: values.title.trim(),
-      shift: values.shift.trim() || staff.shift,
-    };
-    setStaffList((prev) => prev.map((s) => (s.id === staff.id ? updated : s)));
-    setEditOpen(false);
+  if (!staff) {
+    return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
+  }
+
+  const handleEditSubmit = async (values: StaffFormValues) => {
     showToast('Staff profile updated successfully', 'success');
+    setEditOpen(false);
+    setStaff((prev) =>
+      prev
+        ? {
+            ...prev,
+            name: values.name.trim(),
+            role: values.role,
+            title: values.title.trim(),
+            shift: values.shift.trim() || prev.shift,
+          }
+        : prev
+    );
   };
+
+  const canCheckInOut = isOwnProfile;
+  const canUploadDocuments = isAdmin;
+  const showEdit = isAdmin && canEdit('staff');
 
   return (
     <div className="mx-auto w-full max-w-[1280px] pb-6">
@@ -100,10 +154,8 @@ export const StaffDetailPage = () => {
         <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-[300px] xl:w-[320px]">
           <StaffProfileCard
             staff={staff}
-            onEdit={() => setEditOpen(true)}
-            onSchedule={() => showToast('Full schedule shown in Schedule tab', 'success')}
+            onEdit={showEdit ? () => setEditOpen(true) : undefined}
           />
-          <StaffTodayScheduleCard slots={staff.todaySchedule} />
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col gap-5">
@@ -112,23 +164,25 @@ export const StaffDetailPage = () => {
             appointmentAssignments={assignmentRows}
             assignmentsLoading={assignmentsLoading}
             assignmentsMode={staff.role === 'Therapist' ? 'panchakarma' : 'appointments'}
+            isAdmin={isAdmin}
+            isOwnProfile={isOwnProfile}
+            canCheckInOut={canCheckInOut}
+            canUploadDocuments={canUploadDocuments}
+            activityRefreshKey={activityRefreshKey}
+            onLeaveChanged={() => setActivityRefreshKey((k) => k + 1)}
           />
-          <div>
-            <h3 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Performance Overview
-            </h3>
-            <StaffMetricsRow metrics={staff.metrics} />
-          </div>
         </section>
       </div>
 
-      <AddStaffModal
-        key={`edit-${staff.id}`}
-        open={editOpen}
-        initial={formInitial}
-        onClose={() => setEditOpen(false)}
-        onSubmit={handleEditSubmit}
-      />
+      {showEdit && formInitial ? (
+        <AddStaffModal
+          key={`edit-${staff.id}`}
+          open={editOpen}
+          initial={formInitial}
+          onClose={() => setEditOpen(false)}
+          onSubmit={handleEditSubmit}
+        />
+      ) : null}
     </div>
   );
 };

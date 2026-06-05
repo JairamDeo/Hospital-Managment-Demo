@@ -1,5 +1,5 @@
 import { Droplets, Flower2, Leaf, Wind } from 'lucide-react';
-import type { TherapySummary, TherapyType } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { TherapySummary, TherapyType } from '@/types/panchakarma.types';
 
 const icons: Record<TherapyType, typeof Leaf> = {
   Vamana: Wind,

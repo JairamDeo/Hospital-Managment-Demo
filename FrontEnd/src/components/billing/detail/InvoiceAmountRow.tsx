@@ -1,7 +1,7 @@
 import { Percent, Receipt, Scale, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { InvoiceDetail } from '@/pages/billing/data/mockInvoiceDetails';
-import { formatRupee } from '@/pages/billing/data/mockBilling';
+import type { InvoiceDetail } from '@/types/billing.types';
+import { formatRupee } from '@/types/billing.types';
 
 interface Props {
   invoice: InvoiceDetail;

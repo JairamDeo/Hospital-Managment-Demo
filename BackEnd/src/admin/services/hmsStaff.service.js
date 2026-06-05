@@ -8,7 +8,6 @@ import {
 } from '../../utils/staffCredentials.util.js';
 
 const statLabelForRole = (role) => {
-  if (role === 'Pharmacist') return 'Dispensed';
   if (role === 'Support') return 'Handled';
   return 'Patients';
 };
@@ -26,16 +25,15 @@ export const getStaffByCode = async (staffCode) => {
 
 export const getStaffStats = async () => {
   const base = { status: true };
-  const [total, onDuty, doctors, therapists, pharmacists, support] = await Promise.all([
+  const [total, onDuty, doctors, therapists, support] = await Promise.all([
     HmsStaff.countDocuments(base),
     HmsStaff.countDocuments({ ...base, dutyStatus: 'On Duty' }),
     HmsStaff.countDocuments({ ...base, role: 'Doctor' }),
     HmsStaff.countDocuments({ ...base, role: 'Therapist' }),
-    HmsStaff.countDocuments({ ...base, role: 'Pharmacist' }),
     HmsStaff.countDocuments({ ...base, role: 'Support' }),
   ]);
 
-  return { total, onDuty, doctors, therapists, pharmacists, support };
+  return { total, onDuty, doctors, therapists, support };
 };
 
 export const createStaffByAdmin = async (payload) => {

@@ -37,11 +37,32 @@ class AppointmentAdminService {
     );
   }
 
+  get(appointmentCode: string) {
+    return axiosInstance.get<ApiResponse<{ appointment: HmsAppointment }>>(
+      `/admin/appointments/${encodeURIComponent(appointmentCode)}`
+    );
+  }
+
+  attend(
+    appointmentCode: string,
+    payload: {
+      consultationFee?: number;
+      followUpDate?: string;
+      followUpTimeSlot?: string;
+      followUpNotes?: string;
+    }
+  ) {
+    return axiosInstance.patch<ApiResponse<{ appointment: HmsAppointment }>>(
+      `/admin/appointments/${encodeURIComponent(appointmentCode)}/attend`,
+      payload
+    );
+  }
+
   create(values: AppointmentFormValues) {
     return axiosInstance.post<ApiResponse<{ appointment: HmsAppointment }>>('/admin/appointments', {
       patientCode: values.patientId,
       staffCode: values.staffCode,
-      appointmentType: values.type,
+      appointmentType: 'General Consult',
       date: values.date,
       timeSlot: values.time,
       notes: values.notes || undefined,

@@ -1,5 +1,4 @@
 const statLabelForRole = (role) => {
-  if (role === 'Pharmacist') return 'Dispensed';
   if (role === 'Support') return 'Handled';
   return 'Patients';
 };
@@ -23,6 +22,7 @@ export const formatHmsStaff = (doc) => {
     rating: s.rating ?? 5,
     tags: Array.isArray(s.tags) ? s.tags : [],
     shift: s.shift || '9AM – 5PM',
+    email: s.email || '',
     accountActive: s.status,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,

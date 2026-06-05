@@ -25,9 +25,13 @@ const programErrorStatus = (message) => {
   return 500;
 };
 
-export const getPrograms = async (_req, res) => {
+export const getPrograms = async (req, res) => {
   try {
-    const programs = await listPrograms();
+    const staffCode =
+      req.accountType === 'staff' && req.staff?.role === 'Therapist'
+        ? req.staff.staffCode
+        : null;
+    const programs = await listPrograms(staffCode);
     return customResponse(res, PANCHAKARMA_MESSAGES.LIST_FETCHED, 200, { programs });
   } catch (error) {
     logger.error('List panchakarma programs error:', error);
@@ -35,9 +39,13 @@ export const getPrograms = async (_req, res) => {
   }
 };
 
-export const getProgramsStats = async (_req, res) => {
+export const getProgramsStats = async (req, res) => {
   try {
-    const stats = await getPanchakarmaStats();
+    const staffCode =
+      req.accountType === 'staff' && req.staff?.role === 'Therapist'
+        ? req.staff.staffCode
+        : null;
+    const stats = await getPanchakarmaStats(staffCode);
     return customResponse(res, PANCHAKARMA_MESSAGES.STATS_FETCHED, 200, { stats });
   } catch (error) {
     logger.error('Panchakarma stats error:', error);
@@ -55,9 +63,13 @@ export const getStaffPrograms = async (req, res) => {
   }
 };
 
-export const getTherapists = async (_req, res) => {
+export const getTherapists = async (req, res) => {
   try {
-    const therapists = await listTherapistsForPanchakarma();
+    const staffCode =
+      req.accountType === 'staff' && req.staff?.role === 'Therapist'
+        ? req.staff.staffCode
+        : null;
+    const therapists = await listTherapistsForPanchakarma(staffCode);
     return customResponse(res, PANCHAKARMA_MESSAGES.THERAPISTS_FETCHED, 200, { therapists });
   } catch (error) {
     logger.error('Panchakarma therapists error:', error);
@@ -77,16 +89,21 @@ export const getRooms = async (_req, res) => {
 
 export const postProgram = async (req, res) => {
   try {
+    const isTherapistStaff =
+      req.accountType === 'staff' && req.staff?.role === 'Therapist';
     const createdBy = {
-      type: 'admin',
+      type: isTherapistStaff ? 'staff' : 'admin',
       adminId: req.admin?._id,
-      name: req.admin?.name || 'Admin',
+      staffCode: isTherapistStaff ? req.staff.staffCode : undefined,
+      name: req.admin?.name || req.staff?.name || 'Staff',
     };
+
+    const staffCode = isTherapistStaff ? req.staff.staffCode : req.body.staffCode;
 
     const program = await createProgram(
       {
         patientCode: req.body.patientCode,
-        staffCode: req.body.staffCode,
+        staffCode,
         therapy: req.body.therapy,
         totalDays: req.body.totalDays,
         room: req.body.room,

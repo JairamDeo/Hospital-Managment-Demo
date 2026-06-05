@@ -1,4 +1,4 @@
-import type { ProgramStatus } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { ProgramStatus } from '@/types/panchakarma.types';
 
 const styles: Record<ProgramStatus, { dot: string; text: string }> = {
   Ongoing: { dot: 'bg-success', text: 'text-success' },

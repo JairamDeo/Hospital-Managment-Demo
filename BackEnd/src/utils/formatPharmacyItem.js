@@ -56,5 +56,6 @@ export const formatPharmacyItem = (doc) => {
     stock: safeStock,
     status: getStockStatus(safeStock),
     monthlyUsagePercent: doc.monthlyUsagePercent ?? 0,
+    salePrice: Number(doc.salePrice) || 0,
   };
 };

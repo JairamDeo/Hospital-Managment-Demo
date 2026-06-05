@@ -1,26 +1,60 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { InvoiceProfileCard } from '@/components/billing/detail/InvoiceProfileCard';
 import { InvoicePaymentCard } from '@/components/billing/detail/InvoicePaymentCard';
 import { InvoiceAmountRow } from '@/components/billing/detail/InvoiceAmountRow';
 import { InvoiceDetailTabs } from '@/components/billing/detail/InvoiceDetailTabs';
+import { CollectPaymentModal } from '@/components/billing/CollectPaymentModal';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
-import { buildInvoiceDetail } from './data/mockInvoiceDetails';
-import { MOCK_INVOICES } from './data/mockBilling';
+import { billingAdminService } from '@/services/billing/billingAdmin.service';
+import { getApiErrorMessage } from '@/utils/helpers';
+import type { InvoiceDetail } from '@/types/billing.types';
 
 export const InvoiceDetailPage = () => {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { showToast } = useToast();
+  const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [collectOpen, setCollectOpen] = useState(false);
 
-  const invoice = useMemo(() => {
-    const base = MOCK_INVOICES.find((inv) => inv.id === invoiceId);
-    return base ? buildInvoiceDetail(base) : null;
+  const load = async () => {
+    if (!invoiceId) return;
+    setLoading(true);
+    try {
+      const { data } = await billingAdminService.get(invoiceId);
+      setInvoice(data.res?.invoice ?? null);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+      setInvoice(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
   }, [invoiceId]);
 
-  if (!invoiceId || !invoice) {
+  if (!invoiceId) {
     return <Navigate to={ROUTES.ADMIN_BILLING} replace />;
   }
+
+  if (loading) {
+    return (
+      <div className="py-16 text-center text-sm text-ink-soft">Loading invoice…</div>
+    );
+  }
+
+  if (!invoice) {
+    return <Navigate to={ROUTES.ADMIN_BILLING} replace />;
+  }
+
+  const handleCollected = async () => {
+    await load();
+    setCollectOpen(false);
+    showToast('Payment collected successfully', 'success');
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1280px] pb-6">
@@ -28,9 +62,7 @@ export const InvoiceDetailPage = () => {
         <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-[300px] xl:w-[320px]">
           <InvoiceProfileCard
             invoice={invoice}
-            onDownload={() => showToast(`Downloading ${invoice.id}`, 'success')}
-            onSendReminder={() => showToast('Payment reminder sent', 'success')}
-            onEdit={() => showToast('Invoice edit — coming soon', 'success')}
+            onCollect={() => setCollectOpen(true)}
           />
           <InvoicePaymentCard invoice={invoice} />
         </aside>
@@ -45,6 +77,13 @@ export const InvoiceDetailPage = () => {
           </div>
         </section>
       </div>
+
+      <CollectPaymentModal
+        open={collectOpen}
+        invoice={invoice}
+        onClose={() => setCollectOpen(false)}
+        onCollected={handleCollected}
+      />
     </div>
   );
 };

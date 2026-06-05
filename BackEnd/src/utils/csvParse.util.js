@@ -80,6 +80,12 @@ const HEADER_ALIASES = {
   best_before_months: 'bestBeforeMonths',
   shelflife: 'bestBeforeMonths',
   shelf_life_months: 'bestBeforeMonths',
+  saleprice: 'salePrice',
+  sale_price: 'salePrice',
+  price: 'salePrice',
+  unitprice: 'salePrice',
+  unit_price: 'salePrice',
+  mrp: 'salePrice',
 };
 
 export const normalizeCsvHeader = (header) => {
@@ -103,4 +109,5 @@ export const IMPORT_CSV_HEADERS = [
   'Expiry Date',
   'Best Before Months',
   'Monthly Usage %',
+  'Sale Price',
 ];

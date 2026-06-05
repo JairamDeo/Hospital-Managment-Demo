@@ -8,30 +8,38 @@ export const formatIndianMobile = (mobileNumber) => {
   return digits;
 };
 
+const isMsg91GloballyEnabled = () => process.env.MSG91_ENABLED !== 'false';
+
 export const isMsg91Enabled = () => {
-  if (process.env.MSG91_ENABLED === 'false') return false;
+  if (!isMsg91GloballyEnabled()) return false;
   return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID);
 };
 
+export const isAppointmentReminderSmsEnabled = () => {
+  if (!isMsg91GloballyEnabled()) return false;
+  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_APPOINTMENT_TEMPLATE_ID);
+};
+
+export const isFollowUpReminderSmsEnabled = () => {
+  if (!isMsg91GloballyEnabled()) return false;
+  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_FOLLOWUP_TEMPLATE_ID);
+};
+
 /**
- * Send OTP SMS via MSG91 Flow API (template must include OTP variable).
+ * Generic MSG91 Flow API sender — plug in template id + variable map from env.
  * @see https://docs.msg91.com/
  */
-export const sendOtpSms = async (mobileNumber, otp) => {
-  if (!isMsg91Enabled()) {
+export const sendFlowSms = async ({ templateId, mobileNumber, variables, logLabel = 'SMS' }) => {
+  if (!isMsg91GloballyEnabled() || !process.env.MSG91_AUTH_KEY || !templateId) {
     logger.warn(
-      `MSG91 not configured — OTP for ${mobileNumber}: ${otp} (set MSG91_AUTH_KEY & MSG91_TEMPLATE_ID)`
+      `MSG91 not configured for ${logLabel} — mobile ${mobileNumber}: ${JSON.stringify(variables)}`
     );
     return { skipped: true };
   }
 
   const authKey = process.env.MSG91_AUTH_KEY;
-  const templateId = process.env.MSG91_TEMPLATE_ID;
-  const otpVariable = process.env.MSG91_OTP_VARIABLE || 'OTP';
   const mobiles = formatIndianMobile(mobileNumber);
-
-  const recipient = { mobiles };
-  recipient[otpVariable] = String(otp);
+  const recipient = { mobiles, ...variables };
 
   try {
     const { data, status } = await axios.post(
@@ -53,15 +61,62 @@ export const sendOtpSms = async (mobileNumber, otp) => {
     const responseType = data?.type?.toLowerCase?.();
     if (status >= 400 || responseType === 'error') {
       const errMsg = data?.message || data?.msg || 'MSG91 failed to send SMS';
-      logger.error('MSG91 API error:', data);
+      logger.error(`MSG91 API error (${logLabel}):`, data);
       throw new Error(errMsg);
     }
 
-    logger.info(`MSG91 OTP SMS queued for ${mobiles}`);
+    logger.info(`MSG91 ${logLabel} queued for ${mobiles}`);
     return { success: true, requestId: data?.request_id || data?.message };
   } catch (error) {
     const detail = error.response?.data || error.message;
-    logger.error('MSG91 sendOtpSms failed:', detail);
+    logger.error(`MSG91 ${logLabel} failed:`, detail);
     throw error;
   }
+};
+
+/**
+ * Send OTP SMS via MSG91 Flow API (template must include OTP variable).
+ */
+export const sendOtpSms = async (mobileNumber, otp) => {
+  const otpVariable = process.env.MSG91_OTP_VARIABLE || 'OTP';
+  return sendFlowSms({
+    templateId: process.env.MSG91_TEMPLATE_ID,
+    mobileNumber,
+    variables: { [otpVariable]: String(otp) },
+    logLabel: 'OTP',
+  });
+};
+
+const appointmentReminderVars = ({ patientName, doctorName, date, time }) => ({
+  [process.env.MSG91_APPT_VAR_PATIENT || 'PATIENT']: patientName,
+  [process.env.MSG91_APPT_VAR_DOCTOR || 'DOCTOR']: doctorName,
+  [process.env.MSG91_APPT_VAR_DATE || 'DATE']: date,
+  [process.env.MSG91_APPT_VAR_TIME || 'TIME']: time,
+});
+
+const followUpReminderVars = ({ patientName, doctorName, date, time }) => ({
+  [process.env.MSG91_FOLLOWUP_VAR_PATIENT || 'PATIENT']: patientName,
+  [process.env.MSG91_FOLLOWUP_VAR_DOCTOR || 'DOCTOR']: doctorName,
+  [process.env.MSG91_FOLLOWUP_VAR_DATE || 'DATE']: date,
+  [process.env.MSG91_FOLLOWUP_VAR_TIME || 'TIME']: time,
+});
+
+/** Reminder SMS sent ~1 hr before scheduled appointment. */
+export const sendAppointmentReminderSms = async (mobileNumber, payload) => {
+  return sendFlowSms({
+    templateId: process.env.MSG91_APPOINTMENT_TEMPLATE_ID,
+    mobileNumber,
+    variables: appointmentReminderVars(payload),
+    logLabel: 'appointment reminder',
+  });
+};
+
+/** Reminder SMS sent ~1 hr before scheduled follow-up visit. */
+export const sendFollowUpReminderSms = async (mobileNumber, payload) => {
+  return sendFlowSms({
+    templateId: process.env.MSG91_FOLLOWUP_TEMPLATE_ID,
+    mobileNumber,
+    variables: followUpReminderVars(payload),
+    logLabel: 'follow-up reminder',
+  });
 };

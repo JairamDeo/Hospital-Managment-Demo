@@ -39,7 +39,6 @@ export const filterToRole = (filter: StaffFilter): StaffRole | null => {
   const map: Record<Exclude<StaffFilter, 'all'>, StaffRole> = {
     doctor: 'Doctor',
     therapist: 'Therapist',
-    pharmacist: 'Pharmacist',
     support: 'Support',
   };
   return filter === 'all' ? null : map[filter];
@@ -50,7 +49,6 @@ export const defaultStaffStats = (): StaffStats => ({
   onDuty: 0,
   doctors: 0,
   therapists: 0,
-  pharmacists: 0,
   support: 0,
 });
 

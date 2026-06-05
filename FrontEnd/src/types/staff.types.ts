@@ -1,6 +1,6 @@
-export type StaffRole = 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+export type StaffRole = 'Doctor' | 'Therapist' | 'Support';
 
-export type StaffFilter = 'all' | 'doctor' | 'therapist' | 'pharmacist' | 'support';
+export type StaffFilter = 'all' | 'doctor' | 'therapist' | 'support';
 
 export type DutyStatus = 'On Duty' | 'Off Duty';
 
@@ -25,7 +25,6 @@ export interface StaffStats {
   onDuty: number;
   doctors: number;
   therapists: number;
-  pharmacists: number;
   support: number;
 }
 
@@ -36,4 +35,4 @@ export interface StaffFormValues {
   shift: string;
 }
 
-export const ROLE_OPTIONS: StaffRole[] = ['Doctor', 'Therapist', 'Pharmacist', 'Support'];
+export const ROLE_OPTIONS: StaffRole[] = ['Doctor', 'Therapist', 'Support'];

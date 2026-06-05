@@ -308,7 +308,7 @@ export const PatientsPage = () => {
         ) : null}
         {!listLoading && filtered.length === 0 ? (
           <p className="border-t border-border-sage px-4 py-8 text-center text-sm text-ink-soft">
-            No patients yet. Add your first patient or restart the backend to run the seed.
+            No patients registered yet. Use <span className="font-medium text-ink">Add patient</span> to register your first patient.
           </p>
         ) : null}
 

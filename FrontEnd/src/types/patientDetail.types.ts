@@ -29,11 +29,18 @@ export interface TreatmentRecord {
 
 export interface PatientAppointment {
   id: string;
+  appointmentCode?: string;
   date: string;
   time: string;
   type: string;
   doctor: string;
   status: 'Upcoming' | 'Completed' | 'Cancelled';
+  followUpDate?: string | null;
+  followUpDateIso?: string | null;
+  followUpTime?: string | null;
+  followUpTimeSlot?: string | null;
+  hasFollowUp?: boolean;
+  attendedAt?: string;
 }
 
 export interface LabReport {
@@ -49,6 +56,7 @@ export interface PatientInvoice {
   id: string;
   date: string;
   treatment: string;
+  feeType?: 'Consultation' | 'Medicine' | '';
   amount: number;
   status: 'Paid' | 'Pending' | 'Overdue';
 }

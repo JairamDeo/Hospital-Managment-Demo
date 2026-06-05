@@ -1,5 +1,5 @@
-import type { TherapyType } from '@/pages/panchakarma/data/mockPanchakarma';
-import { THERAPY_STYLES } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { TherapyType } from '@/types/panchakarma.types';
+import { THERAPY_STYLES } from '@/types/panchakarma.types';
 
 export const TherapyBadge = ({ therapy }: { therapy: TherapyType }) => (
   <span

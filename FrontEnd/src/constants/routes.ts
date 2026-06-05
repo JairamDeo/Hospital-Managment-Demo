@@ -20,6 +20,7 @@ export const ROUTES = {
   ADMIN_PATIENT_DETAIL: `${ADMIN}/patients/:patientId`,
   ADMIN_APPOINTMENTS: `${ADMIN}/appointments`,
   ADMIN_APPOINTMENT_DETAIL: `${ADMIN}/appointments/:appointmentId`,
+  ADMIN_APPOINTMENT_FOLLOWUP: `${ADMIN}/appointments/:appointmentId/follow-up`,
   ADMIN_PANCHAKARMA: `${ADMIN}/panchakarma`,
   ADMIN_PHARMACY: `${ADMIN}/pharmacy`,
   ADMIN_STAFF: `${ADMIN}/staff`,
@@ -37,4 +38,6 @@ export const patientDetailPath = (patientId: string) =>
 export const staffDetailPath = (staffId: string) => `${ADMIN}/staff/${staffId}`;
 export const invoiceDetailPath = (invoiceId: string) => `${ADMIN}/billing/${invoiceId}`;
 export const appointmentDetailPath = (appointmentId: string) =>
-  `${ADMIN}/appointments/${appointmentId}`;
+  `${ADMIN}/appointments/${encodeURIComponent(appointmentId)}`;
+export const appointmentFollowUpPath = (appointmentId: string) =>
+  `${ADMIN}/appointments/${encodeURIComponent(appointmentId)}/follow-up`;

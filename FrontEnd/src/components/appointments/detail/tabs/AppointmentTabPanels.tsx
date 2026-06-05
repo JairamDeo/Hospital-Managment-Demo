@@ -5,7 +5,7 @@ import type {
   AppointmentDetail,
   AppointmentDocument,
   AppointmentVitals,
-} from '@/pages/appointments/data/mockAppointmentDetails';
+} from '@/types/appointmentDetail.types';
 
 const TableShell = ({ children }: { children: ReactNode }) => (
   <div className="overflow-x-auto rounded-xl border border-border-sage">
@@ -34,16 +34,22 @@ export const AppointmentOverviewTab = ({ appointment }: { appointment: Appointme
       <h4 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
         Symptoms
       </h4>
-      <div className="flex flex-wrap gap-2">
-        {appointment.symptoms.map((symptom) => (
-          <span
-            key={symptom}
-            className="rounded-full border border-sage-pale bg-sage-mist/50 px-3 py-1 text-xs font-medium text-sage-deep"
-          >
-            {symptom}
-          </span>
-        ))}
-      </div>
+      {appointment.symptoms.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {appointment.symptoms.map((symptom) => (
+            <span
+              key={symptom}
+              className="rounded-full border border-sage-pale bg-sage-mist/50 px-3 py-1 text-xs font-medium text-sage-deep"
+            >
+              {symptom}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-xl border border-border-sage bg-cream/30 px-4 py-3 text-sm text-ink-soft">
+          No symptoms recorded
+        </p>
+      )}
     </section>
 
     {appointment.diagnosis ? (

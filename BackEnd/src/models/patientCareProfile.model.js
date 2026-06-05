@@ -32,11 +32,15 @@ const treatmentHistorySchema = new Schema({
 });
 
 const appointmentSchema = new Schema({
+  appointmentCode: { type: String, default: '', trim: true },
   date: { type: String, required: true },
   time: { type: String, default: '' },
   type: { type: String, default: '' },
   doctor: { type: String, default: '' },
   status: { type: String, enum: ['Upcoming', 'Completed', 'Cancelled'], default: 'Completed' },
+  followUpDate: { type: String, default: '' },
+  followUpTime: { type: String, default: '' },
+  feeType: { type: String, enum: ['Consultation', 'Medicine', ''], default: '' },
   sortOrder: { type: Number, default: 0 },
 });
 

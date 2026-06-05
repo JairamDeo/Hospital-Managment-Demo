@@ -18,8 +18,19 @@ const readToken = (key: string) => {
   }
 };
 
+const isPublicAuthRequest = (url: string) =>
+  url.includes('/admin/login') ||
+  url.includes('/admin/forgot-password') ||
+  url.includes('/patient-portal/login') ||
+  url.includes('/patient-portal/register') ||
+  url.includes('/patient-portal/verify-otp');
+
 axiosInstance.interceptors.request.use((config) => {
   const url = config.url ?? '';
+  if (isPublicAuthRequest(url)) {
+    return config;
+  }
+
   const isPatientPortalApi = url.startsWith('/patient-portal');
   const token = isPatientPortalApi
     ? readToken(PATIENT_AUTH_STORAGE_KEY)

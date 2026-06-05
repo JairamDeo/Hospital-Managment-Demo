@@ -1,0 +1,7 @@
+2026-06-06 02:59:24 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: attendAppointmentSchema is not defined
+ReferenceError: attendAppointmentSchema is not defined
+    at file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/admin/routes/hmsAppointment.routes.js:30:19
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async start (file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/server.js:8:28)

@@ -16,11 +16,11 @@ import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
 import { PatientClinicalInfoPanel } from './PatientClinicalInfoPanel';
 import { TreatmentHistoryItem } from './TreatmentHistoryItem';
 import {
-  PatientAppointmentsTab,
   PatientLabReportsTab,
   PatientBillingTab,
   PatientDocumentsTab,
 } from './tabs/PatientTabPanels';
+import { PatientAppointmentsTab } from './tabs/PatientAppointmentsTab';
 import { PatientPrescriptionsTab } from './tabs/PatientPrescriptionsTab';
 
 const MAIN_TABS: { id: PatientDetailTab; label: string; icon: LucideIcon }[] = [
@@ -58,6 +58,7 @@ interface Props {
   patient: PatientDetail;
   activeTab?: PatientDetailTab;
   onTabChange?: (tab: PatientDetailTab) => void;
+  canManageVisits?: boolean;
   clinical?: ClinicalProps;
   prakritiMasters?: MasterItem[];
   prescriptions?: PrescriptionProps;
@@ -67,6 +68,7 @@ export const PatientDetailTabs = ({
   patient,
   activeTab: controlledTab,
   onTabChange,
+  canManageVisits = false,
   clinical,
   prakritiMasters = [],
   prescriptions,
@@ -155,7 +157,10 @@ export const PatientDetailTabs = ({
         ) : null}
 
         {activeTab === 'appointments' ? (
-          <PatientAppointmentsTab appointments={patient.appointments} />
+          <PatientAppointmentsTab
+            appointments={patient.appointments}
+            canManageVisits={canManageVisits}
+          />
         ) : null}
 
         {activeTab === 'prescriptions' && prescriptions ? (

@@ -52,8 +52,10 @@ const findActiveRoomConflict = async (room, excludeId) => {
   return HmsPanchakarmaProgram.findOne(query).lean();
 };
 
-export const listPrograms = async () => {
-  const rows = await HmsPanchakarmaProgram.find({ status: { $ne: 'Cancelled' } }).sort({
+export const listPrograms = async (staffCode) => {
+  const query = { status: { $ne: 'Cancelled' } };
+  if (staffCode) query.staffCode = staffCode;
+  const rows = await HmsPanchakarmaProgram.find(query).sort({
     startDate: -1,
     createdAt: -1,
   });
@@ -68,11 +70,15 @@ export const listProgramsByStaff = async (staffCode) => {
   return rows.map(formatHmsPanchakarmaProgram);
 };
 
-export const getPanchakarmaStats = async () => {
+export const getPanchakarmaStats = async (staffCode) => {
   const activeStatuses = ['Starting', 'Ongoing'];
+  const scope = staffCode ? { staffCode } : {};
+
   const [activePrograms, therapistsOnDuty, roomsAvailable] = await Promise.all([
-    HmsPanchakarmaProgram.countDocuments({ status: { $in: activeStatuses } }),
-    HmsStaff.countDocuments({ role: 'Therapist', status: true, dutyStatus: 'On Duty' }),
+    HmsPanchakarmaProgram.countDocuments({ ...scope, status: { $in: activeStatuses } }),
+    staffCode
+      ? Promise.resolve(1)
+      : HmsStaff.countDocuments({ role: 'Therapist', status: true, dutyStatus: 'On Duty' }),
     HmsPanchakarmaProgram.countDocuments({ status: { $in: activeStatuses } }).then(
       async (occupied) => 4 - occupied
     ),
@@ -82,6 +88,7 @@ export const getPanchakarmaStats = async () => {
     PANCHAKARMA_THERAPIES.map(async (therapy) => ({
       therapy,
       activeSessions: await HmsPanchakarmaProgram.countDocuments({
+        ...scope,
         therapy,
         status: { $in: activeStatuses },
       }),
@@ -96,8 +103,10 @@ export const getPanchakarmaStats = async () => {
   };
 };
 
-export const listTherapistsForPanchakarma = async () => {
-  const therapists = await HmsStaff.find({ role: 'Therapist', status: true }).sort({ name: 1 });
+export const listTherapistsForPanchakarma = async (staffCode) => {
+  const query = { role: 'Therapist', status: true };
+  if (staffCode) query.staffCode = staffCode;
+  const therapists = await HmsStaff.find(query).sort({ name: 1 });
   const activeStatuses = ['Starting', 'Ongoing'];
 
   const withCounts = await Promise.all(

@@ -92,18 +92,35 @@ const validateImportRow = (row) => {
       throw new Error('Monthly Usage % must be between 0 and 100');
     }
   }
+
+  const priceRaw = row.salePrice?.toString().trim();
+  let salePrice = null;
+  if (priceRaw) {
+    salePrice = Number(priceRaw);
+    if (Number.isNaN(salePrice) || salePrice < 0) {
+      throw new Error('Sale Price must be a number (0 or more)');
+    }
+  }
+
   const dates = resolvePharmacyDates({
     manufacturingDate: row.manufacturingDate,
     expiryDate: row.expiryDate,
     bestBeforeMonths: row.bestBeforeMonths,
   });
 
-  return { packQuantity, stock, monthlyUsagePercent, ...dates };
+  return { packQuantity, stock, monthlyUsagePercent, salePrice, ...dates };
 };
 
 const upsertImportRow = async (row, cache) => {
-  const { packQuantity, stock, monthlyUsagePercent, manufacturingDate, expiryDate, bestBeforeMonths } =
-    validateImportRow(row);
+  const {
+    packQuantity,
+    stock,
+    monthlyUsagePercent,
+    salePrice,
+    manufacturingDate,
+    expiryDate,
+    bestBeforeMonths,
+  } = validateImportRow(row);
   const name = row.name.trim();
   const company = normalizeCompany(row.company);
   const categoryId = await resolveCategory(row.category, cache);
@@ -114,6 +131,10 @@ const upsertImportRow = async (row, cache) => {
     name,
     company,
   });
+
+  if (!existing && salePrice === null) {
+    throw new Error('Sale Price is required for new items');
+  }
 
   const payload = {
     name,
@@ -127,6 +148,10 @@ const upsertImportRow = async (row, cache) => {
     bestBeforeMonths,
     monthlyUsagePercent,
   };
+
+  if (salePrice !== null) {
+    payload.salePrice = salePrice;
+  }
 
   if (existing) {
     Object.assign(existing, payload);

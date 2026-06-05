@@ -1,4 +1,4 @@
-import { Building2, Pill, Stethoscope, UserRound } from 'lucide-react';
+import { Building2, Stethoscope, UserRound } from 'lucide-react';
 import type { StaffFilter, StaffStats } from '@/types/staff.types';
 import { defaultStaffStats } from '@/utils/staffHelpers';
 
@@ -18,13 +18,6 @@ const buildFilters = (stats: StaffStats) => [
     iconClass: 'bg-pink-100 text-pink-600',
   },
   {
-    id: 'pharmacist' as const,
-    label: 'Pharmacists',
-    count: stats.pharmacists,
-    icon: Pill,
-    iconClass: 'bg-amber-100 text-amber-700',
-  },
-  {
     id: 'support' as const,
     label: 'Support Staff',
     count: stats.support,
@@ -42,7 +35,7 @@ interface Props {
 export const StaffRoleFilters = ({ active, stats, onChange }: Props) => {
   const filters = buildFilters(stats ?? defaultStaffStats());
   return (
-  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+  <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
     {filters.map((f) => {
       const Icon = f.icon;
       const isActive = active === f.id;
@@ -87,11 +80,6 @@ const chipFilters: { id: StaffFilter; label: string; activeClass: string }[] = [
   { id: 'all', label: 'All Staff', activeClass: 'border-sage-deep bg-sage-mist text-sage-deep' },
   { id: 'doctor', label: 'Doctors', activeClass: 'border-violet-300 bg-violet-50 text-violet-700' },
   { id: 'therapist', label: 'Therapists', activeClass: 'border-pink-300 bg-pink-50 text-pink-700' },
-  {
-    id: 'pharmacist',
-    label: 'Pharmacists',
-    activeClass: 'border-amber-300 bg-amber-50 text-amber-800',
-  },
   { id: 'support', label: 'Support Staff', activeClass: 'border-teal-300 bg-teal-50 text-teal-800' },
 ];
 

@@ -1,72 +1,80 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
 import { AppointmentProfileCard } from '@/components/appointments/detail/AppointmentProfileCard';
 import { AppointmentDetailTabs } from '@/components/appointments/detail/AppointmentDetailTabs';
 import { AppointmentVisitSummaryRow } from '@/components/appointments/detail/AppointmentVisitSummaryRow';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { ROUTES } from '@/constants/routes';
-import { buildAppointmentDetail } from './data/mockAppointmentDetails';
-import {
-  MOCK_APPOINTMENTS,
-  type AppointmentFormValues,
-} from './data/mockAppointments';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
+import { buildAppointmentDetail, hmsToAppointment } from '@/utils/appointmentHelpers';
+import { getApiErrorMessage } from '@/utils/helpers';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
+import type { AppointmentFormValues } from '@/types/appointment.types';
+import type { AppointmentDetail } from '@/types/appointmentDetail.types';
 
 export const AppointmentDetailPage = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const { patients } = useAdminPatientsList();
   const { showToast } = useToast();
+  const { canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
-  const [appointments, setAppointments] = useState(MOCK_APPOINTMENTS);
+  const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const appointment = useMemo(() => {
-    const base = appointments.find((a) => a.id === appointmentId);
-    return base ? buildAppointmentDetail(base, patients) : null;
-  }, [appointmentId, appointments, patients]);
+  useEffect(() => {
+    if (!appointmentId) return;
+    let cancelled = false;
 
-  if (!appointmentId || !appointment) {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data } = await appointmentAdminService.get(appointmentId);
+        const row = data.res?.appointment;
+        if (!row) throw new Error('Appointment not found');
+        const base = hmsToAppointment(row);
+        const patient = patients.find((p) => p.id === base.patientId);
+        if (!cancelled) setAppointment(buildAppointmentDetail(base, patient));
+      } catch (err) {
+        if (!cancelled) {
+          showToast(getApiErrorMessage(err), 'error');
+          setAppointment(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [appointmentId, patients, showToast]);
+
+  if (!appointmentId) {
+    return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[1280px] py-16 text-center text-sm text-ink-soft">
+        Loading appointment…
+      </div>
+    );
+  }
+
+  if (!appointment) {
     return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
   }
 
   const formInitial: AppointmentFormValues = {
     patientId: appointment.patientId,
+    staffCode: appointment.staffCode,
     type: appointment.type,
     date: appointment.date,
     time: appointment.time,
     notes: appointment.notes ?? '',
-  };
-
-  const handleEditSubmit = (values: AppointmentFormValues) => {
-    const patient = patients.find((p) => p.id === values.patientId);
-    if (!patient) return;
-
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === appointment.id
-          ? {
-              ...a,
-              patientId: patient.id,
-              patientName: patient.name,
-              initials: patient.initials,
-              avatarClass: patient.avatarClass,
-              type: values.type,
-              date: values.date,
-              time: values.time,
-              notes: values.notes,
-            }
-          : a
-      )
-    );
-    setEditOpen(false);
-    showToast('Appointment updated successfully', 'success');
-  };
-
-  const handleCheckIn = () => {
-    setAppointments((prev) =>
-      prev.map((a) => (a.id === appointment.id ? { ...a, status: 'In' as const } : a))
-    );
-    showToast(`${appointment.patientName} checked in`, 'success');
   };
 
   return (
@@ -76,8 +84,7 @@ export const AppointmentDetailPage = () => {
           <AppointmentProfileCard
             appointment={appointment}
             onReschedule={() => showToast('Reschedule — coming soon', 'success')}
-            onEdit={() => setEditOpen(true)}
-            onCheckIn={handleCheckIn}
+            onEdit={canEdit('appointments') ? () => setEditOpen(true) : undefined}
           />
         </aside>
 
@@ -92,14 +99,19 @@ export const AppointmentDetailPage = () => {
         </section>
       </div>
 
-      <NewAppointmentModal
-        key={`edit-${appointment.id}`}
-        open={editOpen}
-        initial={formInitial}
-        patients={patients}
-        onClose={() => setEditOpen(false)}
-        onSubmit={handleEditSubmit}
-      />
+      {canEdit('appointments') ? (
+        <NewAppointmentModal
+          key={`edit-${appointment.id}`}
+          open={editOpen}
+          initial={formInitial}
+          patients={patients}
+          onClose={() => setEditOpen(false)}
+          onSubmit={() => {
+            setEditOpen(false);
+            showToast('Appointment update — coming soon', 'success');
+          }}
+        />
+      ) : null}
     </div>
   );
 };

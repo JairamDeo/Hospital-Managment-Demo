@@ -417,7 +417,7 @@ export const SettingsPage = () => {
                 />
                 <SettingsToggle
                   label="SMS Notifications"
-                  description="Receive alerts via SMS (MSG91 integration)."
+                  description="Send appointment and follow-up reminders to patients by SMS."
                   checked={settings.notifications.smsNotifications}
                   onChange={(v) => updateNotifications('smsNotifications', v)}
                 />

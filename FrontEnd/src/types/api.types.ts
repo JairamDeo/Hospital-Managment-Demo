@@ -19,7 +19,7 @@ export interface AdminUser {
   mobileNumber?: string;
   role: string;
   accountType?: 'admin' | 'staff';
-  staffRole?: 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+  staffRole?: 'Doctor' | 'Therapist' | 'Support';
   staffCode?: string;
   title?: string;
   permissions?: Record<string, ModulePermission>;
@@ -116,7 +116,7 @@ export interface HmsStaff {
   staffCode: string;
   id: string;
   name: string;
-  role: 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+  role: 'Doctor' | 'Therapist' | 'Support';
   title: string;
   dutyStatus: 'On Duty' | 'Off Duty';
   status: 'On Duty' | 'Off Duty';
@@ -127,6 +127,7 @@ export interface HmsStaff {
   rating: number;
   tags: string[];
   shift: string;
+  email?: string;
   accountActive?: boolean;
 }
 
@@ -148,6 +149,7 @@ export interface HmsAppointment {
   date: string;
   dateDisplay?: string;
   time: string;
+  timeSlot?: string;
   timeDisplay?: string;
   status: 'Upcoming' | 'Completed' | 'Cancelled';
   adminStatus?: 'Soon' | 'In' | 'Done' | 'Cancelled';
@@ -157,6 +159,16 @@ export interface HmsAppointment {
     name?: string;
     patientCode?: string;
   };
+  createdAt?: string;
+  attendedAt?: string;
+  attendedBy?: { type: string; name?: string; staffCode?: string };
+  followUpDate?: string | null;
+  followUpDateDisplay?: string | null;
+  followUpTimeSlot?: string | null;
+  followUpTimeDisplay?: string | null;
+  followUpNotes?: string;
+  followUpAddedBy?: { type: string; name?: string; staffCode?: string };
+  followUpAddedAt?: string;
 }
 
 export interface HmsPanchakarmaProgram {

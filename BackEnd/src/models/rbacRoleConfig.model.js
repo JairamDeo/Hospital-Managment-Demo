@@ -28,7 +28,7 @@ const rbacRoleConfigSchema = new Schema(
   {
     role: {
       type: String,
-      enum: ['Doctor', 'Therapist', 'Pharmacist', 'Support'],
+      enum: ['Doctor', 'Therapist', 'Support'],
       unique: true,
       required: true,
     },

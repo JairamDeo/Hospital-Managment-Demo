@@ -2,9 +2,20 @@ import { Schema, model } from 'mongoose';
 
 const createdBySchema = new Schema(
   {
-    type: { type: String, enum: ['admin', 'patient'], required: true },
+    type: { type: String, enum: ['admin', 'patient', 'staff'], required: true },
     adminId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    staffCode: { type: String, default: '' },
     patientCode: { type: String, default: '' },
+    name: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const actorSchema = new Schema(
+  {
+    type: { type: String, enum: ['admin', 'staff'], required: true },
+    adminId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    staffCode: { type: String, default: '' },
     name: { type: String, default: '' },
   },
   { _id: false }
@@ -32,6 +43,16 @@ const hmsAppointmentSchema = new Schema({
     enum: ['Upcoming', 'Completed', 'Cancelled'],
     default: 'Upcoming',
   },
+  attendedAt: { type: Date, default: null },
+  attendedBy: { type: actorSchema, default: null },
+  followUpDate: { type: Date, default: null },
+  followUpTimeSlot: { type: String, trim: true, default: '' },
+  followUpTimeDisplay: { type: String, trim: true, default: '' },
+  followUpNotes: { type: String, trim: true, default: '' },
+  followUpAddedBy: { type: actorSchema, default: null },
+  followUpAddedAt: { type: Date, default: null },
+  appointmentReminderSentAt: { type: Date, default: null },
+  followUpReminderSentAt: { type: Date, default: null },
   createdBy: { type: createdBySchema, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

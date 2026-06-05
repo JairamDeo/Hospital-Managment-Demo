@@ -175,7 +175,7 @@ const defaultTodaySchedule = (member: StaffMember): StaffScheduleSlot[] => {
     {
       id: `${member.id}-ts-1`,
       time: '10:30 AM',
-      title: member.role === 'Pharmacist' ? 'Dispensing' : member.role === 'Support' ? 'Front Desk' : 'Consultation',
+      title: member.role === 'Support' ? 'Front Desk' : 'Consultation',
       patientOrTask: member.role === 'Support' ? 'Reception duties' : 'Morning session',
       status: 'Completed',
     },
@@ -218,13 +218,13 @@ const defaultWeeklySchedule = (member: StaffMember): StaffScheduleSlot[] =>
   }));
 
 const defaultAssignments = (member: StaffMember): StaffAssignment[] => {
-  if (member.role === 'Support' || member.role === 'Pharmacist') {
+  if (member.role === 'Support') {
     return [
       {
         id: `${member.id}-as-1`,
         patientName: '—',
         patientId: '—',
-        program: member.role === 'Pharmacist' ? 'Pharmacy Operations' : 'Front Desk Operations',
+        program: 'Front Desk Operations',
         since: member.shift,
         status: 'Active',
       },

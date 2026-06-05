@@ -1,4 +1,4 @@
-import type { TreatmentRoom } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { TreatmentRoom } from '@/types/panchakarma.types';
 
 interface Props {
   rooms: TreatmentRoom[];

@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { CalendarDotType } from '@/pages/appointments/data/mockAppointments';
-import { CALENDAR_DOTS } from '@/pages/appointments/data/mockAppointments';
+import type { Appointment, CalendarDotType } from '@/types/appointment.types';
+import { buildCalendarDots } from '@/utils/appointmentHelpers';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -14,6 +15,7 @@ interface Props {
   month: number;
   year: number;
   selectedDay: number;
+  appointments?: Appointment[];
   onSelectDay: (day: number) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
@@ -23,6 +25,7 @@ export const AppointmentCalendar = ({
   month,
   year,
   selectedDay,
+  appointments = [],
   onSelectDay,
   onPrevMonth,
   onNextMonth,
@@ -31,6 +34,11 @@ export const AppointmentCalendar = ({
     month: 'long',
     year: 'numeric',
   });
+
+  const calendarDots = useMemo(
+    () => buildCalendarDots(appointments, month, year),
+    [appointments, month, year]
+  );
 
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -85,7 +93,7 @@ export const AppointmentCalendar = ({
           }
 
           const isSelected = day === selectedDay;
-          const dots = month === 9 && year === 2023 ? CALENDAR_DOTS[day] ?? [] : [];
+          const dots = calendarDots[day] ?? [];
 
           return (
             <button

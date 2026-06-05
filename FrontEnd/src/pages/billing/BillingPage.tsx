@@ -1,66 +1,119 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Upload } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { BillingStatCard, billingStatCards } from '@/components/billing/BillingStatCard';
+import { BillingStatCard } from '@/components/billing/BillingStatCard';
 import { InvoiceTable } from '@/components/billing/InvoiceTable';
 import { PaymentMethodsPanel } from '@/components/billing/PaymentMethodsPanel';
-import { InsuranceClaimsPanel } from '@/components/billing/InsuranceClaimsPanel';
+import { MedicineBillModal } from '@/components/billing/MedicineBillModal';
 import { StaffPagination } from '@/components/staff/StaffPagination';
 import { useToast } from '@/hooks/useToast';
 import { invoiceDetailPath } from '@/constants/routes';
+import { billingAdminService } from '@/services/billing/billingAdmin.service';
+import { getApiErrorMessage } from '@/utils/helpers';
 import {
-  BILLING_STATS,
-  INSURANCE_CLAIMS,
-  MOCK_INVOICES,
-  PAYMENT_METHODS,
+  formatRupee,
+  formatRupeeCompact,
+  type BillingStats,
   type Invoice,
   type InvoiceFilter,
-} from './data/mockBilling';
+} from '@/types/billing.types';
+import { Banknote, CheckCircle2, Clock, TriangleAlert } from 'lucide-react';
 
 const PAGE_SIZE = 6;
 
-const statusFilter = (filter: InvoiceFilter, status: Invoice['status']) => {
-  if (filter === 'all') return true;
-  if (filter === 'paid') return status === 'Paid';
-  if (filter === 'pending') return status === 'Pending';
-  return status === 'Overdue';
-};
-
 export const BillingPage = () => {
   const navigate = useNavigate();
-  const [invoices] = useState<Invoice[]>(MOCK_INVOICES);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [stats, setStats] = useState<BillingStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<InvoiceFilter>('all');
+  const [feeFilter, setFeeFilter] = useState<'all' | 'Consultation' | 'Medicine'>('all');
   const [page, setPage] = useState(1);
+  const [medicineModalOpen, setMedicineModalOpen] = useState(false);
   const { showToast } = useToast();
 
-  const filtered = useMemo(() => {
-    let list = invoices.filter((inv) => statusFilter(filter, inv.status));
-    const q = search.trim().toLowerCase();
-    if (q) {
-      list = list.filter(
-        (inv) =>
-          inv.id.toLowerCase().includes(q) ||
-          inv.patientName.toLowerCase().includes(q) ||
-          inv.treatment.toLowerCase().includes(q) ||
-          inv.patientId.toLowerCase().includes(q)
-      );
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [listRes, statsRes] = await Promise.all([
+        billingAdminService.list({
+          status: filter,
+          feeType: feeFilter === 'all' ? undefined : feeFilter,
+          search: search.trim() || undefined,
+        }),
+        billingAdminService.getStats(),
+      ]);
+      setInvoices(listRes.data.res?.invoices ?? []);
+      setStats(statsRes.data.res?.stats ?? null);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+      setInvoices([]);
+    } finally {
+      setLoading(false);
     }
-    return list;
-  }, [invoices, search, filter]);
+  }, [filter, feeFilter, search, showToast]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const totalPages = Math.max(1, Math.ceil(invoices.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageInvoices = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  const from = filtered.length ? (safePage - 1) * PAGE_SIZE + 1 : 0;
-  const to = Math.min(safePage * PAGE_SIZE, filtered.length);
+  const pageInvoices = invoices.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const from = invoices.length ? (safePage - 1) * PAGE_SIZE + 1 : 0;
+  const to = Math.min(safePage * PAGE_SIZE, invoices.length);
+
+  const statCards = useMemo(
+    () => [
+      {
+        label: 'Total Revenue',
+        value: formatRupeeCompact(stats?.totalRevenue ?? 0),
+        subLabel: `${stats?.invoiceCount ?? 0} invoices`,
+        icon: Banknote,
+        iconClass: 'bg-success-bg text-success',
+        subClass: 'text-ink-soft',
+      },
+      {
+        label: 'Collected',
+        value: formatRupeeCompact(stats?.collected ?? 0),
+        subLabel: `${stats?.collectionRate ?? 0}% collection rate`,
+        icon: CheckCircle2,
+        iconClass: 'bg-success-bg text-success',
+        subClass: 'text-success',
+      },
+      {
+        label: 'Pending',
+        value: formatRupeeCompact(stats?.pending ?? 0),
+        subLabel: `${stats?.pendingCount ?? 0} awaiting payment`,
+        icon: Clock,
+        iconClass: 'bg-warning-bg text-warning',
+        subClass: 'text-warning',
+      },
+      {
+        label: 'Overdue',
+        value: formatRupeeCompact(stats?.overdue ?? 0),
+        subLabel: `${stats?.overdueCount ?? 0} overdue bills`,
+        icon: TriangleAlert,
+        iconClass: 'bg-danger-bg text-danger',
+        subClass: 'text-danger',
+      },
+    ],
+    [stats]
+  );
 
   const filters: { id: InvoiceFilter; label: string; activeClass: string }[] = [
     { id: 'all', label: 'All', activeClass: 'border-sage-deep bg-sage-mist text-sage-deep' },
     { id: 'paid', label: 'Paid', activeClass: 'border-success/30 bg-success-bg text-success' },
     { id: 'pending', label: 'Pending', activeClass: 'border-warning/40 bg-warning-bg text-warning' },
     { id: 'overdue', label: 'Overdue', activeClass: 'border-danger/40 bg-danger-bg text-danger' },
+  ];
+
+  const feeFilters: { id: typeof feeFilter; label: string }[] = [
+    { id: 'all', label: 'All types' },
+    { id: 'Consultation', label: 'Consultation' },
+    { id: 'Medicine', label: 'Medicine' },
   ];
 
   return (
@@ -71,30 +124,22 @@ export const BillingPage = () => {
             Billing & Invoices
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            October 2023 · {BILLING_STATS.invoiceCount} invoices generated
+            Consultation fees (on visit) and medicine fees (pharmacy)
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button
-            variant="secondary"
             className="gap-2 rounded-lg px-4 py-2"
-            onClick={() => showToast('Export started', 'success')}
-          >
-            <Upload className="h-4 w-4" strokeWidth={1.75} />
-            Export
-          </Button>
-          <Button
-            className="gap-2 rounded-lg px-4 py-2"
-            onClick={() => showToast('New invoice form coming soon', 'success')}
+            onClick={() => setMedicineModalOpen(true)}
           >
             <Plus className="h-4 w-4" strokeWidth={2} />
-            New Invoice
+            Medicine Bill
           </Button>
         </div>
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {billingStatCards.map((card) => (
+        {statCards.map((card) => (
           <BillingStatCard key={card.label} {...card} />
         ))}
       </div>
@@ -102,7 +147,7 @@ export const BillingPage = () => {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_280px]">
         <div className="overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
           <div className="border-b border-border-sage p-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3">
               <div className="relative max-w-md flex-1">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-ghost"
@@ -137,20 +182,41 @@ export const BillingPage = () => {
                     {f.label}
                   </button>
                 ))}
+                <span className="mx-1 hidden h-4 w-px bg-border-sage sm:inline" />
+                {feeFilters.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      setFeeFilter(f.id);
+                      setPage(1);
+                    }}
+                    className={`cursor-pointer rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                      feeFilter === f.id
+                        ? 'border-sage-deep bg-sage-mist text-sage-deep'
+                        : 'border-border-sage bg-white text-ink-soft hover:bg-sage-mist/60'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          <InvoiceTable
-            invoices={pageInvoices}
-            onView={(inv) => navigate(invoiceDetailPath(inv.id))}
-            onDownload={(inv) => showToast(`Downloading ${inv.id}`, 'success')}
-          />
+          {loading ? (
+            <p className="px-4 py-10 text-center text-sm text-ink-soft">Loading invoices…</p>
+          ) : (
+            <InvoiceTable
+              invoices={pageInvoices}
+              onView={(inv) => navigate(invoiceDetailPath(inv.id))}
+            />
+          )}
 
           <StaffPagination
             from={from}
             to={to}
-            total={filtered.length}
+            total={invoices.length}
             currentPage={safePage}
             totalPages={totalPages}
             onPageChange={setPage}
@@ -159,10 +225,34 @@ export const BillingPage = () => {
         </div>
 
         <aside className="flex flex-col gap-3">
-          <PaymentMethodsPanel methods={PAYMENT_METHODS} />
-          <InsuranceClaimsPanel claims={INSURANCE_CLAIMS} />
+          <PaymentMethodsPanel methods={stats?.paymentMethods ?? []} />
+          <div className="rounded-xl border border-border-sage bg-white p-4 text-sm text-ink-soft">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              How billing works
+            </p>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-xs">
+              <li>
+                <strong className="font-semibold text-ink">Consultation</strong> — doctor enters the
+                visit fee when marking a patient as attended.
+              </li>
+              <li>
+                <strong className="font-semibold text-ink">Medicine</strong> — support staff creates
+                a bill when dispensing pharmacy items.
+              </li>
+              <li>Collect payment from the invoice detail page.</li>
+            </ul>
+          </div>
         </aside>
       </div>
+
+      <MedicineBillModal
+        open={medicineModalOpen}
+        onClose={() => setMedicineModalOpen(false)}
+        onCreated={() => {
+          setMedicineModalOpen(false);
+          void load();
+        }}
+      />
     </div>
   );
 };

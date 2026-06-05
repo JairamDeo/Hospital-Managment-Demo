@@ -1,4 +1,4 @@
-import type { TherapistOnDuty } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { TherapistOnDuty } from '@/types/panchakarma.types';
 
 interface Props {
   therapists: TherapistOnDuty[];

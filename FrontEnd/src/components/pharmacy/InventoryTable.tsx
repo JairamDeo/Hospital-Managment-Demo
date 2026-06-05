@@ -1,11 +1,12 @@
 import type { PharmacyItemView } from '@/types/pharmacy.types';
 import { InventoryStatusBadge } from './InventoryStatusBadge';
+import { formatRupee } from '@/types/billing.types';
 
 interface Props {
   items: PharmacyItemView[];
 }
 
-const COLUMNS = ['Item', 'Pack', 'Brand', 'Expiry', 'Category', 'Stock', 'Status'] as const;
+const COLUMNS = ['Item', 'Pack', 'Brand', 'Price', 'Expiry', 'Category', 'Stock', 'Status'] as const;
 
 const cellMuted = 'px-3 py-3 text-sm text-ink-soft';
 
@@ -92,6 +93,9 @@ export const InventoryTable = ({ items }: Props) => (
                 </td>
                 <td className={`${cellMuted} max-w-[120px] truncate`} title={item.company}>
                   {item.company?.trim() ? item.company : '—'}
+                </td>
+                <td className={`${cellMuted} whitespace-nowrap`}>
+                  {(item.salePrice ?? 0) > 0 ? formatRupee(item.salePrice!) : '—'}
                 </td>
                 <td className={`${cellMuted} whitespace-nowrap`}>
                   {item.expiryDate?.trim() ? item.expiryDate : '—'}

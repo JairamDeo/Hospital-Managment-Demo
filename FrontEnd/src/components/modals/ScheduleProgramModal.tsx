@@ -20,6 +20,7 @@ interface Props {
   patients: Patient[];
   therapists: TherapistOnDuty[];
   rooms: TreatmentRoom[];
+  lockedTherapist?: TherapistOnDuty | null;
   submitting?: boolean;
   onClose: () => void;
   onSubmit: (values: ScheduleProgramFormValues) => void | Promise<void>;
@@ -31,6 +32,7 @@ export const ScheduleProgramModal = ({
   patients,
   therapists,
   rooms,
+  lockedTherapist = null,
   submitting = false,
   onClose,
   onSubmit,
@@ -84,7 +86,11 @@ export const ScheduleProgramModal = ({
       open={open}
       onClose={onClose}
       title="Schedule Program"
-      subtitle="Assign a new Panchakarma therapy program"
+      subtitle={
+        lockedTherapist
+          ? `Assign a program for ${lockedTherapist.name}`
+          : 'Assign a new Panchakarma therapy program'
+      }
       size="lg"
       footer={
         <>
@@ -169,18 +175,29 @@ export const ScheduleProgramModal = ({
 
         <div>
           <label className={formLabelClass}>Therapist *</label>
-          <select
-            value={form.therapistId}
-            onChange={(e) => set('therapistId', e.target.value)}
-            className={`${formSelectClass} ${errors.therapistId ? 'border-danger' : ''}`}
-          >
-            <option value="">Select therapist</option>
-            {therapists.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} — {t.specialty}
-              </option>
-            ))}
-          </select>
+          {lockedTherapist ? (
+            <div className="rounded-xl border border-border-sage bg-cream/40 px-3 py-2.5 text-sm font-medium text-ink">
+              {lockedTherapist.name}
+              {lockedTherapist.specialty ? (
+                <span className="ml-1 font-normal text-ink-soft">
+                  — {lockedTherapist.specialty}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <select
+              value={form.therapistId}
+              onChange={(e) => set('therapistId', e.target.value)}
+              className={`${formSelectClass} ${errors.therapistId ? 'border-danger' : ''}`}
+            >
+              <option value="">Select therapist</option>
+              {therapists.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} — {t.specialty}
+                </option>
+              ))}
+            </select>
+          )}
           {errors.therapistId ? (
             <p className="mt-1 text-xs text-danger">{errors.therapistId}</p>
           ) : null}

@@ -1,7 +1,7 @@
 import { Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { patientDetailPath } from '@/constants/routes';
-import type { ActiveProgram } from '@/pages/panchakarma/data/mockPanchakarma';
+import type { ActiveProgram } from '@/types/panchakarma.types';
 import { TherapyBadge } from './TherapyBadge';
 import { ProgramStatusBadge } from './ProgramStatusBadge';
 import { AnimatedProgressBar } from './AnimatedProgressBar';

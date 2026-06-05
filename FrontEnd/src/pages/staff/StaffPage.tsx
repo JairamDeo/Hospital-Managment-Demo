@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
-import { StaffScheduleModal } from '@/components/modals/StaffScheduleModal';
 import { StaffRoleFilters, StaffFilterChips } from '@/components/staff/StaffRoleFilters';
 import { StaffCard } from '@/components/staff/StaffCard';
 import { StaffPagination } from '@/components/staff/StaffPagination';
@@ -32,7 +31,6 @@ export const StaffPage = () => {
   const [roleFilter, setRoleFilter] = useState<StaffFilter>('all');
   const [page, setPage] = useState(1);
   const [addOpen, setAddOpen] = useState(false);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyStaffForm());
   const { showToast } = useToast();
   const { canEdit } = usePermissions();
@@ -114,14 +112,6 @@ export const StaffPage = () => {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button
-            variant="secondary"
-            className="gap-2 rounded-lg px-4 py-2"
-            onClick={() => setScheduleOpen(true)}
-          >
-            <Calendar className="h-4 w-4" strokeWidth={1.75} />
-            Schedule
-          </Button>
           {canEdit('staff') ? (
             <Button
               className="gap-2 rounded-lg px-4 py-2"
@@ -199,12 +189,6 @@ export const StaffPage = () => {
         submitting={submitting}
       />
 
-      <StaffScheduleModal
-        open={scheduleOpen}
-        staff={staff}
-        stats={stats}
-        onClose={() => setScheduleOpen(false)}
-      />
     </div>
   );
 };

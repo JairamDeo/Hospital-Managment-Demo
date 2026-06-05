@@ -10,7 +10,7 @@ export type RbacModuleKey =
   | 'billing'
   | 'settings';
 
-export type StaffRole = 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+export type StaffRole = 'Doctor' | 'Therapist' | 'Support';
 
 export interface ModulePermission {
   view: boolean;

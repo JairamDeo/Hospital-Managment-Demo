@@ -8,6 +8,7 @@ import { TherapistsPanel } from '@/components/panchakarma/TherapistsPanel';
 import { TreatmentRoomsPanel } from '@/components/panchakarma/TreatmentRoomsPanel';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/hooks/useAuth';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
 import { getApiErrorMessage } from '@/utils/helpers';
@@ -43,7 +44,21 @@ export const PanchakarmaPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyScheduleProgramForm());
   const { showToast } = useToast();
-  const { canEdit } = usePermissions();
+  const { user } = useAuth();
+  const { canEdit, isStaff, staffRole, staffCode } = usePermissions();
+
+  const lockedTherapist = useMemo((): TherapistOnDuty | null => {
+    if (!isStaff || staffRole !== 'Therapist' || !staffCode) return null;
+    const fromList = therapists.find((t) => t.id === staffCode);
+    if (fromList) return fromList;
+    return {
+      id: staffCode,
+      name: user?.name ?? 'You',
+      specialty: user?.title ?? 'Therapist',
+      patientCount: 0,
+      dutyStatus: 'On Duty',
+    };
+  }, [isStaff, staffRole, staffCode, therapists, user]);
 
   const therapySummaries = useMemo(() => buildTherapySummaries(stats), [stats]);
 
@@ -72,7 +87,10 @@ export const PanchakarmaPage = () => {
   }, [loadData]);
 
   const openSchedule = () => {
-    setFormInitial(emptyScheduleProgramForm());
+    setFormInitial({
+      ...emptyScheduleProgramForm(),
+      therapistId: lockedTherapist?.id ?? '',
+    });
     setModalOpen(true);
   };
 
@@ -97,11 +115,13 @@ export const PanchakarmaPage = () => {
       <div className="mb-3 flex shrink-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-bold text-sage-deep sm:text-[1.75rem]">
-            Panchakarma Scheduling
+            {lockedTherapist ? 'My Panchakarma Programs' : 'Panchakarma Scheduling'}
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {stats.activePrograms} active programs · {stats.therapistsOnDuty} therapists on duty ·{' '}
-            {stats.roomsAvailable} rooms available
+            {stats.activePrograms} active program{stats.activePrograms === 1 ? '' : 's'}
+            {lockedTherapist
+              ? ` · ${lockedTherapist.name}`
+              : ` · ${stats.therapistsOnDuty} therapists on duty · ${stats.roomsAvailable} rooms available`}
           </p>
         </div>
         {canEdit('panchakarma') ? (
@@ -122,7 +142,7 @@ export const PanchakarmaPage = () => {
         <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
           <div className="flex shrink-0 items-center justify-between border-b border-border-sage px-4 py-2.5">
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Active Programs
+              {lockedTherapist ? 'My Active Programs' : 'Active Programs'}
             </h3>
           </div>
           <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
@@ -135,7 +155,7 @@ export const PanchakarmaPage = () => {
         </div>
 
         <aside className="flex min-h-0 flex-col gap-3 overflow-hidden">
-          <TherapistsPanel therapists={therapists} />
+          {!lockedTherapist ? <TherapistsPanel therapists={therapists} /> : null}
           <TreatmentRoomsPanel rooms={rooms} className="min-h-0 flex-1" />
         </aside>
       </div>
@@ -147,6 +167,7 @@ export const PanchakarmaPage = () => {
         patients={patients}
         therapists={therapists}
         rooms={rooms}
+        lockedTherapist={lockedTherapist}
         submitting={submitting}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}

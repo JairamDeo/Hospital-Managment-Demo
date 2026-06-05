@@ -3,6 +3,7 @@ import User from '../../models/user.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
 import { generateToken } from '../../utils/tokenUtil.js';
 import { getPortalPermissions } from '../../utils/rbac.service.js';
+import { staffLoginEmailAliases } from '../../utils/staffCredentials.util.js';
 import { ErrorMessages, ADMIN_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { CLIENT } from '../../utils/constants.js';
@@ -81,7 +82,8 @@ export const loginAdmin = async (email, password) => {
     };
   }
 
-  const staff = await HmsStaff.findOne({ email: normalized, status: true });
+  const emailAliases = staffLoginEmailAliases(normalized);
+  const staff = await HmsStaff.findOne({ email: { $in: emailAliases }, status: true });
   if (!staff) throw new Error(ErrorMessages.INVALID_CREDENTIALS);
 
   const staffValid = await staff.comparePassword(password);

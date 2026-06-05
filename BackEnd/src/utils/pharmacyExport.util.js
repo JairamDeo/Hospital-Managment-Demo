@@ -19,6 +19,7 @@ const INVENTORY_HEADERS = [
   'Best Before Months',
   'Status',
   'Monthly Usage %',
+  'Sale Price (₹)',
 ];
 
 export const buildPharmacyCsv = ({ items, stats, generatedAt }) => {
@@ -47,6 +48,7 @@ export const buildPharmacyCsv = ({ items, stats, generatedAt }) => {
         item.bestBeforeMonths ?? '',
         item.status,
         item.monthlyUsagePercent ?? 0,
+        item.salePrice ?? 0,
       ]
         .map(escapeCsvCell)
         .join(',')
@@ -69,6 +71,7 @@ export const buildPharmacyImportTemplateCsv = () => {
     '',
     '24',
     '80',
+    '450',
   ];
   return `${IMPORT_CSV_HEADERS.map(escapeCsvCell).join(',')}\n${sample.map(escapeCsvCell).join(',')}\n`;
 };
@@ -99,7 +102,7 @@ export const buildPharmacyPdf = ({ items, stats, generatedAt }) =>
     doc.fontSize(12).text('Inventory (all records)', { underline: true });
     doc.moveDown(0.5);
 
-    const colWidths = [58, 72, 58, 58, 42, 28, 52, 52, 36, 38, 32];
+    const colWidths = [58, 72, 58, 58, 42, 28, 52, 52, 36, 38, 32, 36];
     const startX = doc.x;
     let y = doc.y;
 
@@ -133,6 +136,7 @@ export const buildPharmacyPdf = ({ items, stats, generatedAt }) =>
         item.bestBeforeMonths ?? '—',
         item.status,
         item.monthlyUsagePercent ?? 0,
+        item.salePrice ?? 0,
       ]);
     }
 

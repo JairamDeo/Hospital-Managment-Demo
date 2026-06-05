@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const staffRole = Joi.string().valid('Doctor', 'Therapist', 'Pharmacist', 'Support');
+const staffRole = Joi.string().valid('Doctor', 'Therapist', 'Support');
 const dutyStatus = Joi.string().valid('On Duty', 'Off Duty');
 
 export const adminCreateStaffSchema = Joi.object({

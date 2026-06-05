@@ -71,7 +71,7 @@ export const getApiErrorMessage = (error: unknown, fallback = 'Something went wr
     }
 
     if (ax.code === 'ERR_NETWORK' || ax.message === 'Network Error') {
-      return 'Cannot reach server. Start the backend and try again.';
+      return 'Unable to connect. Please check your internet connection and try again.';
     }
   }
 

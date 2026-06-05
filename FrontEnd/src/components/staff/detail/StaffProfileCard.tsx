@@ -1,36 +1,30 @@
 import {
   Briefcase,
-  CalendarPlus,
   Mail,
   Phone,
   SquarePen,
   Stethoscope,
   UserCog,
-  Pill,
   Headphones,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import type { StaffDetail } from '@/pages/staff/data/mockStaffDetails';
-import type { StaffRole } from '@/pages/staff/data/mockStaff';
+import type { StaffProfileCardData } from '@/types/staffProfile.types';
 
 interface Props {
-  staff: StaffDetail;
-  onEdit: () => void;
-  onSchedule: () => void;
+  staff: StaffProfileCardData;
+  onEdit?: () => void;
 }
 
-const ROLE_STYLES: Record<StaffRole, string> = {
+const ROLE_STYLES: Record<StaffProfileCardData['role'], string> = {
   Doctor: 'bg-violet-50 text-violet-700 ring-violet-200',
   Therapist: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  Pharmacist: 'bg-amber-50 text-amber-700 ring-amber-200',
   Support: 'bg-blue-50 text-blue-700 ring-blue-200',
 };
 
-const ROLE_ICONS: Record<StaffRole, LucideIcon> = {
+const ROLE_ICONS: Record<StaffProfileCardData['role'], LucideIcon> = {
   Doctor: Stethoscope,
   Therapist: Briefcase,
-  Pharmacist: Pill,
   Support: Headphones,
 };
 
@@ -41,7 +35,7 @@ const DetailCell = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-export const StaffProfileCard = ({ staff, onEdit, onSchedule }: Props) => {
+export const StaffProfileCard = ({ staff, onEdit }: Props) => {
   const RoleIcon = ROLE_ICONS[staff.role];
   const isOnDuty = staff.status === 'On Duty';
 
@@ -108,23 +102,16 @@ export const StaffProfileCard = ({ staff, onEdit, onSchedule }: Props) => {
           ))}
         </div>
 
-        <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-          <Button
-            className="w-full whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-[1.4]"
-            onClick={onSchedule}
-          >
-            <CalendarPlus className="h-4 w-4 shrink-0" strokeWidth={2} />
-            View Schedule
-          </Button>
+        {onEdit ? (
           <Button
             variant="secondary"
-            className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm sm:flex-1"
+            className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm"
             onClick={onEdit}
           >
             <SquarePen className="h-4 w-4 shrink-0" strokeWidth={2} />
             Edit
           </Button>
-        </div>
+        ) : null}
       </div>
     </div>
   );

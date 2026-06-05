@@ -30,38 +30,3 @@ export const BillingStatCard = ({
     </div>
   </div>
 );
-
-export const billingStatCards = [
-  {
-    label: 'Total Revenue',
-    value: '₹4.8L',
-    subLabel: '+12% this month',
-    icon: Banknote,
-    iconClass: 'bg-success-bg text-success',
-    subClass: 'text-success',
-  },
-  {
-    label: 'Collected',
-    value: '₹3.9L',
-    subLabel: '82% collection rate',
-    icon: CheckCircle2,
-    iconClass: 'bg-success-bg text-success',
-    subClass: 'text-ink-soft',
-  },
-  {
-    label: 'Pending',
-    value: '₹64K',
-    subLabel: '18 invoices due',
-    icon: Clock,
-    iconClass: 'bg-warning-bg text-warning',
-    subClass: 'text-warning',
-  },
-  {
-    label: 'Overdue',
-    value: '₹12K',
-    subLabel: '4 overdue bills',
-    icon: TriangleAlert,
-    iconClass: 'bg-danger-bg text-danger',
-    subClass: 'text-danger',
-  },
-];

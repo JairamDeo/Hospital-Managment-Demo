@@ -16,7 +16,7 @@ interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<string>;
+  login: (email: string, password: string) => Promise<{ message: string; user: AdminUser }>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
 }
@@ -75,12 +75,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback(
     async (email: string, password: string) => {
+      authStorage.clear();
+      setToken(null);
+      setUser(null);
+
       const { data } = await authService.login(email, password);
       if (!data.res?.token || !data.res?.user) {
         throw new Error(data.message || 'Login failed');
       }
       persist(data.res.token, data.res.user);
-      return data.message;
+      return { message: data.message, user: data.res.user };
     },
     [persist]
   );

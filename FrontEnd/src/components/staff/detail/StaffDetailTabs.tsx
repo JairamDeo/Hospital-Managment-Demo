@@ -1,37 +1,31 @@
-import {
-  Briefcase,
-  CalendarDays,
-  FileText,
-  History,
-  Palmtree,
-  TrendingUp,
-} from 'lucide-react';
+import { Briefcase, FileText, History, Palmtree } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { StaffAssignment, StaffDetail, StaffDetailTab } from '@/pages/staff/data/mockStaffDetails';
-import { StaffActivityItem } from './StaffActivityItem';
-import {
-  StaffAssignmentsTab,
-  StaffDocumentsTab,
-  StaffLeaveTab,
-  StaffPerformanceTab,
-  StaffScheduleTab,
-} from './tabs/StaffTabPanels';
+import type { StaffAssignment } from '@/pages/staff/data/mockStaffDetails';
+import type { StaffDetailTab, StaffProfileCardData } from '@/types/staffProfile.types';
+import { StaffAssignmentsTab } from './tabs/StaffTabPanels';
+import { StaffActivityPanel } from './panels/StaffActivityPanel';
+import { StaffDocumentsPanel } from './panels/StaffDocumentsPanel';
+import { StaffLeavePanel } from './panels/StaffLeavePanel';
 
 const TABS: { id: StaffDetailTab; label: string; icon: LucideIcon }[] = [
   { id: 'activity', label: 'Activity Log', icon: History },
-  { id: 'schedule', label: 'Schedule', icon: CalendarDays },
   { id: 'assignments', label: 'Assignments', icon: Briefcase },
-  { id: 'performance', label: 'Performance', icon: TrendingUp },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'leave', label: 'Leave', icon: Palmtree },
 ];
 
 interface Props {
-  staff: StaffDetail;
+  staff: StaffProfileCardData;
   appointmentAssignments?: StaffAssignment[];
   assignmentsLoading?: boolean;
   assignmentsMode?: 'appointments' | 'panchakarma';
+  isAdmin: boolean;
+  isOwnProfile: boolean;
+  canCheckInOut: boolean;
+  canUploadDocuments: boolean;
+  activityRefreshKey?: number;
+  onLeaveChanged?: () => void;
 }
 
 export const StaffDetailTabs = ({
@@ -39,10 +33,14 @@ export const StaffDetailTabs = ({
   appointmentAssignments = [],
   assignmentsLoading = false,
   assignmentsMode = 'appointments',
+  isAdmin,
+  isOwnProfile,
+  canCheckInOut,
+  canUploadDocuments,
+  activityRefreshKey = 0,
+  onLeaveChanged,
 }: Props) => {
-  const [activeTab, setActiveTab] = useState<StaffDetailTab>('assignments');
-  const assignments =
-    appointmentAssignments.length > 0 ? appointmentAssignments : staff.assignments;
+  const [activeTab, setActiveTab] = useState<StaffDetailTab>('activity');
   const showAppointments = assignmentsMode === 'appointments';
 
   return (
@@ -73,33 +71,35 @@ export const StaffDetailTabs = ({
 
       <div className="p-4 sm:p-5">
         {activeTab === 'activity' ? (
-          <div className="space-y-0">
-            {staff.activityLog.map((record, i) => (
-              <StaffActivityItem
-                key={record.id}
-                record={record}
-                isLast={i === staff.activityLog.length - 1}
-              />
-            ))}
-          </div>
+          <StaffActivityPanel
+            key={activityRefreshKey}
+            staffCode={staff.id}
+            canCheckInOut={canCheckInOut}
+          />
         ) : null}
-        {activeTab === 'schedule' ? <StaffScheduleTab slots={staff.weeklySchedule} /> : null}
         {activeTab === 'assignments' ? (
           assignmentsLoading ? (
-            <p className="py-8 text-center text-sm text-ink-soft">Loading appointments…</p>
+            <p className="py-8 text-center text-sm text-ink-soft">Loading assignments…</p>
           ) : (
             <StaffAssignmentsTab
-              assignments={assignments}
+              assignments={appointmentAssignments}
               showAppointments={showAppointments}
               showPanchakarma={assignmentsMode === 'panchakarma'}
             />
           )
         ) : null}
-        {activeTab === 'performance' ? (
-          <StaffPerformanceTab records={staff.performanceRecords} />
+        {activeTab === 'documents' ? (
+          <StaffDocumentsPanel staffCode={staff.id} canUpload={canUploadDocuments} />
         ) : null}
-        {activeTab === 'documents' ? <StaffDocumentsTab documents={staff.documents} /> : null}
-        {activeTab === 'leave' ? <StaffLeaveTab records={staff.leaveRecords} /> : null}
+        {activeTab === 'leave' ? (
+          <StaffLeavePanel
+            staffCode={staff.id}
+            staffName={staff.name}
+            isAdmin={isAdmin}
+            isOwnProfile={isOwnProfile}
+            onLeaveChanged={onLeaveChanged}
+          />
+        ) : null}
       </div>
     </div>
   );

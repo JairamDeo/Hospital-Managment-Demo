@@ -1,6 +1,6 @@
 import { Clock, DoorOpen, IndianRupee, LogIn } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { AppointmentDetail } from '@/pages/appointments/data/mockAppointmentDetails';
+import type { AppointmentDetail } from '@/types/appointmentDetail.types';
 
 interface Props {
   appointment: AppointmentDetail;

@@ -5,6 +5,12 @@ import { ErrorMessages } from '../../utils/constants.js';
 import { formatHmsPatient } from '../../utils/formatHmsPatient.js';
 import { formatPatientCare } from '../../utils/formatPatientCare.js';
 import { formatClinicalProfile } from '../../utils/patientClinical.util.js';
+import {
+  listAppointmentsByPatient,
+  mapHmsToPatientCareAppointment,
+} from './hmsAppointment.service.js';
+import { listInvoicesByPatient } from './hmsBilling.service.js';
+import { mapInvoiceToPatientCare } from '../../utils/formatHmsInvoice.js';
 
 export const getPatientStats = async () => {
   const total = await HmsPatient.countDocuments({ status: true });
@@ -26,6 +32,16 @@ export const getPatientOverview = async (patientCode) => {
   const formatted = formatHmsPatient(patient);
   const careData = formatPatientCare(care);
   const clinical = formatClinicalProfile(patient.clinicalProfile);
+
+  const hmsAppts = await listAppointmentsByPatient(patientCode);
+  if (hmsAppts.length > 0) {
+    careData.appointments = hmsAppts.map(mapHmsToPatientCareAppointment);
+  }
+
+  const hmsInvoices = await listInvoicesByPatient(patientCode);
+  if (hmsInvoices.length > 0) {
+    careData.invoices = hmsInvoices.map(mapInvoiceToPatientCare);
+  }
 
   return {
     patient: {

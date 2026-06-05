@@ -5,6 +5,7 @@ import { resolveApiErrorMessage } from '../../utils/resolveApiErrorMessage.js';
 import {
   createPharmacyItem,
   getPharmacyOverview,
+  listPharmacyItemsForBilling,
 } from '../services/pharmacy.service.js';
 import {
   exportPharmacyCsv,
@@ -25,6 +26,16 @@ export const getPharmacy = async (req, res) => {
     return customResponse(res, PHARMACY_MESSAGES.OVERVIEW_FETCHED, 200, overview);
   } catch (error) {
     logger.error('Pharmacy overview error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getPharmacyBillingItems = async (_req, res) => {
+  try {
+    const items = await listPharmacyItemsForBilling();
+    return customResponse(res, PHARMACY_MESSAGES.BILLING_ITEMS_FETCHED, 200, { items });
+  } catch (error) {
+    logger.error('Pharmacy billing items error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

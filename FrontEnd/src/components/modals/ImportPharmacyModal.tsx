@@ -83,7 +83,7 @@ export const ImportPharmacyModal = ({
             <li>
               <strong>CSV only.</strong> Columns include Item Code, Item Name, Company, Category,
               Pack Quantity, Pack Unit, Stock, Manufacturing Date, Expiry Date (or Best Before
-              Months), Monthly Usage %.
+              Months), Monthly Usage %, and <strong>Sale Price</strong> (₹ per pack for billing).
             </li>
             <li>
               <strong>Shelf life:</strong> enter <strong>Expiry Date</strong> or{' '}
@@ -100,7 +100,8 @@ export const ImportPharmacyModal = ({
             </li>
             <li>
               <strong>New products:</strong> leave Item Code blank. A new code is generated
-              automatically (e.g. item-001/mm-yy).
+              automatically (e.g. item-001/mm-yy). <strong>Sale Price is required</strong> for new
+              items.
             </li>
             <li>
               Category and Pack Unit must match names in <strong>Master Data</strong> (e.g.

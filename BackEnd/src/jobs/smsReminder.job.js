@@ -1,0 +1,150 @@
+import moment from 'moment';
+import HmsAppointment from '../models/hmsAppointment.model.js';
+import HmsPatient from '../models/hmsPatient.model.js';
+import { logger } from '../utils/logger.js';
+import {
+  formatAppointmentDateDisplay,
+  minutesUntilAppointment,
+} from '../utils/appointment.util.js';
+import {
+  isAppointmentReminderSmsEnabled,
+  isFollowUpReminderSmsEnabled,
+  sendAppointmentReminderSms,
+  sendFollowUpReminderSms,
+} from '../services/sms/msg91.service.js';
+
+const reminderMinutesBefore = () =>
+  Number.parseInt(process.env.SMS_REMINDER_MINUTES_BEFORE || '60', 10);
+
+const reminderWindowMinutes = () =>
+  Number.parseInt(process.env.SMS_REMINDER_WINDOW_MINUTES || '2', 10);
+
+const isReminderEnabled = () => process.env.SMS_REMINDER_ENABLED !== 'false';
+
+const isInReminderWindow = (date, timeSlot) => {
+  const minutesUntil = minutesUntilAppointment(date, timeSlot);
+  const target = reminderMinutesBefore();
+  const halfWindow = reminderWindowMinutes() / 2;
+  return minutesUntil >= target - halfWindow && minutesUntil <= target + halfWindow;
+};
+
+const loadPatientMobiles = async (patientCodes) => {
+  if (!patientCodes.length) return new Map();
+  const rows = await HmsPatient.find({ patientCode: { $in: patientCodes } }).select(
+    'patientCode mobileNumber name'
+  );
+  return new Map(rows.map((p) => [p.patientCode, p.mobileNumber]));
+};
+
+const smsPayload = (appointment, date, timeDisplay) => ({
+  patientName: appointment.patientName,
+  doctorName: appointment.doctorName,
+  date: formatAppointmentDateDisplay(date),
+  time: timeDisplay,
+});
+
+export const runSmsReminders = async () => {
+  if (!isReminderEnabled()) return;
+
+  const now = moment();
+  const rangeStart = now.clone().startOf('day').toDate();
+  const rangeEnd = now.clone().add(2, 'days').endOf('day').toDate();
+
+  const [upcomingRows, followUpRows] = await Promise.all([
+    isAppointmentReminderSmsEnabled()
+      ? HmsAppointment.find({
+          status: 'Upcoming',
+          appointmentReminderSentAt: null,
+          appointmentDate: { $gte: rangeStart, $lte: rangeEnd },
+        }).lean()
+      : [],
+    isFollowUpReminderSmsEnabled()
+      ? HmsAppointment.find({
+          status: 'Completed',
+          followUpDate: { $ne: null, $gte: rangeStart, $lte: rangeEnd },
+          followUpTimeSlot: { $nin: [null, ''] },
+          followUpReminderSentAt: null,
+        }).lean()
+      : [],
+  ]);
+
+  const patientCodes = [
+    ...new Set([
+      ...upcomingRows.map((a) => a.patientCode),
+      ...followUpRows.map((a) => a.patientCode),
+    ]),
+  ];
+  const mobileByPatient = await loadPatientMobiles(patientCodes);
+
+  for (const row of upcomingRows) {
+    if (!isInReminderWindow(row.appointmentDate, row.timeSlot)) continue;
+
+    const mobile = mobileByPatient.get(row.patientCode);
+    if (!mobile) {
+      logger.warn(`SMS reminder skipped — no mobile for patient ${row.patientCode}`);
+      continue;
+    }
+
+    try {
+      await sendAppointmentReminderSms(
+        mobile,
+        smsPayload(row, row.appointmentDate, row.timeDisplay)
+      );
+      await HmsAppointment.updateOne(
+        { _id: row._id },
+        { $set: { appointmentReminderSentAt: new Date() } }
+      );
+    } catch (err) {
+      logger.error(`Appointment reminder failed for ${row.appointmentCode}:`, err.message);
+    }
+  }
+
+  for (const row of followUpRows) {
+    if (!isInReminderWindow(row.followUpDate, row.followUpTimeSlot)) continue;
+
+    const mobile = mobileByPatient.get(row.patientCode);
+    if (!mobile) {
+      logger.warn(`Follow-up SMS skipped — no mobile for patient ${row.patientCode}`);
+      continue;
+    }
+
+    try {
+      await sendFollowUpReminderSms(
+        mobile,
+        smsPayload(row, row.followUpDate, row.followUpTimeDisplay)
+      );
+      await HmsAppointment.updateOne(
+        { _id: row._id },
+        { $set: { followUpReminderSentAt: new Date() } }
+      );
+    } catch (err) {
+      logger.error(`Follow-up reminder failed for ${row.appointmentCode}:`, err.message);
+    }
+  }
+};
+
+let intervalHandle = null;
+
+export const startSmsReminderJob = () => {
+  if (!isReminderEnabled()) {
+    logger.info('SMS reminder job disabled (SMS_REMINDER_ENABLED=false)');
+    return;
+  }
+
+  const pollMs = Number.parseInt(process.env.SMS_REMINDER_POLL_INTERVAL_MS || '60000', 10);
+  logger.info(
+    `SMS reminder job started — ${reminderMinutesBefore()} min before visit, poll every ${pollMs}ms`
+  );
+
+  void runSmsReminders();
+  intervalHandle = setInterval(() => {
+    void runSmsReminders();
+  }, pollMs);
+};
+
+export const stopSmsReminderJob = () => {
+  if (intervalHandle) {
+    clearInterval(intervalHandle);
+    intervalHandle = null;
+  }
+};

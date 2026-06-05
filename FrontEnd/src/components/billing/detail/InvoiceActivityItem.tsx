@@ -1,4 +1,4 @@
-import type { InvoiceActivity } from '@/pages/billing/data/mockInvoiceDetails';
+import type { InvoiceActivity } from '@/types/billing.types';
 
 interface Props {
   record: InvoiceActivity;

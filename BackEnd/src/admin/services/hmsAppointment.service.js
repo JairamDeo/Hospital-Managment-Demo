@@ -3,17 +3,19 @@ import HmsAppointment from '../../models/hmsAppointment.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
-import { ErrorMessages, APPOINTMENT_MESSAGES } from '../../utils/constants.js';
+import { ErrorMessages, APPOINTMENT_MESSAGES, BILLING_MESSAGES } from '../../utils/constants.js';
 import {
   APPOINTMENT_TIME_SLOTS,
   assertValidTimeSlot,
   findDoctorSlotConflict,
   formatAppointmentDateDisplay,
+  formatAppointmentDateIso,
   formatTimeDisplay,
   normalizeAppointmentDate,
 } from '../../utils/appointment.util.js';
 import { formatHmsAppointment } from '../../utils/formatHmsAppointment.js';
 import { generateAppointmentCode } from '../../utils/generateAppointmentCode.js';
+import { createConsultationInvoiceFromAppointment } from './hmsBilling.service.js';
 
 const syncAppointmentToPatientCare = async (appointment) => {
   const care =
@@ -24,17 +26,75 @@ const syncAppointmentToPatientCare = async (appointment) => {
     }));
 
   const entry = {
+    appointmentCode: appointment.appointmentCode,
     date: formatAppointmentDateDisplay(appointment.appointmentDate),
     time: appointment.timeDisplay,
     type: appointment.appointmentType,
     doctor: appointment.doctorName,
     status: appointment.status === 'Cancelled' ? 'Cancelled' : 'Upcoming',
+    followUpDate: appointment.followUpDate
+      ? formatAppointmentDateDisplay(appointment.followUpDate)
+      : '',
+    followUpTime: appointment.followUpTimeDisplay || '',
     sortOrder: Date.now(),
   };
 
   care.appointments.unshift(entry);
   await care.save();
 };
+
+const syncCareFromAppointment = async (appointment) => {
+  const care = await PatientCareProfile.findOne({ patientCode: appointment.patientCode });
+  if (!care) return;
+
+  const status =
+    appointment.status === 'Cancelled'
+      ? 'Cancelled'
+      : appointment.status === 'Completed'
+        ? 'Completed'
+        : 'Upcoming';
+
+  const patch = {
+    appointmentCode: appointment.appointmentCode,
+    date: formatAppointmentDateDisplay(appointment.appointmentDate),
+    time: appointment.timeDisplay,
+    type: appointment.appointmentType,
+    doctor: appointment.doctorName,
+    status,
+    followUpDate: appointment.followUpDate
+      ? formatAppointmentDateDisplay(appointment.followUpDate)
+      : '',
+    followUpTime: appointment.followUpTimeDisplay || '',
+  };
+
+  const idx = care.appointments.findIndex(
+    (a) => a.appointmentCode === appointment.appointmentCode
+  );
+
+  if (idx >= 0) {
+    Object.assign(care.appointments[idx], patch);
+  } else {
+    care.appointments.unshift({ ...patch, sortOrder: Date.now() });
+  }
+
+  await care.save();
+};
+
+export const mapHmsToPatientCareAppointment = (a) => ({
+  id: a.appointmentCode,
+  appointmentCode: a.appointmentCode,
+  date: a.dateDisplay,
+  time: a.timeDisplay,
+  type: a.appointmentType,
+  doctor: a.doctorName,
+  status: a.status,
+  followUpDate: a.followUpDateDisplay || null,
+  followUpDateIso: a.followUpDate || null,
+  followUpTime: a.followUpTimeDisplay || null,
+  followUpTimeSlot: a.followUpTimeSlot || null,
+  hasFollowUp: Boolean(a.followUpDate),
+  attendedAt: a.attendedAt,
+});
 
 export const listAppointments = async (staffCode) => {
   const query = staffCode ? { staffCode } : {};
@@ -72,27 +132,38 @@ export const getAvailabilityForDoctor = async (staffCode, date) => {
   const booked = await getBookedSlotsForDoctor(staffCode, date);
   return {
     staffCode,
-    date: moment(normalizeAppointmentDate(date)).format('YYYY-MM-DD'),
+    date: moment.utc(normalizeAppointmentDate(date)).format('YYYY-MM-DD'),
     bookedSlots: booked,
     availableSlots: APPOINTMENT_TIME_SLOTS.filter((slot) => !booked.includes(slot)),
   };
 };
 
-export const getAppointmentStats = async () => {
-  const today = moment().startOf('day').toDate();
-  const tomorrow = moment().add(1, 'day').startOf('day').toDate();
+export const getAppointmentStats = async (staffCode) => {
+  const today = moment.utc().startOf('day').toDate();
+  const tomorrow = moment.utc().add(1, 'day').startOf('day').toDate();
+  const scope = staffCode ? { staffCode } : {};
 
   const [scheduledToday, completed, panchakarma, cancelled] = await Promise.all([
     HmsAppointment.countDocuments({
+      ...scope,
       appointmentDate: { $gte: today, $lt: tomorrow },
-      status: 'Upcoming',
+      status: { $in: ['Upcoming', 'Completed'] },
     }),
-    HmsAppointment.countDocuments({ status: 'Completed' }),
     HmsAppointment.countDocuments({
+      ...scope,
+      appointmentDate: { $gte: today, $lt: tomorrow },
+      status: 'Completed',
+    }),
+    HmsAppointment.countDocuments({
+      ...scope,
       appointmentType: 'Panchakarma',
       status: { $ne: 'Cancelled' },
     }),
-    HmsAppointment.countDocuments({ status: 'Cancelled' }),
+    HmsAppointment.countDocuments({
+      ...scope,
+      appointmentDate: { $gte: today, $lt: tomorrow },
+      status: 'Cancelled',
+    }),
   ]);
 
   return { scheduledToday, completed, panchakarma, cancelled };
@@ -140,7 +211,7 @@ export const createAppointment = async (payload, createdBy) => {
     appointmentDate: normalizeAppointmentDate(payload.date),
     timeSlot: payload.timeSlot,
     timeDisplay: formatTimeDisplay(payload.timeSlot),
-    appointmentType: payload.appointmentType,
+    appointmentType: payload.appointmentType || 'General Consult',
     notes: payload.notes?.trim() || '',
     status: 'Upcoming',
     createdBy,
@@ -150,8 +221,10 @@ export const createAppointment = async (payload, createdBy) => {
   return formatHmsAppointment(appointment);
 };
 
-export const listDoctorsForBooking = async () => {
-  const doctors = await HmsStaff.find({ role: 'Doctor', status: true }).sort({ name: 1 });
+export const listDoctorsForBooking = async (staffCode) => {
+  const query = { role: 'Doctor', status: true };
+  if (staffCode) query.staffCode = staffCode;
+  const doctors = await HmsStaff.find(query).sort({ name: 1 });
   return doctors.map((d) => ({
     staffCode: d.staffCode,
     id: d.staffCode,
@@ -159,4 +232,99 @@ export const listDoctorsForBooking = async () => {
     title: d.title,
     role: d.role,
   }));
+};
+
+export const getAppointmentByCode = async (appointmentCode, staffCode) => {
+  const query = { appointmentCode };
+  if (staffCode) query.staffCode = staffCode;
+  const row = await HmsAppointment.findOne(query);
+  if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  return formatHmsAppointment(row);
+};
+
+const performerFromReq = (req) => {
+  if (req.accountType === 'admin') {
+    return {
+      type: 'admin',
+      name: req.admin?.firstName
+        ? `${req.admin.firstName} ${req.admin.lastName || ''}`.trim()
+        : req.admin?.email || 'Admin',
+      adminId: req.admin?._id,
+    };
+  }
+  return {
+    type: 'staff',
+    name: req.staff?.name || 'Staff',
+    staffCode: req.staff?.staffCode,
+  };
+};
+
+export const attendAppointmentWithFollowUp = async (appointmentCode, payload, req) => {
+  if (req.accountType === 'staff' && req.staff?.role !== 'Doctor') {
+    throw new Error(ErrorMessages.ACCESS_DENIED);
+  }
+
+  const staffCode =
+    req.accountType === 'staff' && req.staff?.role === 'Doctor' ? req.staff.staffCode : null;
+
+  const query = { appointmentCode };
+  if (staffCode) query.staffCode = staffCode;
+
+  const row = await HmsAppointment.findOne(query);
+  if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  if (row.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
+
+  const actor = performerFromReq(req);
+  const now = new Date();
+
+  const wasCompleted = row.status === 'Completed';
+
+  if (!wasCompleted) {
+    const fee = Number(payload.consultationFee);
+    if (!Number.isFinite(fee) || fee < 0) {
+      throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
+    }
+  }
+
+  if (row.status !== 'Completed') {
+    row.status = 'Completed';
+    row.attendedAt = now;
+    row.attendedBy = actor;
+  }
+
+  const followUpDateRaw = payload.followUpDate?.trim?.() || payload.followUpDate;
+  const followUpNotes = payload.followUpNotes?.trim?.() || '';
+  const followUpTimeRaw = payload.followUpTimeSlot?.trim?.() || payload.followUpTimeSlot;
+
+  if (followUpDateRaw) {
+    const nextTimeSlot = followUpTimeRaw || row.timeSlot;
+    assertValidTimeSlot(nextTimeSlot);
+
+    const followUpChanged =
+      !row.followUpDate ||
+      formatAppointmentDateIso(row.followUpDate) !==
+        formatAppointmentDateIso(normalizeAppointmentDate(followUpDateRaw)) ||
+      row.followUpTimeSlot !== nextTimeSlot;
+
+    row.followUpDate = normalizeAppointmentDate(followUpDateRaw);
+    row.followUpTimeSlot = nextTimeSlot;
+    row.followUpTimeDisplay = formatTimeDisplay(nextTimeSlot);
+    row.followUpNotes = followUpNotes;
+    row.followUpAddedBy = actor;
+    row.followUpAddedAt = now;
+    if (followUpChanged) row.followUpReminderSentAt = null;
+  } else if (followUpNotes) {
+    row.followUpNotes = followUpNotes;
+    row.followUpAddedBy = actor;
+    row.followUpAddedAt = now;
+  }
+
+  await row.save();
+  await syncCareFromAppointment(row);
+
+  if (!wasCompleted) {
+    await createConsultationInvoiceFromAppointment(row, req, payload.consultationFee);
+  }
+
+  return formatHmsAppointment(row);
 };

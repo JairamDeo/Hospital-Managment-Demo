@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 import type {
   AppointmentDetail,
   AppointmentDetailTab,
-} from '@/pages/appointments/data/mockAppointmentDetails';
+} from '@/types/appointmentDetail.types';
 import { AppointmentActivityItem } from './AppointmentActivityItem';
 import {
   AppointmentDocumentsTab,
@@ -59,15 +59,19 @@ export const AppointmentDetailTabs = ({ appointment }: Props) => {
         {activeTab === 'vitals' ? <AppointmentVitalsTab vitals={appointment.vitals} /> : null}
         {activeTab === 'notes' ? <AppointmentNotesTab appointment={appointment} /> : null}
         {activeTab === 'activity' ? (
-          <div className="space-y-0">
-            {appointment.activityLog.map((record, i) => (
-              <AppointmentActivityItem
-                key={record.id}
-                record={record}
-                isLast={i === appointment.activityLog.length - 1}
-              />
-            ))}
-          </div>
+          appointment.activityLog.length === 0 ? (
+            <p className="py-8 text-center text-sm text-ink-soft">No activity recorded yet.</p>
+          ) : (
+            <div className="space-y-0">
+              {appointment.activityLog.map((record, i) => (
+                <AppointmentActivityItem
+                  key={record.id}
+                  record={record}
+                  isLast={i === appointment.activityLog.length - 1}
+                />
+              ))}
+            </div>
+          )
         ) : null}
         {activeTab === 'documents' ? (
           <AppointmentDocumentsTab documents={appointment.documents} />

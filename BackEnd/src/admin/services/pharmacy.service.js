@@ -1,6 +1,7 @@
 import PharmacyItem from '../../models/pharmacyItem.model.js';
 import PharmacyCategoryMaster from '../../models/pharmacyCategoryMaster.model.js';
 import PharmacyUnitMaster from '../../models/pharmacyUnitMaster.model.js';
+import moment from 'moment';
 import { PHARMACY_MESSAGES } from '../../utils/constants.js';
 import { generatePharmacyItemCode } from '../../utils/generatePharmacyItemCode.js';
 import { formatPharmacyItem } from '../../utils/formatPharmacyItem.js';
@@ -118,6 +119,25 @@ export const getPharmacyStats = async () => {
   return { totalItems, lowStock, critical };
 };
 
+/** All active, non-expired items for medicine billing (no pagination). */
+export const listPharmacyItemsForBilling = async () => {
+  const startOfToday = moment().startOf('day').toDate();
+  const docs = await PharmacyItem.find({
+    active: true,
+    $or: [
+      { expiryDate: { $gte: startOfToday } },
+      { expiryDate: null },
+      { expiryDate: { $exists: false } },
+    ],
+  })
+    .populate('category', 'name')
+    .populate('unit', 'name')
+    .sort({ name: 1 })
+    .lean();
+
+  return docs.map(formatPharmacyItem);
+};
+
 export const getPharmacyOverview = async (queryInput = {}) => {
   const [{ items, pagination }, stats, panelItems, filterOptions] = await Promise.all([
     listPharmacyItems(queryInput),
@@ -172,6 +192,7 @@ export const createPharmacyItem = async (payload) => {
     packQuantity: payload.packQuantity,
     unit: unit._id,
     stock: payload.stock,
+    salePrice: payload.salePrice,
     manufacturingDate: dates.manufacturingDate,
     expiryDate: dates.expiryDate,
     bestBeforeMonths: dates.bestBeforeMonths,

@@ -7,7 +7,7 @@ import { PatientDetailTabs } from '@/components/patients/detail/PatientDetailTab
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { buildPatientDetail } from '@/utils/buildPatientDetail';
-import { mergeClinicalFromApi } from '@/utils/patientClinicalHelpers';
+import { mergeClinicalFromApi, emptyClinicalProfile } from '@/utils/patientClinicalHelpers';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
@@ -17,12 +17,16 @@ import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
 import type { PatientProfileFormValues } from '@/types/patient.types';
 import type { PatientDetail, PatientDetailTab } from '@/types/patientDetail.types';
-import { emptyClinicalProfile } from '@/utils/patientClinicalHelpers';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export const PatientDetailPage = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const location = useLocation();
   const { showToast } = useToast();
+  const { isAdmin, canEdit, staffRole } = usePermissions();
+  const canManageVisits =
+    (isAdmin && canEdit('appointments')) ||
+    (staffRole === 'Doctor' && canEdit('appointments'));
   const [loading, setLoading] = useState(true);
   const [clinicalLoading, setClinicalLoading] = useState(true);
   const [savingClinical, setSavingClinical] = useState(false);
@@ -93,6 +97,11 @@ export const PatientDetailPage = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const tab = (location.state as { activeTab?: PatientDetailTab } | null)?.activeTab;
+    if (tab) setActiveTab(tab);
+  }, [location.state]);
 
   useEffect(() => {
     if (location.hash !== '#patient-info') return;
@@ -252,6 +261,7 @@ export const PatientDetailPage = () => {
             patient={patient}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            canManageVisits={canManageVisits}
             prakritiMasters={prakritiMasters.filter((m) => m.active !== false)}
             clinical={{
               clinical,

@@ -41,18 +41,6 @@ export const DEFAULT_RBAC_BY_ROLE = {
     billing: denied(),
     settings: denied(),
   },
-  Pharmacist: {
-    dashboard: viewOnly(),
-    patients: viewOnly(),
-    appointments: { view: false, edit: false },
-    panchakarma: { view: false, edit: false },
-    masterData: { view: false, edit: false },
-    pharmacy: { view: true, edit: true },
-    staff: viewOnly(),
-    analytics: { view: false, edit: false },
-    billing: { view: false, edit: false },
-    settings: viewOnly(),
-  },
   Support: {
     dashboard: viewOnly(),
     patients: { view: true, edit: true },
@@ -62,7 +50,7 @@ export const DEFAULT_RBAC_BY_ROLE = {
     pharmacy: viewOnly(),
     staff: viewOnly(),
     analytics: { view: false, edit: false },
-    billing: viewOnly(),
+    billing: { view: true, edit: true },
     settings: viewOnly(),
   },
 };

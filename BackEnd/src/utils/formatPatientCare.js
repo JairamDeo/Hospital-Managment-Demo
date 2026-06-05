@@ -11,6 +11,7 @@ const mapWithId = (items, prefix) =>
           id: plain.invoiceCode,
           date: plain.date,
           treatment: plain.treatment,
+          feeType: plain.feeType || '',
           amount: plain.amount,
           status: plain.status,
         };

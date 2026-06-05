@@ -1,4 +1,4 @@
-import type { AppointmentActivity } from '@/pages/appointments/data/mockAppointmentDetails';
+import type { AppointmentActivity } from '@/types/appointmentDetail.types';
 
 interface Props {
   record: AppointmentActivity;

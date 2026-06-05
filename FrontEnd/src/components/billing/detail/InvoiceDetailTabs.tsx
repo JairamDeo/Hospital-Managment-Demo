@@ -1,21 +1,14 @@
-import { ClipboardList, FileText, History, ListOrdered, Shield } from 'lucide-react';
+import { ClipboardList, History, ListOrdered } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { InvoiceDetail, InvoiceDetailTab } from '@/pages/billing/data/mockInvoiceDetails';
+import type { InvoiceDetail, InvoiceDetailTab } from '@/types/billing.types';
 import { InvoiceActivityItem } from './InvoiceActivityItem';
-import {
-  InvoiceDocumentsTab,
-  InvoiceInsuranceTab,
-  InvoiceLineItemsTab,
-  InvoicePaymentsTab,
-} from './tabs/InvoiceTabPanels';
+import { InvoiceLineItemsTab, InvoicePaymentsTab } from './tabs/InvoiceTabPanels';
 
 const TABS: { id: InvoiceDetailTab; label: string; icon: LucideIcon }[] = [
   { id: 'items', label: 'Line Items', icon: ListOrdered },
   { id: 'payments', label: 'Payments', icon: ClipboardList },
   { id: 'activity', label: 'Activity', icon: History },
-  { id: 'insurance', label: 'Insurance', icon: Shield },
-  { id: 'documents', label: 'Documents', icon: FileText },
 ];
 
 interface Props {
@@ -66,10 +59,6 @@ export const InvoiceDetailTabs = ({ invoice }: Props) => {
               />
             ))}
           </div>
-        ) : null}
-        {activeTab === 'insurance' ? <InvoiceInsuranceTab invoice={invoice} /> : null}
-        {activeTab === 'documents' ? (
-          <InvoiceDocumentsTab documents={invoice.documents} />
         ) : null}
       </div>
     </div>

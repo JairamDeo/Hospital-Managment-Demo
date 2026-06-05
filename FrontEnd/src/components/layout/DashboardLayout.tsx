@@ -4,8 +4,6 @@ import { Header } from './Header';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { ROUTES } from '@/constants/routes';
 import { getStaffById } from '@/pages/staff/data/mockStaffDetails';
-import { getInvoiceById } from '@/pages/billing/data/mockInvoiceDetails';
-import { getAppointmentById } from '@/pages/appointments/data/mockAppointmentDetails';
 
 const titles: Record<string, string> = {
   [ROUTES.ADMIN_DASHBOARD]: 'Dashboard',
@@ -32,12 +30,17 @@ const LayoutContent = () => {
   const staffMember = staffId ? getStaffById(staffId) : null;
 
   const invoiceMatch = pathname.match(/^\/admin\/billing\/([^/]+)$/);
-  const invoiceId = invoiceMatch?.[1];
-  const invoice = invoiceId ? getInvoiceById(invoiceId) : null;
+  const invoiceId = invoiceMatch?.[1] ? decodeURIComponent(invoiceMatch[1]) : null;
+
+  const appointmentFollowUpMatch = pathname.match(/^\/admin\/appointments\/([^/]+)\/follow-up$/);
+  const followUpAppointmentId = appointmentFollowUpMatch?.[1]
+    ? decodeURIComponent(appointmentFollowUpMatch[1])
+    : null;
 
   const appointmentMatch = pathname.match(/^\/admin\/appointments\/([^/]+)$/);
-  const appointmentId = appointmentMatch?.[1];
-  const appointment = appointmentId ? getAppointmentById(appointmentId) : null;
+  const appointmentId = appointmentMatch?.[1]
+    ? decodeURIComponent(appointmentMatch[1])
+    : null;
 
   const headerProps = patientBreadcrumbLabel
     ? {
@@ -53,18 +56,26 @@ const LayoutContent = () => {
             { label: staffMember.name },
           ],
         }
-      : invoice
+      : invoiceId
         ? {
             breadcrumbs: [
               { label: 'Billing', href: ROUTES.ADMIN_BILLING },
-              { label: `#${invoice.id}` },
+              { label: `#${invoiceId}` },
             ],
           }
-        : appointment
+        : followUpAppointmentId
           ? {
               breadcrumbs: [
                 { label: 'Appointments', href: ROUTES.ADMIN_APPOINTMENTS },
-                { label: appointment.id },
+                { label: followUpAppointmentId, href: `/admin/appointments/${encodeURIComponent(followUpAppointmentId)}` },
+                { label: 'Follow-up' },
+              ],
+            }
+        : appointmentId
+          ? {
+              breadcrumbs: [
+                { label: 'Appointments', href: ROUTES.ADMIN_APPOINTMENTS },
+                { label: appointmentId },
               ],
             }
           : { title: titles[pathname] || 'Dashboard' };

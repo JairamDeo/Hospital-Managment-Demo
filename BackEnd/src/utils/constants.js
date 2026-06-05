@@ -109,6 +109,7 @@ export const PHARMACY_MESSAGES = {
   IMPORT_INVALID_FILE: 'Only CSV files are allowed for import',
   IMPORT_EMPTY: 'CSV file has no data rows',
   IMPORT_INVALID_HEADERS: 'CSV headers are invalid. Download the template and try again',
+  BILLING_ITEMS_FETCHED: 'Pharmacy items for billing fetched successfully',
 };
 
 export const ADMIN_MESSAGES = {
@@ -144,10 +145,32 @@ export const APPOINTMENT_MESSAGES = {
   STATS_FETCHED: 'Appointment stats fetched successfully',
   AVAILABILITY_FETCHED: 'Doctor availability fetched successfully',
   DOCTORS_FETCHED: 'Doctors fetched successfully',
+  FETCHED: 'Appointment fetched successfully',
   CREATED: 'Appointment scheduled successfully',
+  NOT_FOUND: 'Appointment not found',
+  ALREADY_CANCELLED: 'Cannot attend a cancelled appointment',
+  ATTENDED: 'Visit marked as attended',
+  FOLLOW_UP_SAVED: 'Follow-up saved successfully',
   DOCTOR_SLOT_UNAVAILABLE:
     'This doctor already has an appointment at the selected date and time. Please choose another slot.',
   STAFF_NOT_DOCTOR: 'Selected staff member is not a doctor',
+};
+
+export const BILLING_MESSAGES = {
+  LIST_FETCHED: 'Invoices fetched successfully',
+  STATS_FETCHED: 'Billing stats fetched successfully',
+  FETCHED: 'Invoice fetched successfully',
+  CREATED: 'Invoice created successfully',
+  PAYMENT_COLLECTED: 'Payment collected successfully',
+  NOT_FOUND: 'Invoice not found',
+  ALREADY_PAID: 'Invoice is already paid',
+  ITEMS_REQUIRED: 'At least one medicine item is required',
+  ITEM_NOT_FOUND: 'Pharmacy item not found',
+  INVALID_QUANTITY: 'Invalid quantity',
+  INSUFFICIENT_STOCK: 'Insufficient stock',
+  PRICE_REQUIRED: 'Sale price required for item',
+  ITEM_EXPIRED: 'Medicine has expired',
+  FEE_REQUIRED: 'Consultation fee is required',
 };
 
 export const STAFF_MESSAGES = {

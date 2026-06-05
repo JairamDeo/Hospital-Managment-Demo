@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Banknote, Landmark, QrCode, ShieldCheck, type LucideIcon } from 'lucide-react';
-import type { PaymentMethod, PaymentMethodIcon } from '@/pages/billing/data/mockBilling';
+import type { PaymentMethodStat, PaymentMethodIcon } from '@/types/billing.types';
 
 interface Props {
-  methods: PaymentMethod[];
+  methods: PaymentMethodStat[];
   className?: string;
 }
 
@@ -22,14 +22,16 @@ export const PaymentMethodsPanel = ({ methods, className = '' }: Props) => (
       </h3>
     </div>
     <div className="space-y-4 p-4">
-      {methods.map((m) => (
-        <MethodBar key={m.id} method={m} />
-      ))}
+      {methods.length === 0 ? (
+        <p className="text-xs text-ink-soft">No paid invoices yet</p>
+      ) : (
+        methods.map((m) => <MethodBar key={m.id} method={m} />)
+      )}
     </div>
   </div>
 );
 
-const MethodBar = ({ method }: { method: PaymentMethod }) => {
+const MethodBar = ({ method }: { method: PaymentMethodStat }) => {
   const [width, setWidth] = useState(0);
   const Icon = ICON_MAP[method.icon];
 

@@ -6,10 +6,8 @@ import { useToast } from '@/hooks/useToast';
 import { patientPortalAppointmentService } from '@/services/appointment/patientPortalAppointment.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import {
-  APPOINTMENT_TYPE_OPTIONS,
   TIME_SLOTS,
   type AppointmentDoctor,
-  type AppointmentType,
 } from '@/types/appointment.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
 
@@ -23,7 +21,6 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const [staffCode, setStaffCode] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [timeSlot, setTimeSlot] = useState('10:30');
-  const [appointmentType, setAppointmentType] = useState<AppointmentType>('General Consult');
   const [notes, setNotes] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -102,7 +99,6 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
     try {
       const { data } = await patientPortalAppointmentService.book({
         staffCode,
-        appointmentType,
         date,
         timeSlot,
         notes: notes.trim() || undefined,
@@ -139,21 +135,6 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
               {doctors.map((d) => (
                 <option key={d.staffCode} value={d.staffCode}>
                   {d.name} — {d.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={formLabelClass}>Appointment type *</label>
-            <select
-              value={appointmentType}
-              onChange={(e) => setAppointmentType(e.target.value as AppointmentType)}
-              className={formSelectClass}
-            >
-              {APPOINTMENT_TYPE_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
                 </option>
               ))}
             </select>

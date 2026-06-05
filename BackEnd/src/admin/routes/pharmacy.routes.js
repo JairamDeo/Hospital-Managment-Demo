@@ -7,6 +7,7 @@ import { PHARMACY_MESSAGES } from '../../utils/constants.js';
 import { customResponse } from '../../utils/response.js';
 import {
   getPharmacy,
+  getPharmacyBillingItems,
   postPharmacyItem,
   downloadPharmacyCsv,
   downloadPharmacyPdf,
@@ -18,6 +19,7 @@ const router = Router();
 
 router.use(portalAuth);
 
+router.get('/billing-items', getPharmacyBillingItems);
 router.get('/', getPharmacy);
 router.get('/export/csv', downloadPharmacyCsv);
 router.get('/export/pdf', downloadPharmacyPdf);

@@ -1,33 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Users, UserPlus, CalendarCheck, Activity, Sprout, FlaskConical, Droplets, Flower2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
+import { hmsToAppointment, formatTimeLabel } from '@/utils/appointmentHelpers';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AppointmentRow } from '@/components/dashboard/AppointmentRow';
 import { PharmacyItem } from '@/components/dashboard/PharmacyItem';
 import { ROUTES } from '@/constants/routes';
-import { MOCK_APPOINTMENTS } from '@/pages/appointments/data/mockAppointments';
-
-const formatDisplayTime = (time: string) => {
-  const [hStr, mStr] = time.split(':');
-  const h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 || 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
-};
-
-const dashboardAppointments = MOCK_APPOINTMENTS.slice(0, 4).map((a) => ({
-  appointmentId: a.id,
-  time: formatDisplayTime(a.time),
-  name: a.patientName,
-  type: a.type,
-  status: (a.status === 'In' ? 'Checked In' : 'Upcoming') as 'Upcoming' | 'Checked In',
-  initials: a.initials,
-  avatarClass: a.avatarClass,
-}));
+import type { Appointment } from '@/types/appointment.types';
 
 const inventory = [
   { name: 'Ashwagandha Powder', unitsRemaining: 215, maxUnits: 500, status: 'Low' as const, icon: Sprout },
@@ -40,6 +23,8 @@ export const DashboardPage = () => {
   const { user } = useAuth();
   const [patientTotal, setPatientTotal] = useState(0);
   const [newThisWeek, setNewThisWeek] = useState(0);
+  const [todayVisits, setTodayVisits] = useState(0);
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
 
   useEffect(() => {
     patientAdminService
@@ -54,10 +39,45 @@ export const DashboardPage = () => {
       });
   }, []);
 
+  useEffect(() => {
+    appointmentAdminService
+      .getStats()
+      .then(({ data }) => {
+        setTodayVisits(data.res?.stats?.scheduledToday ?? 0);
+      })
+      .catch(() => setTodayVisits(0));
+
+    appointmentAdminService
+      .list()
+      .then(({ data }) => {
+        const rows = (data.res?.appointments ?? []).map(hmsToAppointment);
+        const today = new Date().toISOString().slice(0, 10);
+        const todayRows = rows.filter((a) => a.date === today && a.status !== 'Cancelled');
+        setTodayAppointments(todayRows.slice(0, 4));
+      })
+      .catch(() => {
+        setTodayAppointments([]);
+      });
+  }, []);
+
   const name = formatDisplayName(user?.firstName, user?.lastName, user?.name);
   const initials = getInitials(user?.firstName, user?.lastName);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+  const dashboardRows = useMemo(
+    () =>
+      todayAppointments.map((a) => ({
+        appointmentId: a.id,
+        time: formatTimeLabel(a.time),
+        name: a.patientName,
+        type: a.type,
+        status: (a.status === 'In' ? 'Checked In' : 'Upcoming') as 'Upcoming' | 'Checked In',
+        initials: a.initials,
+        avatarClass: a.avatarClass,
+      })),
+    [todayAppointments]
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -93,7 +113,13 @@ export const DashboardPage = () => {
           icon={UserPlus}
           className="bg-[#2a6b54]"
         />
-        <StatCard label="Today's Visits" value="22" subLabel="Scheduled" icon={CalendarCheck} className="bg-sage-mid" />
+        <StatCard
+          label="Today's Visits"
+          value={String(todayVisits)}
+          subLabel="Scheduled"
+          icon={CalendarCheck}
+          className="bg-sage-mid"
+        />
         <StatCard label="Active Treatments" value="98" subLabel="Ongoing" icon={Activity} className="bg-sage-light" />
       </div>
 
@@ -111,9 +137,11 @@ export const DashboardPage = () => {
             </Link>
           </div>
           <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
-            {dashboardAppointments.map((a) => (
-              <AppointmentRow key={a.appointmentId} {...a} />
-            ))}
+            {dashboardRows.length === 0 ? (
+              <p className="py-8 text-center text-sm text-ink-soft">No appointments scheduled for today</p>
+            ) : (
+              dashboardRows.map((a) => <AppointmentRow key={a.appointmentId} {...a} />)
+            )}
           </div>
         </section>
 

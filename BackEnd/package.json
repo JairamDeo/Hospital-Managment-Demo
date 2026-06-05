@@ -8,6 +8,7 @@
     "dev": "nodemon",
     "seed": "node src/seed/seedAll.js",
     "seed:admin": "node src/seed/seedAdmin.js",
+    "migrate:pharmacy": "node src/seed/migratePharmacyOnly.js",
     "test": "set NODE_OPTIONS=--experimental-vm-modules && jest --detectOpenHandles"
   },
   "keywords": [],

@@ -1,20 +1,19 @@
-import { Download, Eye } from 'lucide-react';
-import type { Invoice } from '@/pages/billing/data/mockBilling';
-import { formatRupee } from '@/pages/billing/data/mockBilling';
+import { Eye } from 'lucide-react';
+import type { Invoice } from '@/types/billing.types';
+import { formatRupee } from '@/types/billing.types';
 import { InvoiceStatusBadge } from './InvoiceStatusBadge';
 
 interface Props {
   invoices: Invoice[];
   onView: (invoice: Invoice) => void;
-  onDownload: (invoice: Invoice) => void;
 }
 
-export const InvoiceTable = ({ invoices, onView, onDownload }: Props) => (
+export const InvoiceTable = ({ invoices, onView }: Props) => (
   <div className="overflow-x-auto">
     <table className="w-full min-w-[720px] border-collapse">
       <thead>
         <tr className="border-b border-border-sage bg-cream/50">
-          {['Invoice', 'Patient', 'Date', 'Treatment', 'Amount', 'Status', 'Actions'].map((col) => (
+          {['Invoice', 'Patient', 'Date', 'Type', 'Description', 'Amount', 'Status', 'Actions'].map((col) => (
             <th
               key={col}
               className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-ink-ghost"
@@ -27,7 +26,7 @@ export const InvoiceTable = ({ invoices, onView, onDownload }: Props) => (
       <tbody>
         {invoices.length === 0 ? (
           <tr>
-            <td colSpan={7} className="px-4 py-10 text-center text-sm text-ink-soft">
+            <td colSpan={8} className="px-4 py-10 text-center text-sm text-ink-soft">
               No invoices found
             </td>
           </tr>
@@ -52,7 +51,20 @@ export const InvoiceTable = ({ invoices, onView, onDownload }: Props) => (
                 </div>
               </td>
               <td className="px-4 py-3 text-sm text-ink-soft">{inv.date}</td>
-              <td className="px-4 py-3 text-sm text-ink-soft">{inv.treatment}</td>
+              <td className="px-4 py-3">
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    inv.feeType === 'Medicine'
+                      ? 'bg-violet-100 text-violet-700'
+                      : 'bg-blue-50 text-blue-700'
+                  }`}
+                >
+                  {inv.feeType}
+                </span>
+              </td>
+              <td className="max-w-[180px] truncate px-4 py-3 text-sm text-ink-soft" title={inv.treatment}>
+                {inv.treatment}
+              </td>
               <td className="px-4 py-3 text-sm font-semibold text-ink">
                 {formatRupee(inv.amount)}
               </td>
@@ -68,14 +80,6 @@ export const InvoiceTable = ({ invoices, onView, onDownload }: Props) => (
                     aria-label={`View ${inv.id}`}
                   >
                     <Eye className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDownload(inv)}
-                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-ink-soft"
-                    aria-label={`Download ${inv.id}`}
-                  >
-                    <Download className="h-4 w-4" strokeWidth={1.75} />
                   </button>
                 </div>
               </td>

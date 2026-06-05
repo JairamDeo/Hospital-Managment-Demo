@@ -21,6 +21,7 @@ const pharmacyItemSchema = new Schema(
     expiryDate: { type: Date, required: true },
     bestBeforeMonths: { type: Number, min: 1 },
     monthlyUsagePercent: { type: Number, min: 0, max: 100, default: 0 },
+    salePrice: { type: Number, min: 0, default: 0 },
     active: { type: Boolean, default: true },
   },
   { timestamps: true }

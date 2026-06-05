@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react';
 import { Download, Eye, FileText } from 'lucide-react';
-import type {
-  PatientAppointment,
-  PatientDocument,
-  PatientInvoice,
-  LabReport,
-} from '@/types/patientDetail.types';
+import { Link } from 'react-router-dom';
+import { invoiceDetailPath } from '@/constants/routes';
+import type { PatientDocument, LabReport, PatientInvoice } from '@/types/patientDetail.types';
 import { formatPatientRupee } from '@/types/patientDetail.types';
 
 const TableShell = ({ children }: { children: ReactNode }) => (
@@ -20,12 +17,6 @@ const Th = ({ children }: { children: ReactNode }) => (
   </th>
 );
 
-const APPT_STATUS: Record<PatientAppointment['status'], string> = {
-  Upcoming: 'bg-blue-50 text-blue-700',
-  Completed: 'bg-success-bg text-success',
-  Cancelled: 'bg-danger-bg text-danger',
-};
-
 const LAB_STATUS: Record<LabReport['status'], string> = {
   Normal: 'bg-success-bg text-success',
   Abnormal: 'bg-warning-bg text-warning',
@@ -36,45 +27,6 @@ const INV_STATUS: Record<PatientInvoice['status'], string> = {
   Paid: 'bg-success-bg text-success',
   Pending: 'bg-warning-bg text-warning',
   Overdue: 'bg-danger-bg text-danger',
-};
-
-export const PatientAppointmentsTab = ({
-  appointments,
-}: {
-  appointments: PatientAppointment[];
-}) => {
-  return (
-  <TableShell>
-    <thead>
-      <tr className="border-b border-border-sage bg-cream/60">
-        <Th>Date & Time</Th>
-        <Th>Type</Th>
-        <Th>Doctor</Th>
-        <Th>Status</Th>
-      </tr>
-    </thead>
-    <tbody>
-      {appointments.map((a) => (
-          <tr
-            key={a.id}
-            className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30"
-          >
-            <td className="px-4 py-3">
-              <p className="text-sm font-medium text-ink">{a.date}</p>
-              <p className="text-xs text-ink-ghost">{a.time}</p>
-            </td>
-            <td className="px-4 py-3 text-sm text-ink-soft">{a.type}</td>
-            <td className="px-4 py-3 text-sm font-medium text-ink">{a.doctor}</td>
-            <td className="px-4 py-3">
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${APPT_STATUS[a.status]}`}>
-                {a.status}
-              </span>
-            </td>
-          </tr>
-      ))}
-    </tbody>
-  </TableShell>
-  );
 };
 
 export { PatientPrescriptionsTab } from './PatientPrescriptionsTab';
@@ -134,25 +86,42 @@ export const PatientBillingTab = ({ invoices }: { invoices: PatientInvoice[] }) 
           <tr className="border-b border-border-sage bg-cream/60">
             <Th>Invoice</Th>
             <Th>Date</Th>
-            <Th>Treatment</Th>
+            <Th>Type</Th>
+            <Th>Description</Th>
             <Th>Amount</Th>
             <Th>Status</Th>
           </tr>
         </thead>
         <tbody>
-          {invoices.map((inv) => (
-            <tr key={inv.id} className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30">
-              <td className="px-4 py-3 text-sm font-semibold text-sage-deep">#{inv.id}</td>
-              <td className="px-4 py-3 text-sm text-ink-ghost">{inv.date}</td>
-              <td className="px-4 py-3 text-sm text-ink-soft">{inv.treatment}</td>
-              <td className="px-4 py-3 text-sm font-semibold text-ink">{formatPatientRupee(inv.amount)}</td>
-              <td className="px-4 py-3">
-                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${INV_STATUS[inv.status]}`}>
-                  {inv.status}
-                </span>
+          {invoices.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="px-4 py-8 text-center text-sm text-ink-soft">
+                No invoices yet
               </td>
             </tr>
-          ))}
+          ) : (
+            invoices.map((inv) => (
+              <tr key={inv.id} className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30">
+                <td className="px-4 py-3">
+                  <Link
+                    to={invoiceDetailPath(inv.id)}
+                    className="text-sm font-semibold text-sage-deep hover:underline"
+                  >
+                    #{inv.id}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-sm text-ink-ghost">{inv.date}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{inv.feeType || '—'}</td>
+                <td className="px-4 py-3 text-sm text-ink-soft">{inv.treatment}</td>
+                <td className="px-4 py-3 text-sm font-semibold text-ink">{formatPatientRupee(inv.amount)}</td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${INV_STATUS[inv.status]}`}>
+                    {inv.status}
+                  </span>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </TableShell>
     </div>

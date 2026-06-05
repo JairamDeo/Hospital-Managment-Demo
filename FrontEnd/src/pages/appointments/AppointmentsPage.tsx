@@ -8,6 +8,7 @@ import { ScheduleListItem } from '@/components/appointments/ScheduleListItem';
 import { ViewSwitcher, type CalendarView } from '@/components/appointments/ViewSwitcher';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/hooks/useAuth';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { getApiErrorMessage } from '@/utils/helpers';
@@ -40,9 +41,49 @@ export const AppointmentsPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyAppointmentForm());
   const { showToast } = useToast();
-  const { canEdit } = usePermissions();
+  const { user } = useAuth();
+  const { canEdit, isStaff, staffRole, staffCode } = usePermissions();
+
+  const lockedDoctor = useMemo((): AppointmentDoctor | null => {
+    if (!isStaff || staffRole !== 'Doctor' || !staffCode) return null;
+    const fromList = doctors.find((d) => d.staffCode === staffCode);
+    if (fromList) return fromList;
+    return {
+      staffCode,
+      id: staffCode,
+      name: user?.name ?? 'You',
+      title: user?.title ?? '',
+      role: 'Doctor',
+    };
+  }, [isStaff, staffRole, staffCode, doctors, user]);
+
+  const [filterByDay, setFilterByDay] = useState(false);
 
   const selectedDateIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+
+  const sortedAppointments = useMemo(
+    () =>
+      [...appointments].sort((a, b) => {
+        const dateCmp = b.date.localeCompare(a.date);
+        return dateCmp !== 0 ? dateCmp : a.time.localeCompare(b.time);
+      }),
+    [appointments]
+  );
+
+  const visibleSchedule = useMemo(() => {
+    const list = filterByDay
+      ? sortedAppointments.filter((a) => a.date === selectedDateIso)
+      : sortedAppointments;
+    return [...list].sort((a, b) => {
+      const dateCmp = a.date.localeCompare(b.date);
+      return dateCmp !== 0 ? dateCmp : a.time.localeCompare(b.time);
+    });
+  }, [sortedAppointments, filterByDay, selectedDateIso]);
+
+  const handleSelectDay = (day: number) => {
+    setSelectedDay(day);
+    setFilterByDay(true);
+  };
 
   const loadData = useCallback(async () => {
     setListLoading(true);
@@ -66,18 +107,11 @@ export const AppointmentsPage = () => {
     void loadData();
   }, [loadData]);
 
-  const todaySchedule = useMemo(
-    () =>
-      [...appointments]
-        .filter((a) => a.date === selectedDateIso)
-        .sort((a, b) => a.time.localeCompare(b.time)),
-    [appointments, selectedDateIso]
-  );
-
   const openNew = () => {
     setFormInitial({
       ...emptyAppointmentForm(),
       date: selectedDateIso,
+      staffCode: lockedDoctor?.staffCode ?? '',
     });
     setModalOpen(true);
   };
@@ -121,10 +155,12 @@ export const AppointmentsPage = () => {
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-bold text-sage-deep sm:text-[1.75rem]">
-            Appointments
+            {lockedDoctor ? 'My Appointments' : 'Appointments'}
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {stats.scheduledToday} scheduled today · {stats.completed} completed
+            {appointments.length} appointment{appointments.length === 1 ? '' : 's'}
+            {lockedDoctor ? ` · ${lockedDoctor.name}` : ''}
+            {stats.scheduledToday > 0 ? ` · ${stats.scheduledToday} today` : ''}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -143,7 +179,8 @@ export const AppointmentsPage = () => {
           month={month}
           year={year}
           selectedDay={selectedDay}
-          onSelectDay={setSelectedDay}
+          appointments={appointments}
+          onSelectDay={handleSelectDay}
           onPrevMonth={prevMonth}
           onNextMonth={nextMonth}
         />
@@ -152,16 +189,37 @@ export const AppointmentsPage = () => {
           <AppointmentStatsCards stats={stats} />
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
             <div className="border-b border-border-sage px-4 py-3">
-              <h2 className="text-sm font-semibold text-ink">Today&apos;s schedule</h2>
-              <p className="text-xs text-ink-soft">{selectedDateIso}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-semibold text-ink">
+                    {filterByDay ? 'Schedule for date' : 'All appointments'}
+                  </h2>
+                  <p className="text-xs text-ink-soft">
+                    {filterByDay
+                      ? selectedDateIso
+                      : `${visibleSchedule.length} total`}
+                  </p>
+                </div>
+                {filterByDay ? (
+                  <button
+                    type="button"
+                    onClick={() => setFilterByDay(false)}
+                    className="cursor-pointer text-[11px] font-semibold text-sage-deep hover:underline"
+                  >
+                    Show all
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               {listLoading ? (
                 <p className="py-8 text-center text-sm text-ink-soft">Loading…</p>
-              ) : todaySchedule.length === 0 ? (
-                <p className="py-8 text-center text-sm text-ink-soft">No appointments this day</p>
+              ) : visibleSchedule.length === 0 ? (
+                <p className="py-8 text-center text-sm text-ink-soft">
+                  {filterByDay ? 'No appointments on this date' : 'No appointments yet'}
+                </p>
               ) : (
-                todaySchedule.map((a) => <ScheduleListItem key={a.id} appointment={a} />)
+                visibleSchedule.map((a) => <ScheduleListItem key={a.id} appointment={a} />)
               )}
             </div>
           </div>
@@ -174,6 +232,7 @@ export const AppointmentsPage = () => {
         initial={formInitial}
         patients={patients}
         doctors={doctors}
+        lockedDoctor={lockedDoctor}
         submitting={submitting}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}

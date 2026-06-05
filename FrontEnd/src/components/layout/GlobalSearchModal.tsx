@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
+import { billingAdminService } from '@/services/billing/billingAdmin.service';
+import { hmsToAppointment } from '@/utils/appointmentHelpers';
+import type { Appointment } from '@/types/appointment.types';
+import type { Invoice } from '@/types/billing.types';
 import {
   QUICK_LINKS,
   TYPE_CONFIG,
@@ -19,8 +24,25 @@ export const GlobalSearchModal = ({ open, onClose }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const { patients } = useAdminPatientsList();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
-  const results = useMemo(() => searchGlobal(query, patients), [query, patients]);
+  useEffect(() => {
+    if (!open) return;
+    appointmentAdminService
+      .list()
+      .then(({ data }) => setAppointments((data.res?.appointments ?? []).map(hmsToAppointment)))
+      .catch(() => setAppointments([]));
+    billingAdminService
+      .list()
+      .then(({ data }) => setInvoices(data.res?.invoices ?? []))
+      .catch(() => setInvoices([]));
+  }, [open]);
+
+  const results = useMemo(
+    () => searchGlobal(query, patients, appointments, invoices),
+    [query, patients, appointments, invoices]
+  );
 
   useEffect(() => {
     if (!open) {

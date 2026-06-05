@@ -29,7 +29,8 @@ export const getPermissionsForStaffRole = async (staffRole) => {
 };
 
 export const listRbacConfigs = async () => {
-  const rows = await RbacRoleConfig.find().sort({ role: 1 }).lean();
+  const allowed = Object.keys(DEFAULT_RBAC_BY_ROLE);
+  const rows = await RbacRoleConfig.find({ role: { $in: allowed } }).sort({ role: 1 }).lean();
   return rows.map((r) => ({ role: r.role, modules: toPlainModules(r.modules) }));
 };
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, Stethoscope, Pill, Headphones, Leaf } from 'lucide-react';
+import { ChevronDown, Stethoscope, Headphones, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { rbacAdminService } from '@/services/rbac/rbacAdmin.service';
@@ -11,7 +11,7 @@ import {
   type StaffRole,
 } from '@/types/rbac.types';
 
-const ROLES: StaffRole[] = ['Doctor', 'Therapist', 'Pharmacist', 'Support'];
+const ROLES: StaffRole[] = ['Doctor', 'Therapist', 'Support'];
 
 const ROLE_META: Record<
   StaffRole,
@@ -24,10 +24,6 @@ const ROLE_META: Record<
   Therapist: {
     summary: 'Dashboard & Panchakarma scheduling',
     icon: Leaf,
-  },
-  Pharmacist: {
-    summary: 'Dashboard & Pharmacy inventory',
-    icon: Pill,
   },
   Support: {
     summary: 'Front desk — patients, appointments & billing',

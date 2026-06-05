@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { defaultLandingRoute } from '@/utils/navPermissions';
-import { authService } from '@/services/auth/authService';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -34,12 +33,12 @@ export const LoginPage = () => {
     if (!validate()) return;
     setLoading(true);
     try {
-      const msg = await login(email.trim().toLowerCase(), password);
-      showToast(msg || 'Login successful', 'success');
-      const { data } = await authService.getProfile();
-      const profile = data.res?.user;
+      const { message, user: profile } = await login(email.trim().toLowerCase(), password);
+      showToast(message || 'Login successful', 'success');
       const isAdmin = profile?.accountType === 'admin' || profile?.role === 'admin';
-      navigate(defaultLandingRoute(profile?.permissions, isAdmin, profile?.staffCode));
+      navigate(defaultLandingRoute(profile?.permissions, isAdmin, profile?.staffCode), {
+        replace: true,
+      });
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Invalid email or password'), 'error');
     } finally {
@@ -58,7 +57,7 @@ export const LoginPage = () => {
           type="email"
           name="email"
           autoComplete="email"
-          placeholder="admin@ayurvedahealth.com"
+          placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}

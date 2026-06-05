@@ -1,7 +1,7 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import type { Invoice } from '@/pages/billing/data/mockBilling';
-import { formatRupee } from '@/pages/billing/data/mockBilling';
+import type { Invoice } from '@/types/billing.types';
+import { formatRupee } from '@/types/billing.types';
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge';
 
 interface Props {

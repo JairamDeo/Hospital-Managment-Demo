@@ -60,6 +60,10 @@ export const AddPharmacyItemModal = ({
         next.expiryDate = 'Expiry must be after manufacturing date';
       }
     }
+    const price = Number(form.salePrice);
+    if (form.salePrice.trim() === '' || Number.isNaN(price) || price < 0) {
+      next.salePrice = 'Sale price per pack is required';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -183,6 +187,26 @@ export const AddPharmacyItemModal = ({
             placeholder="e.g. 100"
           />
           {errors.stock ? <p className="mt-1 text-xs text-danger">{errors.stock}</p> : null}
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className={formLabelClass}>Sale price per pack (₹) *</label>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.salePrice}
+            onChange={(e) => set('salePrice', e.target.value)}
+            className={`${formInputClass} ${errors.salePrice ? 'border-danger' : ''}`}
+            placeholder="e.g. 450 (used in medicine billing)"
+          />
+          {errors.salePrice ? (
+            <p className="mt-1 text-xs text-danger">{errors.salePrice}</p>
+          ) : (
+            <p className="mt-1 text-[11px] text-ink-ghost">
+              Price for one pack (pack quantity × unit above). Billed per stock unit at this rate.
+            </p>
+          )}
         </div>
 
         <div>

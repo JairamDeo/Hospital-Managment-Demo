@@ -4,6 +4,7 @@ import PharmacyItem from '../models/pharmacyItem.model.js';
 import moment from 'moment';
 import { generatePharmacyItemCode } from '../utils/generatePharmacyItemCode.js';
 import { logger } from '../utils/logger.js';
+import { PHARMACY_SEED_ITEMS } from './pharmacySeedDefaults.js';
 
 const DEFAULT_CATEGORIES = [
   'Medicated Oil',
@@ -32,68 +33,7 @@ const DEFAULT_UNITS = [
   'unit',
 ];
 
-const DEFAULT_ITEMS = [
-  {
-    name: 'Brahmi Oil',
-    company: 'Dabur India',
-    category: 'Medicated Oil',
-    packQuantity: 200,
-    unit: 'ml',
-    stock: 98,
-    bestBeforeMonths: 24,
-    monthlyUsagePercent: 82,
-  },
-  {
-    name: 'Ashwagandha Powder',
-    company: 'Himalaya Wellness',
-    category: 'Adaptogen',
-    packQuantity: 500,
-    unit: 'g',
-    stock: 215,
-    bestBeforeMonths: 36,
-    monthlyUsagePercent: 88,
-  },
-  {
-    name: 'Triphala Churna',
-    company: 'Baidyanath',
-    category: 'Herbal Formula',
-    packQuantity: 250,
-    unit: 'g',
-    stock: 380,
-    bestBeforeMonths: 24,
-    monthlyUsagePercent: 95,
-  },
-  {
-    name: 'Chyawanprash',
-    company: 'Dabur India',
-    category: 'Rasayana',
-    packQuantity: 500,
-    unit: 'g',
-    stock: 275,
-    bestBeforeMonths: 18,
-    monthlyUsagePercent: 65,
-  },
-  {
-    name: 'Shatavari',
-    company: 'Patanjali Ayurved',
-    category: 'Herbal Extract',
-    packQuantity: 100,
-    unit: 'g',
-    stock: 88,
-    bestBeforeMonths: 24,
-    monthlyUsagePercent: 72,
-  },
-  {
-    name: 'Amla Juice',
-    company: 'Patanjali Ayurved',
-    category: 'Health Tonic',
-    packQuantity: 1,
-    unit: 'L',
-    stock: 95,
-    bestBeforeMonths: 12,
-    monthlyUsagePercent: 75,
-  },
-];
+const DEFAULT_ITEMS = PHARMACY_SEED_ITEMS;
 
 const nextCategoryCode = async () => {
   const count = await PharmacyCategoryMaster.countDocuments();
@@ -154,6 +94,7 @@ export const seedPharmacyIfEmpty = async () => {
       expiryDate,
       bestBeforeMonths: row.bestBeforeMonths ?? 24,
       monthlyUsagePercent: row.monthlyUsagePercent,
+      salePrice: row.salePrice ?? 0,
     });
   }
 

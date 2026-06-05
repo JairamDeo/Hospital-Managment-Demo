@@ -5,7 +5,7 @@ import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import type { Patient } from '@/types/patient.types';
 import type { AppointmentDoctor, AppointmentFormValues } from '@/types/appointment.types';
-import { APPOINTMENT_TYPE_OPTIONS, TIME_SLOTS } from '@/types/appointment.types';
+import { TIME_SLOTS } from '@/types/appointment.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   initial: AppointmentFormValues;
   patients: Patient[];
   doctors: AppointmentDoctor[];
+  lockedDoctor?: AppointmentDoctor | null;
   submitting?: boolean;
   onClose: () => void;
   onSubmit: (values: AppointmentFormValues) => void | Promise<void>;
@@ -23,6 +24,7 @@ export const NewAppointmentModal = ({
   initial,
   patients,
   doctors,
+  lockedDoctor = null,
   submitting = false,
   onClose,
   onSubmit,
@@ -99,7 +101,11 @@ export const NewAppointmentModal = ({
       open={open}
       onClose={onClose}
       title="New Appointment"
-      subtitle="Schedule a patient visit"
+      subtitle={
+        lockedDoctor
+          ? `Schedule a visit for ${lockedDoctor.name}`
+          : 'Schedule a patient visit'
+      }
       size="lg"
       footer={
         <>
@@ -134,36 +140,30 @@ export const NewAppointmentModal = ({
 
         <div className="sm:col-span-2">
           <label className={formLabelClass}>Doctor *</label>
-          <select
-            value={form.staffCode}
-            onChange={(e) => set('staffCode', e.target.value)}
-            className={`${formSelectClass} ${errors.staffCode ? 'border-danger' : ''}`}
-          >
-            <option value="">Select doctor</option>
-            {doctors.map((d) => (
-              <option key={d.staffCode} value={d.staffCode}>
-                {d.name} — {d.title}
-              </option>
-            ))}
-          </select>
+          {lockedDoctor ? (
+            <div className="rounded-xl border border-border-sage bg-cream/40 px-3 py-2.5 text-sm font-medium text-ink">
+              {lockedDoctor.name}
+              {lockedDoctor.title ? (
+                <span className="ml-1 font-normal text-ink-soft">— {lockedDoctor.title}</span>
+              ) : null}
+            </div>
+          ) : (
+            <select
+              value={form.staffCode}
+              onChange={(e) => set('staffCode', e.target.value)}
+              className={`${formSelectClass} ${errors.staffCode ? 'border-danger' : ''}`}
+            >
+              <option value="">Select doctor</option>
+              {doctors.map((d) => (
+                <option key={d.staffCode} value={d.staffCode}>
+                  {d.name} — {d.title}
+                </option>
+              ))}
+            </select>
+          )}
           {errors.staffCode ? (
             <p className="mt-1 text-xs text-danger">{errors.staffCode}</p>
           ) : null}
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className={formLabelClass}>Appointment Type *</label>
-          <select
-            value={form.type}
-            onChange={(e) => set('type', e.target.value as AppointmentFormValues['type'])}
-            className={formSelectClass}
-          >
-            {APPOINTMENT_TYPE_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
-          </select>
         </div>
 
         <div>

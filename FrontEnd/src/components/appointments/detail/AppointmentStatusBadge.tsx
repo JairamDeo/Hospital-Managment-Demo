@@ -1,4 +1,4 @@
-import type { AppointmentStatus } from '@/pages/appointments/data/mockAppointments';
+import type { AppointmentStatus } from '@/types/appointment.types';
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
   Soon: 'Scheduled',
