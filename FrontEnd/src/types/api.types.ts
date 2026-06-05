@@ -4,15 +4,25 @@ export interface ApiResponse<T = unknown> {
   res: T | null;
 }
 
+export interface ModulePermission {
+  view: boolean;
+  edit: boolean;
+}
+
 export interface AdminUser {
   _id: string;
-  userCode: string;
+  userCode?: string;
   firstName?: string;
   lastName?: string;
   name?: string;
   email?: string;
-  mobileNumber: string;
+  mobileNumber?: string;
   role: string;
+  accountType?: 'admin' | 'staff';
+  staffRole?: 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+  staffCode?: string;
+  title?: string;
+  permissions?: Record<string, ModulePermission>;
 }
 
 export interface LoginResponse {
@@ -99,4 +109,74 @@ export interface HmsPatient {
   recordStatus: string;
   status: string;
   createdByAdmin?: boolean;
+}
+
+export interface HmsStaff {
+  _id: string;
+  staffCode: string;
+  id: string;
+  name: string;
+  role: 'Doctor' | 'Therapist' | 'Pharmacist' | 'Support';
+  title: string;
+  dutyStatus: 'On Duty' | 'Off Duty';
+  status: 'On Duty' | 'Off Duty';
+  statPrimaryValue: number;
+  statPrimaryLabel: string;
+  todayCount: number;
+  todayLabel: string;
+  rating: number;
+  tags: string[];
+  shift: string;
+  accountActive?: boolean;
+}
+
+export interface HmsAppointment {
+  _id: string;
+  appointmentCode: string;
+  id: string;
+  patientCode: string;
+  patientId: string;
+  patientName: string;
+  initials?: string;
+  avatarClass?: string;
+  staffCode: string;
+  doctorId?: string;
+  doctorName: string;
+  doctor?: string;
+  appointmentType: string;
+  type: string;
+  date: string;
+  dateDisplay?: string;
+  time: string;
+  timeDisplay?: string;
+  status: 'Upcoming' | 'Completed' | 'Cancelled';
+  adminStatus?: 'Soon' | 'In' | 'Done' | 'Cancelled';
+  notes?: string;
+  createdBy?: {
+    type: 'admin' | 'patient';
+    name?: string;
+    patientCode?: string;
+  };
+}
+
+export interface HmsPanchakarmaProgram {
+  _id: string;
+  programCode: string;
+  id: string;
+  patientCode: string;
+  patientId: string;
+  patientName: string;
+  initials?: string;
+  avatarClass?: string;
+  staffCode: string;
+  therapistId: string;
+  therapistName: string;
+  therapy: 'Vamana' | 'Virechana' | 'Basti' | 'Nasya';
+  totalDays: number;
+  currentDay: number;
+  room: string;
+  startDate: string;
+  startDateDisplay?: string;
+  progress: number;
+  status: 'Starting' | 'Ongoing' | 'Complete' | 'Cancelled';
 }

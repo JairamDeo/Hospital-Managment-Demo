@@ -8,6 +8,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { getApiErrorMessage } from '@/utils/helpers';
+import { defaultLandingRoute } from '@/utils/navPermissions';
+import { authService } from '@/services/auth/authService';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -34,7 +36,10 @@ export const LoginPage = () => {
     try {
       const msg = await login(email.trim().toLowerCase(), password);
       showToast(msg || 'Login successful', 'success');
-      navigate(ROUTES.ADMIN_DASHBOARD);
+      const { data } = await authService.getProfile();
+      const profile = data.res?.user;
+      const isAdmin = profile?.accountType === 'admin' || profile?.role === 'admin';
+      navigate(defaultLandingRoute(profile?.permissions, isAdmin, profile?.staffCode));
     } catch (err) {
       showToast(getApiErrorMessage(err, 'Invalid email or password'), 'error');
     } finally {
@@ -44,8 +49,8 @@ export const LoginPage = () => {
 
   return (
     <AuthLayout
-      title="Admin Sign In"
-      subtitle="Hospital Management System — secure admin access"
+      title="Staff & Admin Sign In"
+      subtitle="Hospital Management System — staff and administrator access"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <Input

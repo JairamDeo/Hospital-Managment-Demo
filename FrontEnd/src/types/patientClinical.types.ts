@@ -3,6 +3,7 @@ export interface PresentComplaint {
 }
 
 export interface GeneralExamination {
+  prakriti: string;
   nadi: string;
   jivha: string;
   stool: string;

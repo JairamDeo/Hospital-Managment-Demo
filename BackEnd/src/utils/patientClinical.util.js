@@ -6,6 +6,7 @@ const toPlain = (obj) => {
 export const emptyClinicalProfile = () => ({
   presentComplaint: { complaint: '' },
   generalExamination: {
+    prakriti: '',
     nadi: '',
     jivha: '',
     stool: '',

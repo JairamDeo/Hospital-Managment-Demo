@@ -7,6 +7,7 @@ import { PatientTable } from '@/components/patients/PatientTable';
 import { PatientPagination } from '@/components/patients/PatientPagination';
 import { PatientFormModal } from '@/components/modals/PatientFormModal';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { patientDetailPath } from '@/constants/routes';
 import type { Patient, PatientFormValues, PatientStats } from '@/types/patient.types';
 import {
@@ -58,6 +59,7 @@ export const PatientsPage = () => {
   const exportRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
+  const { canEdit } = usePermissions();
 
   const activePrakriti = useMemo(
     () => prakritiMasters.filter((p) => p.active),
@@ -215,10 +217,12 @@ export const PatientsPage = () => {
               />
             </PopoverMenu>
           </div>
-          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openAdd}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            Add Patient
-          </Button>
+          {canEdit('patients') ? (
+            <Button className="gap-2 rounded-lg px-4 py-2" onClick={openAdd}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Add Patient
+            </Button>
+          ) : null}
         </div>
       </div>
 

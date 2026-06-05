@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
-import { adminAuth } from '../../middleware/adminAuthMiddleware.js';
+import { portalAuth } from '../../middleware/portalAuthMiddleware.js';
 import { pharmacyCsvUpload } from '../../middleware/pharmacyUpload.middleware.js';
 import { createPharmacyItemSchema } from '../validators/pharmacy.validator.js';
 import { PHARMACY_MESSAGES } from '../../utils/constants.js';
@@ -16,7 +16,7 @@ import {
 
 const router = Router();
 
-router.use(adminAuth);
+router.use(portalAuth);
 
 router.get('/', getPharmacy);
 router.get('/export/csv', downloadPharmacyCsv);

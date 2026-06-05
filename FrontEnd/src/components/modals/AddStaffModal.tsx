@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
-import { ROLE_OPTIONS, type StaffFormValues } from '@/pages/staff/data/mockStaff';
+import { ROLE_OPTIONS, type StaffFormValues } from '@/types/staff.types';
 
 interface Props {
   open: boolean;
   initial: StaffFormValues;
+  submitting?: boolean;
   onClose: () => void;
-  onSubmit: (values: StaffFormValues) => void;
+  onSubmit: (values: StaffFormValues) => void | Promise<void>;
 }
 
-export const AddStaffModal = ({ open, initial, onClose, onSubmit }: Props) => {
+export const AddStaffModal = ({ open, initial, submitting = false, onClose, onSubmit }: Props) => {
   const [form, setForm] = useState<StaffFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof StaffFormValues, string>>>({});
 
@@ -42,10 +43,12 @@ export const AddStaffModal = ({ open, initial, onClose, onSubmit }: Props) => {
       size="lg"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Add Staff</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Adding…' : 'Add Staff'}
+          </Button>
         </>
       }
     >

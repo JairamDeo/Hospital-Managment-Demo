@@ -3,6 +3,7 @@ import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 export const emptyClinicalProfile = (): PatientClinicalProfile => ({
   presentComplaint: { complaint: '' },
   generalExamination: {
+    prakriti: '',
     nadi: '',
     jivha: '',
     stool: '',

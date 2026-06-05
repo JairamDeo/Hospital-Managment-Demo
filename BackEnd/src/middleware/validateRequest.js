@@ -1,6 +1,7 @@
-export const validateRequest = (schema) => {
+export const validateRequest = (schema, source = 'body') => {
   return (req, res, next) => {
-    const { error, value } = schema.validate(req.body, {
+    const input = source === 'query' ? req.query : req.body;
+    const { error, value } = schema.validate(input, {
       abortEarly: false,
       stripUnknown: true,
     });
@@ -14,7 +15,8 @@ export const validateRequest = (schema) => {
         res: null,
       });
     }
-    req.body = value;
+    if (source === 'query') req.query = value;
+    else req.body = value;
     next();
   };
 };

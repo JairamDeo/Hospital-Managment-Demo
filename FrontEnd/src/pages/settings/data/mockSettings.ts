@@ -5,7 +5,8 @@ export type SettingsSectionId =
   | 'billing'
   | 'panchakarma'
   | 'notifications'
-  | 'security';
+  | 'security'
+  | 'rbac';
 
 export interface ClinicSettings {
   name: string;

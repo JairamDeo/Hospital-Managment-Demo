@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon",
+    "seed": "node src/seed/seedAll.js",
     "seed:admin": "node src/seed/seedAdmin.js",
     "test": "set NODE_OPTIONS=--experimental-vm-modules && jest --detectOpenHandles"
   },

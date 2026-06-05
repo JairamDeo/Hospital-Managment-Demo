@@ -7,6 +7,7 @@ export const ROUTES = {
   CUSTOMER_REGISTER: '/register',
   CUSTOMER_VERIFY_OTP: '/verify-otp',
   CUSTOMER_HOME: '/home',
+  CUSTOMER_APPOINTMENTS: '/appointments',
   CUSTOMER_PROFILE: '/profile',
 
   // Admin auth

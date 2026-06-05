@@ -1,35 +1,39 @@
-import { APPOINTMENT_STATS } from '@/pages/appointments/data/mockAppointments';
+import type { AppointmentStats } from '@/types/appointment.types';
 
-const stats = [
+const buildStats = (input: AppointmentStats) => [
   {
-    value: APPOINTMENT_STATS.scheduledToday,
+    value: input.scheduledToday,
     label: 'Today Scheduled',
     accent: 'text-warning',
     dot: 'bg-warning',
   },
   {
-    value: APPOINTMENT_STATS.completed,
+    value: input.completed,
     label: 'Completed',
     accent: 'text-success',
     dot: 'bg-success',
   },
   {
-    value: APPOINTMENT_STATS.panchakarma,
+    value: input.panchakarma,
     label: 'Panchakarma',
     accent: 'text-violet-600',
     dot: 'bg-violet-500',
   },
   {
-    value: APPOINTMENT_STATS.cancelled,
+    value: input.cancelled,
     label: 'Cancelled Today',
     accent: 'text-ink-ghost',
     dot: 'bg-ink-ghost',
   },
 ];
 
-export const AppointmentStatsCards = () => (
+interface Props {
+  stats: AppointmentStats;
+}
+
+export const AppointmentStatsCards = ({ stats }: Props) => (
   <div className="grid grid-cols-2 gap-2">
-    {stats.map((s) => (
+    {buildStats(stats).map((s) => (
       <div
         key={s.label}
         className="rounded-xl border border-border-sage bg-white px-3 py-2"

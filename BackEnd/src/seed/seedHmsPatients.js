@@ -13,6 +13,7 @@ const jairamClinical = () =>
   mergeClinicalProfile(null, {
     presentComplaint: { complaint: 'Occasional acidity and mild sleep disturbance. Seeking Vata-balancing care.' },
     generalExamination: {
+      prakriti: 'Vata',
       nadi: 'Vata-predominant, irregular',
       jivha: 'Pale with light coating',
       stool: 'Regular, tendency to dryness',

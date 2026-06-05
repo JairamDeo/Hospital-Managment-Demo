@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ScheduleProgramModal } from '@/components/modals/ScheduleProgramModal';
@@ -7,51 +7,89 @@ import { ActiveProgramsTable } from '@/components/panchakarma/ActiveProgramsTabl
 import { TherapistsPanel } from '@/components/panchakarma/TherapistsPanel';
 import { TreatmentRoomsPanel } from '@/components/panchakarma/TreatmentRoomsPanel';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
+import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
+import { getApiErrorMessage } from '@/utils/helpers';
 import {
-  MOCK_ACTIVE_PROGRAMS,
-  MOCK_ROOMS,
-  MOCK_THERAPISTS,
-  PANCHAKARMA_STATS,
-  THERAPY_SUMMARIES,
+  buildTherapySummaries,
   emptyScheduleProgramForm,
-  type ActiveProgram,
-  type ScheduleProgramFormValues,
-} from './data/mockPanchakarma';
+  hmsToActiveProgram,
+  mapTherapistsFromApi,
+} from '@/utils/panchakarmaHelpers';
+import type {
+  ActiveProgram,
+  PanchakarmaStats,
+  ScheduleProgramFormValues,
+  TherapistOnDuty,
+  TreatmentRoom,
+} from '@/types/panchakarma.types';
+
+const defaultStats = (): PanchakarmaStats => ({
+  activePrograms: 0,
+  therapistsOnDuty: 0,
+  roomsAvailable: 4,
+  therapySummaries: [],
+});
 
 export const PanchakarmaPage = () => {
   const { patients } = useAdminPatientsList();
-  const [programs, setPrograms] = useState<ActiveProgram[]>(MOCK_ACTIVE_PROGRAMS);
+  const [programs, setPrograms] = useState<ActiveProgram[]>([]);
+  const [stats, setStats] = useState<PanchakarmaStats>(defaultStats());
+  const [therapists, setTherapists] = useState<TherapistOnDuty[]>([]);
+  const [rooms, setRooms] = useState<TreatmentRoom[]>([]);
+  const [listLoading, setListLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyScheduleProgramForm());
   const { showToast } = useToast();
+  const { canEdit } = usePermissions();
+
+  const therapySummaries = useMemo(() => buildTherapySummaries(stats), [stats]);
+
+  const loadData = useCallback(async () => {
+    setListLoading(true);
+    try {
+      const [programsRes, statsRes, therapistsRes, roomsRes] = await Promise.all([
+        panchakarmaAdminService.listPrograms(),
+        panchakarmaAdminService.getStats(),
+        panchakarmaAdminService.listTherapists(),
+        panchakarmaAdminService.listRooms(),
+      ]);
+      setPrograms((programsRes.data.res?.programs ?? []).map(hmsToActiveProgram));
+      setStats(statsRes.data.res?.stats ?? defaultStats());
+      setTherapists(mapTherapistsFromApi(therapistsRes.data.res?.therapists ?? []));
+      setRooms(roomsRes.data.res?.rooms ?? []);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setListLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const openSchedule = () => {
     setFormInitial(emptyScheduleProgramForm());
     setModalOpen(true);
   };
 
-  const handleCreate = (values: ScheduleProgramFormValues) => {
-    const patient = patients.find((p) => p.id === values.patientId);
-    if (!patient) return;
-
-    const newProgram: ActiveProgram = {
-      id: `PK-${String(programs.length + 1).padStart(3, '0')}`,
-      patientId: patient.id,
-      patientName: patient.name,
-      initials: patient.initials,
-      avatarClass: patient.avatarClass,
-      therapy: values.therapy,
-      currentDay: 1,
-      totalDays: values.totalDays,
-      room: values.room,
-      progress: Math.round((1 / values.totalDays) * 100),
-      status: 'Starting',
-    };
-
-    setPrograms((prev) => [newProgram, ...prev]);
-    setModalOpen(false);
-    showToast(`Program scheduled for ${patient.name}`, 'success');
+  const handleCreate = async (values: ScheduleProgramFormValues) => {
+    setSubmitting(true);
+    try {
+      const { data } = await panchakarmaAdminService.create(values);
+      if (data.status_code === 201) {
+        setModalOpen(false);
+        showToast('Panchakarma program scheduled successfully', 'success');
+        await loadData();
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -62,19 +100,20 @@ export const PanchakarmaPage = () => {
             Panchakarma Scheduling
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {PANCHAKARMA_STATS.activePrograms} active programs ·{' '}
-            {PANCHAKARMA_STATS.therapistsOnDuty} therapists on duty ·{' '}
-            {PANCHAKARMA_STATS.roomsAvailable} rooms available
+            {stats.activePrograms} active programs · {stats.therapistsOnDuty} therapists on duty ·{' '}
+            {stats.roomsAvailable} rooms available
           </p>
         </div>
-        <Button className="gap-2 rounded-lg px-4 py-2" onClick={openSchedule}>
-          <Plus className="h-4 w-4" strokeWidth={2} />
-          Schedule Program
-        </Button>
+        {canEdit('panchakarma') ? (
+          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openSchedule}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            Schedule Program
+          </Button>
+        ) : null}
       </div>
 
       <div className="mb-3 grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
-        {THERAPY_SUMMARIES.map((s) => (
+        {therapySummaries.map((s) => (
           <TherapySummaryCard key={s.therapy} summary={s} />
         ))}
       </div>
@@ -85,21 +124,19 @@ export const PanchakarmaPage = () => {
             <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
               Active Programs
             </h3>
-            <button
-              type="button"
-              className="cursor-pointer text-xs font-semibold text-sage-deep hover:underline"
-            >
-              View All
-            </button>
           </div>
           <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
-            <ActiveProgramsTable programs={programs} />
+            {listLoading ? (
+              <p className="py-12 text-center text-sm text-ink-soft">Loading programs…</p>
+            ) : (
+              <ActiveProgramsTable programs={programs} />
+            )}
           </div>
         </div>
 
         <aside className="flex min-h-0 flex-col gap-3 overflow-hidden">
-          <TherapistsPanel therapists={MOCK_THERAPISTS} />
-          <TreatmentRoomsPanel rooms={MOCK_ROOMS} className="min-h-0 flex-1" />
+          <TherapistsPanel therapists={therapists} />
+          <TreatmentRoomsPanel rooms={rooms} className="min-h-0 flex-1" />
         </aside>
       </div>
 
@@ -108,6 +145,9 @@ export const PanchakarmaPage = () => {
         open={modalOpen}
         initial={formInitial}
         patients={patients}
+        therapists={therapists}
+        rooms={rooms}
+        submitting={submitting}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}
       />

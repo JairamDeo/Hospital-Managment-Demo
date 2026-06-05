@@ -1,5 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
+import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
+import { appointmentsToStaffAssignments } from '@/utils/appointmentHelpers';
+import { programsToStaffAssignments } from '@/utils/panchakarmaHelpers';
+import type { StaffAssignment } from './data/mockStaffDetails';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
 import { StaffProfileCard } from '@/components/staff/detail/StaffProfileCard';
 import { StaffTodayScheduleCard } from '@/components/staff/detail/StaffTodayScheduleCard';
@@ -15,11 +20,60 @@ export const StaffDetailPage = () => {
   const { showToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [staffList, setStaffList] = useState(MOCK_STAFF);
+  const [assignmentRows, setAssignmentRows] = useState<StaffAssignment[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
 
   const staff = useMemo(() => {
     const base = staffList.find((s) => s.id === staffId);
     return base ? buildStaffDetail(base) : null;
   }, [staffId, staffList]);
+
+  useEffect(() => {
+    if (!staffId || !staff) return;
+    let cancelled = false;
+    setAssignmentsLoading(true);
+
+    const loadAssignments = async () => {
+      try {
+        const requests: Promise<StaffAssignment[]>[] = [];
+
+        if (staff.role === 'Doctor') {
+          requests.push(
+            appointmentAdminService.listByStaff(staffId).then((res) =>
+              appointmentsToStaffAssignments(res.data.res?.appointments ?? [])
+            )
+          );
+        }
+
+        if (staff.role === 'Therapist') {
+          requests.push(
+            panchakarmaAdminService.listByStaff(staffId).then((res) =>
+              programsToStaffAssignments(res.data.res?.programs ?? [])
+            )
+          );
+        }
+
+        if (requests.length === 0) {
+          if (!cancelled) setAssignmentRows([]);
+          return;
+        }
+
+        const results = await Promise.all(requests);
+        if (!cancelled) {
+          setAssignmentRows(results.flat());
+        }
+      } catch {
+        if (!cancelled) setAssignmentRows([]);
+      } finally {
+        if (!cancelled) setAssignmentsLoading(false);
+      }
+    };
+
+    void loadAssignments();
+    return () => {
+      cancelled = true;
+    };
+  }, [staffId, staff]);
 
   if (!staffId || !staff) {
     return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
@@ -53,7 +107,12 @@ export const StaffDetailPage = () => {
         </aside>
 
         <section className="flex min-w-0 flex-1 flex-col gap-5">
-          <StaffDetailTabs staff={staff} />
+          <StaffDetailTabs
+            staff={staff}
+            appointmentAssignments={assignmentRows}
+            assignmentsLoading={assignmentsLoading}
+            assignmentsMode={staff.role === 'Therapist' ? 'panchakarma' : 'appointments'}
+          />
           <div>
             <h3 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
               Performance Overview

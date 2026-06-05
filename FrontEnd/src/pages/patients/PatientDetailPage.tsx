@@ -252,6 +252,7 @@ export const PatientDetailPage = () => {
             patient={patient}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            prakritiMasters={prakritiMasters.filter((m) => m.active !== false)}
             clinical={{
               clinical,
               clinicalLoading,

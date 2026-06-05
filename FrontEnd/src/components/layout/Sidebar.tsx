@@ -13,28 +13,45 @@ import {
   TreePine,
   LogOut,
   X,
+  UserRound,
 } from 'lucide-react';
-import { ROUTES } from '@/constants/routes';
+import { ROUTES, staffDetailPath } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useSidebar } from '@/context/SidebarContext';
 import { getInitials, formatDisplayName } from '@/utils/helpers';
 import { useToast } from '@/hooks/useToast';
 import { usePatientNavStats } from '@/hooks/usePatientNavStats';
+import type { RbacModuleKey } from '@/types/rbac.types';
 
-const mainNavBase = [
-  { to: ROUTES.ADMIN_DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
-  { to: ROUTES.ADMIN_PATIENTS, label: 'Patients', icon: Users },
-  { to: ROUTES.ADMIN_APPOINTMENTS, label: 'Appointments', icon: CalendarDays, badge: '22' },
-  { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf },
+type NavItemDef = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  module: RbacModuleKey;
+  badge?: string;
+};
+
+const mainNavBase: NavItemDef[] = [
+  { to: ROUTES.ADMIN_DASHBOARD, label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
+  { to: ROUTES.ADMIN_PATIENTS, label: 'Patients', icon: Users, module: 'patients' },
+  {
+    to: ROUTES.ADMIN_APPOINTMENTS,
+    label: 'Appointments',
+    icon: CalendarDays,
+    module: 'appointments',
+    badge: '22',
+  },
+  { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf, module: 'panchakarma' },
 ];
 
-const manageNav = [
-  { to: ROUTES.ADMIN_MASTER_DATA, label: 'Master Data', icon: Database },
-  { to: ROUTES.ADMIN_PHARMACY, label: 'Pharmacy', icon: Pill },
-  { to: ROUTES.ADMIN_STAFF, label: 'Staff', icon: UserCog },
-  { to: ROUTES.ADMIN_ANALYTICS, label: 'Analytics', icon: BarChart3 },
-  { to: ROUTES.ADMIN_BILLING, label: 'Billing', icon: Receipt },
-  { to: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Settings },
+const manageNav: NavItemDef[] = [
+  { to: ROUTES.ADMIN_MASTER_DATA, label: 'Master Data', icon: Database, module: 'masterData' },
+  { to: ROUTES.ADMIN_PHARMACY, label: 'Pharmacy', icon: Pill, module: 'pharmacy' },
+  { to: ROUTES.ADMIN_STAFF, label: 'Staff', icon: UserCog, module: 'staff' },
+  { to: ROUTES.ADMIN_ANALYTICS, label: 'Analytics', icon: BarChart3, module: 'analytics' },
+  { to: ROUTES.ADMIN_BILLING, label: 'Billing', icon: Receipt, module: 'billing' },
+  { to: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Settings, module: 'settings' },
 ];
 
 const NavItem = ({
@@ -80,13 +97,26 @@ interface SidebarProps {
 
 export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
   const { badge: patientBadge } = usePatientNavStats();
-  const mainNav = mainNavBase.map((item) =>
-    item.to === ROUTES.ADMIN_PATIENTS ? { ...item, badge: patientBadge } : item
-  );
   const { user, logout } = useAuth();
+  const { canView, isStaff, staffCode } = usePermissions();
   const { isCollapsed, closeMobile } = useSidebar();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  const filterNav = (items: NavItemDef[]) =>
+    items
+      .filter((item) => canView(item.module))
+      .map((item) =>
+        item.to === ROUTES.ADMIN_PATIENTS ? { ...item, badge: patientBadge } : item
+      );
+
+  const mainNav = filterNav(mainNavBase);
+  const manageItems = filterNav(manageNav);
+
+  const profileLink =
+    isStaff && staffCode
+      ? [{ to: staffDetailPath(staffCode), label: 'My Profile', icon: UserRound, module: 'staff' as const }]
+      : [];
 
   const collapsed = variant === 'desktop' && isCollapsed;
   const onNavigate = variant === 'mobile' ? closeMobile : undefined;
@@ -98,8 +128,9 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
     navigate(ROUTES.ADMIN_LOGIN);
   };
 
-  const initials = getInitials(user?.firstName, user?.lastName);
   const displayName = formatDisplayName(user?.firstName, user?.lastName, user?.name);
+  const subtitle = isStaff ? user?.title || user?.staffRole : 'Administrator';
+  const initials = getInitials(user?.firstName, user?.lastName, user?.name);
 
   return (
     <aside
@@ -115,13 +146,7 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sage-deep text-white">
           <TreePine className="h-5 w-5" strokeWidth={1.75} />
         </div>
-        {!collapsed && variant !== 'mobile' && (
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-ink-ghost">Ayurveda</p>
-            <p className="font-serif text-base font-semibold leading-tight text-ink">Health</p>
-          </div>
-        )}
-        {!collapsed && variant === 'mobile' && (
+        {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-ink-ghost">Ayurveda</p>
             <p className="font-serif text-base font-semibold leading-tight text-ink">Health</p>
@@ -140,7 +165,7 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
       </div>
 
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 py-4">
-        {!collapsed && (
+        {!collapsed && mainNav.length > 0 && (
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-ink-ghost">
             Main
           </p>
@@ -150,13 +175,25 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
             <NavItem key={item.to} {...item} collapsed={collapsed} onNavigate={onNavigate} />
           ))}
         </div>
-        {!collapsed && (
+        {profileLink.length > 0 ? (
+          <div className="mb-6 space-y-1">
+            {!collapsed && (
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-ink-ghost">
+                Profile
+              </p>
+            )}
+            {profileLink.map((item) => (
+              <NavItem key={item.to} {...item} collapsed={collapsed} onNavigate={onNavigate} />
+            ))}
+          </div>
+        ) : null}
+        {!collapsed && manageItems.length > 0 && (
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-ink-ghost">
             Manage
           </p>
         )}
         <div className="space-y-1">
-          {manageNav.map((item) => (
+          {manageItems.map((item) => (
             <NavItem key={item.to} {...item} collapsed={collapsed} onNavigate={onNavigate} />
           ))}
         </div>
@@ -173,8 +210,8 @@ export const Sidebar = ({ variant = 'desktop' }: SidebarProps) => {
           </div>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <p className="truncate font-serif text-sm font-semibold text-ink">Dr. {displayName}</p>
-              <p className="text-xs text-ink-soft">Chief Physician</p>
+              <p className="truncate font-serif text-sm font-semibold text-ink">{displayName}</p>
+              <p className="truncate text-xs text-ink-soft">{subtitle}</p>
             </div>
           )}
           <button

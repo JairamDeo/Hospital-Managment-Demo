@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
-import { adminAuth } from '../../middleware/adminAuthMiddleware.js';
+import { portalAuth } from '../../middleware/portalAuthMiddleware.js';
 import {
   adminLoginSchema,
   forgotPasswordMobileSchema,
@@ -24,6 +24,6 @@ router.post('/forgot-password/resend-otp', validateRequest(forgotPasswordMobileS
 router.post('/forgot-password/verify-otp', validateRequest(verifyOtpSchema), verifyOtp);
 router.post('/forgot-password/reset-password', validateRequest(resetPasswordSchema), resetPassword);
 
-router.get('/me', adminAuth, adminMe);
+router.get('/me', portalAuth, adminMe);
 
 export default router;

@@ -204,20 +204,6 @@ export const PatientProfileCard = ({
                 className={formInputClass}
               />
             </EditField>
-            <EditField label="Prakriti">
-              <select
-                value={profileForm.prakritiId}
-                onChange={(e) => set('prakritiId', e.target.value)}
-                className={formSelectClass}
-              >
-                <option value="">Select</option>
-                {prakritiMasters.map((m) => (
-                  <option key={m._id} value={m._id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </EditField>
             <EditField label="Treatment">
               <select
                 value={profileForm.treatmentId}

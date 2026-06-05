@@ -1,39 +1,33 @@
 import { Building2, Pill, Stethoscope, UserRound } from 'lucide-react';
-import type { StaffFilter } from '@/pages/staff/data/mockStaff';
-import { STAFF_STATS } from '@/pages/staff/data/mockStaff';
+import type { StaffFilter, StaffStats } from '@/types/staff.types';
+import { defaultStaffStats } from '@/utils/staffHelpers';
 
-const filters: {
-  id: Exclude<StaffFilter, 'all'>;
-  label: string;
-  count: number;
-  icon: typeof Stethoscope;
-  iconClass: string;
-}[] = [
+const buildFilters = (stats: StaffStats) => [
   {
-    id: 'doctor',
+    id: 'doctor' as const,
     label: 'Doctors',
-    count: STAFF_STATS.doctors,
+    count: stats.doctors,
     icon: Stethoscope,
     iconClass: 'bg-violet-100 text-violet-600',
   },
   {
-    id: 'therapist',
+    id: 'therapist' as const,
     label: 'Therapists',
-    count: STAFF_STATS.therapists,
+    count: stats.therapists,
     icon: UserRound,
     iconClass: 'bg-pink-100 text-pink-600',
   },
   {
-    id: 'pharmacist',
+    id: 'pharmacist' as const,
     label: 'Pharmacists',
-    count: STAFF_STATS.pharmacists,
+    count: stats.pharmacists,
     icon: Pill,
     iconClass: 'bg-amber-100 text-amber-700',
   },
   {
-    id: 'support',
+    id: 'support' as const,
     label: 'Support Staff',
-    count: STAFF_STATS.support,
+    count: stats.support,
     icon: Building2,
     iconClass: 'bg-teal-100 text-teal-700',
   },
@@ -41,10 +35,13 @@ const filters: {
 
 interface Props {
   active: StaffFilter;
+  stats?: StaffStats;
   onChange: (filter: StaffFilter) => void;
 }
 
-export const StaffRoleFilters = ({ active, onChange }: Props) => (
+export const StaffRoleFilters = ({ active, stats, onChange }: Props) => {
+  const filters = buildFilters(stats ?? defaultStaffStats());
+  return (
   <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
     {filters.map((f) => {
       const Icon = f.icon;
@@ -78,7 +75,8 @@ export const StaffRoleFilters = ({ active, onChange }: Props) => (
       );
     })}
   </div>
-);
+  );
+};
 
 interface ChipsProps {
   active: StaffFilter;

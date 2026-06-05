@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
@@ -7,64 +7,95 @@ import { AppointmentStatsCards } from '@/components/appointments/AppointmentStat
 import { ScheduleListItem } from '@/components/appointments/ScheduleListItem';
 import { ViewSwitcher, type CalendarView } from '@/components/appointments/ViewSwitcher';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
-import {
-  APPOINTMENT_STATS,
-  MOCK_APPOINTMENTS,
-  emptyAppointmentForm,
-  type Appointment,
-  type AppointmentFormValues,
-} from './data/mockAppointments';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
+import { getApiErrorMessage } from '@/utils/helpers';
+import { emptyAppointmentForm, hmsToAppointment } from '@/utils/appointmentHelpers';
+import type {
+  Appointment,
+  AppointmentDoctor,
+  AppointmentFormValues,
+  AppointmentStats,
+} from '@/types/appointment.types';
 
-const SELECTED_DATE = '2023-10-26';
+const defaultStats = (): AppointmentStats => ({
+  scheduledToday: 0,
+  completed: 0,
+  panchakarma: 0,
+  cancelled: 0,
+});
 
 export const AppointmentsPage = () => {
   const { patients } = useAdminPatientsList();
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [doctors, setDoctors] = useState<AppointmentDoctor[]>([]);
+  const [stats, setStats] = useState<AppointmentStats>(defaultStats());
+  const [listLoading, setListLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [view, setView] = useState<CalendarView>('month');
-  const [month, setMonth] = useState(9);
-  const [year, setYear] = useState(2023);
-  const [selectedDay, setSelectedDay] = useState(26);
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [modalOpen, setModalOpen] = useState(false);
   const [formInitial, setFormInitial] = useState(emptyAppointmentForm());
   const { showToast } = useToast();
+  const { canEdit } = usePermissions();
+
+  const selectedDateIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
+
+  const loadData = useCallback(async () => {
+    setListLoading(true);
+    try {
+      const [apptRes, statsRes, doctorsRes] = await Promise.all([
+        appointmentAdminService.list(),
+        appointmentAdminService.getStats(),
+        appointmentAdminService.listDoctors(),
+      ]);
+      setAppointments((apptRes.data.res?.appointments ?? []).map(hmsToAppointment));
+      setStats(statsRes.data.res?.stats ?? defaultStats());
+      setDoctors(doctorsRes.data.res?.doctors ?? []);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setListLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const todaySchedule = useMemo(
     () =>
       [...appointments]
-        .filter((a) => a.date === SELECTED_DATE)
+        .filter((a) => a.date === selectedDateIso)
         .sort((a, b) => a.time.localeCompare(b.time)),
-    [appointments]
+    [appointments, selectedDateIso]
   );
 
   const openNew = () => {
     setFormInitial({
       ...emptyAppointmentForm(),
-      date: `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+      date: selectedDateIso,
     });
     setModalOpen(true);
   };
 
-  const handleCreate = (values: AppointmentFormValues) => {
-    const patient = patients.find((p) => p.id === values.patientId);
-    if (!patient) return;
-
-    const newAppt: Appointment = {
-      id: `APT-${String(appointments.length + 1).padStart(3, '0')}`,
-      patientId: patient.id,
-      patientName: patient.name,
-      initials: patient.initials,
-      avatarClass: patient.avatarClass,
-      type: values.type,
-      date: values.date,
-      time: values.time,
-      status: 'Soon',
-      notes: values.notes,
-    };
-
-    setAppointments((prev) => [...prev, newAppt]);
-    setModalOpen(false);
-    showToast(`Appointment scheduled for ${patient.name}`, 'success');
+  const handleCreate = async (values: AppointmentFormValues) => {
+    setSubmitting(true);
+    try {
+      const { data } = await appointmentAdminService.create(values);
+      if (data.status_code === 201) {
+        setModalOpen(false);
+        showToast(`Appointment scheduled successfully`, 'success');
+        await loadData();
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const prevMonth = () => {
@@ -93,16 +124,17 @@ export const AppointmentsPage = () => {
             Appointments
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {APPOINTMENT_STATS.scheduledToday} scheduled today ·{' '}
-            {APPOINTMENT_STATS.completed} completed
+            {stats.scheduledToday} scheduled today · {stats.completed} completed
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ViewSwitcher value={view} onChange={setView} />
-          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openNew}>
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            New Appointment
-          </Button>
+          {canEdit('appointments') ? (
+            <Button className="gap-2 rounded-lg px-4 py-2" onClick={openNew}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              New Appointment
+            </Button>
+          ) : null}
         </div>
       </div>
 
@@ -117,20 +149,17 @@ export const AppointmentsPage = () => {
         />
 
         <aside className="flex h-full min-h-0 flex-col gap-3">
-          <AppointmentStatsCards />
-
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border-sage bg-white">
-            <div className="shrink-0 border-b border-border-sage px-4 py-3">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                Today&apos;s Schedule
-              </h3>
-              <p className="mt-0.5 text-xs text-ink-soft">
-                Oct 26, 2023 · {todaySchedule.length} appointments
-              </p>
+          <AppointmentStatsCards stats={stats} />
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
+            <div className="border-b border-border-sage px-4 py-3">
+              <h2 className="text-sm font-semibold text-ink">Today&apos;s schedule</h2>
+              <p className="text-xs text-ink-soft">{selectedDateIso}</p>
             </div>
-            <div className="flex-1 space-y-2 overflow-y-auto p-3">
-              {todaySchedule.length === 0 ? (
-                <p className="py-8 text-center text-sm text-ink-soft">No appointments today</p>
+            <div className="min-h-0 flex-1 overflow-y-auto p-3">
+              {listLoading ? (
+                <p className="py-8 text-center text-sm text-ink-soft">Loading…</p>
+              ) : todaySchedule.length === 0 ? (
+                <p className="py-8 text-center text-sm text-ink-soft">No appointments this day</p>
               ) : (
                 todaySchedule.map((a) => <ScheduleListItem key={a.id} appointment={a} />)
               )}
@@ -144,6 +173,8 @@ export const AppointmentsPage = () => {
         open={modalOpen}
         initial={formInitial}
         patients={patients}
+        doctors={doctors}
+        submitting={submitting}
         onClose={() => setModalOpen(false)}
         onSubmit={handleCreate}
       />

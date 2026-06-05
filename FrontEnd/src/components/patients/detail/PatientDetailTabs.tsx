@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import type { MasterItem } from '@/types/api.types';
 import type { PatientDetail, PatientDetailTab } from '@/types/patientDetail.types';
 import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
@@ -58,6 +59,7 @@ interface Props {
   activeTab?: PatientDetailTab;
   onTabChange?: (tab: PatientDetailTab) => void;
   clinical?: ClinicalProps;
+  prakritiMasters?: MasterItem[];
   prescriptions?: PrescriptionProps;
 }
 
@@ -66,6 +68,7 @@ export const PatientDetailTabs = ({
   activeTab: controlledTab,
   onTabChange,
   clinical,
+  prakritiMasters = [],
   prescriptions,
 }: Props) => {
   const [internalTab, setInternalTab] = useState<PatientDetailTab>('patient-info');
@@ -124,6 +127,7 @@ export const PatientDetailTabs = ({
         {activeTab === 'patient-info' && clinical ? (
           <PatientClinicalInfoPanel
             clinical={clinical.clinical}
+            prakritiMasters={prakritiMasters}
             loading={clinical.clinicalLoading}
             saving={clinical.savingClinical}
             editing={clinical.clinicalEditing}

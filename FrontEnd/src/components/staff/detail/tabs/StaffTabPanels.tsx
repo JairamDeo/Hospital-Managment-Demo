@@ -64,17 +64,36 @@ export const StaffScheduleTab = ({ slots }: { slots: StaffScheduleSlot[] }) => (
   </TableShell>
 );
 
-export const StaffAssignmentsTab = ({ assignments }: { assignments: StaffAssignment[] }) => (
+export const StaffAssignmentsTab = ({
+  assignments,
+  showAppointments = false,
+  showPanchakarma = false,
+}: {
+  assignments: StaffAssignment[];
+  showAppointments?: boolean;
+  showPanchakarma?: boolean;
+}) => (
   <TableShell>
     <thead>
       <tr className="border-b border-border-sage bg-cream/60">
         <Th>Patient</Th>
-        <Th>Program</Th>
-        <Th>Since</Th>
+        <Th>{showPanchakarma ? 'Panchakarma Program' : showAppointments ? 'Appointment' : 'Program'}</Th>
+        <Th>{showAppointments ? 'Time' : 'Start Date'}</Th>
         <Th>Status</Th>
       </tr>
     </thead>
     <tbody>
+      {assignments.length === 0 ? (
+        <tr>
+          <td colSpan={4} className="px-4 py-10 text-center text-sm text-ink-soft">
+            {showPanchakarma
+              ? 'No Panchakarma programs assigned to this therapist yet.'
+              : showAppointments
+                ? 'No scheduled appointments for this doctor yet.'
+                : 'No assignments yet.'}
+          </td>
+        </tr>
+      ) : null}
       {assignments.map((a) => (
         <tr key={a.id} className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30">
           <td className="px-4 py-3">

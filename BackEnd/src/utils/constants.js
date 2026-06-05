@@ -48,6 +48,9 @@ export const ErrorMessages = {
     GOOGLE_RECAPTCHA_ERROR: 'Google Recaptcha Token Missing',
     GOOGLE_RECAPTCHA_INVALID: 'Google Recaptcha Token Invalid',
     PATIENT_NOT_FOUND: 'Patient not found',
+    STAFF_NOT_FOUND: 'Staff member not found',
+    DOCTOR_NOT_FOUND: 'Doctor not found',
+    THERAPIST_NOT_FOUND: 'Therapist not found',
     INVALID_CREDENTIALS: 'Invalid email or password',
     INVALID_USERNAME: 'Invalid mobile number',
     INVALID_PASSWORD: 'Invalid password',
@@ -124,6 +127,36 @@ export const ADMIN_MESSAGES = {
   SMS_SEND_FAILED: 'Failed to send OTP SMS. Please try again later',
 };
 
+
+export const PANCHAKARMA_MESSAGES = {
+  LIST_FETCHED: 'Panchakarma programs fetched successfully',
+  STATS_FETCHED: 'Panchakarma stats fetched successfully',
+  THERAPISTS_FETCHED: 'Therapists fetched successfully',
+  ROOMS_FETCHED: 'Treatment rooms fetched successfully',
+  CREATED: 'Panchakarma program scheduled successfully',
+  ROOM_UNAVAILABLE:
+    'This treatment room is already occupied by an active program. Please choose another room.',
+  STAFF_NOT_THERAPIST: 'Selected staff member is not a therapist',
+};
+
+export const APPOINTMENT_MESSAGES = {
+  LIST_FETCHED: 'Appointments fetched successfully',
+  STATS_FETCHED: 'Appointment stats fetched successfully',
+  AVAILABILITY_FETCHED: 'Doctor availability fetched successfully',
+  DOCTORS_FETCHED: 'Doctors fetched successfully',
+  CREATED: 'Appointment scheduled successfully',
+  DOCTOR_SLOT_UNAVAILABLE:
+    'This doctor already has an appointment at the selected date and time. Please choose another slot.',
+  STAFF_NOT_DOCTOR: 'Selected staff member is not a doctor',
+};
+
+export const STAFF_MESSAGES = {
+  LIST_FETCHED: 'Staff directory fetched successfully',
+  STATS_FETCHED: 'Staff stats fetched successfully',
+  FETCHED: 'Staff member fetched successfully',
+  CREATED: 'Staff member added successfully',
+  UPDATED: 'Staff member updated successfully',
+};
 
 export const PATIENT_MESSAGES = {
   LIST_FETCHED: 'Patients fetched successfully',

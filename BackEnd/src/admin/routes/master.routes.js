@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
-import { adminAuth } from '../../middleware/adminAuthMiddleware.js';
+import { portalAuth } from '../../middleware/portalAuthMiddleware.js';
 import { masterNameSchema, masterUpdateSchema } from '../validators/hmsPatient.validator.js';
 import {
   getPrakritiList,
@@ -19,7 +19,7 @@ import {
 
 const router = Router();
 
-router.use(adminAuth);
+router.use(portalAuth);
 
 router.get('/prakriti', getPrakritiList);
 router.post('/prakriti', validateRequest(masterNameSchema), postPrakriti);

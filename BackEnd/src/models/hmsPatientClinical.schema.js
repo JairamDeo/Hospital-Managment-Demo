@@ -4,6 +4,7 @@ const trimStr = { type: String, trim: true, default: '' };
 
 export const generalExaminationSchema = new Schema(
   {
+    prakriti: trimStr,
     nadi: trimStr,
     jivha: trimStr,
     stool: trimStr,

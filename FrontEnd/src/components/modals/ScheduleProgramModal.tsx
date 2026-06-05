@@ -1,33 +1,66 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import type { Patient } from '@/types/patient.types';
+import type {
+  ScheduleProgramFormValues,
+  TherapistOnDuty,
+  TreatmentRoom,
+} from '@/types/panchakarma.types';
 import {
-  MOCK_THERAPISTS,
   PROGRAM_DAY_OPTIONS,
   ROOM_OPTIONS,
   THERAPY_OPTIONS,
-  type ScheduleProgramFormValues,
-} from '@/pages/panchakarma/data/mockPanchakarma';
+} from '@/types/panchakarma.types';
 
 interface Props {
   open: boolean;
   initial: ScheduleProgramFormValues;
   patients: Patient[];
+  therapists: TherapistOnDuty[];
+  rooms: TreatmentRoom[];
+  submitting?: boolean;
   onClose: () => void;
-  onSubmit: (values: ScheduleProgramFormValues) => void;
+  onSubmit: (values: ScheduleProgramFormValues) => void | Promise<void>;
 }
 
-export const ScheduleProgramModal = ({ open, initial, patients, onClose, onSubmit }: Props) => {
+export const ScheduleProgramModal = ({
+  open,
+  initial,
+  patients,
+  therapists,
+  rooms,
+  submitting = false,
+  onClose,
+  onSubmit,
+}: Props) => {
   const [form, setForm] = useState<ScheduleProgramFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof ScheduleProgramFormValues, string>>>({});
+
+  useEffect(() => {
+    if (open) setForm(initial);
+  }, [open, initial]);
+
+  const occupiedRooms = new Set(
+    rooms.filter((r) => r.status === 'Occupied').map((r) => r.name)
+  );
+
+  const availableRooms = ROOM_OPTIONS.filter((r) => !occupiedRooms.has(r));
+
+  useEffect(() => {
+    if (!form.room || availableRooms.includes(form.room)) return;
+    setForm((f) => ({ ...f, room: availableRooms[0] ?? '' }));
+  }, [availableRooms, form.room]);
 
   const validate = () => {
     const next: typeof errors = {};
     if (!form.patientId) next.patientId = 'Select a patient';
     if (!form.therapistId) next.therapistId = 'Select a therapist';
     if (!form.room) next.room = 'Select a room';
+    if (form.room && occupiedRooms.has(form.room)) {
+      next.room = 'This room is currently occupied';
+    }
     if (!form.startDate) next.startDate = 'Start date is required';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -55,10 +88,12 @@ export const ScheduleProgramModal = ({ open, initial, patients, onClose, onSubmi
       size="lg"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Create Program</Button>
+          <Button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? 'Creating…' : 'Create Program'}
+          </Button>
         </>
       }
     >
@@ -119,11 +154,15 @@ export const ScheduleProgramModal = ({ open, initial, patients, onClose, onSubmi
             onChange={(e) => set('room', e.target.value)}
             className={`${formSelectClass} ${errors.room ? 'border-danger' : ''}`}
           >
-            {ROOM_OPTIONS.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
+            {availableRooms.length === 0 ? (
+              <option value="">No rooms available</option>
+            ) : (
+              availableRooms.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))
+            )}
           </select>
           {errors.room ? <p className="mt-1 text-xs text-danger">{errors.room}</p> : null}
         </div>
@@ -136,7 +175,7 @@ export const ScheduleProgramModal = ({ open, initial, patients, onClose, onSubmi
             className={`${formSelectClass} ${errors.therapistId ? 'border-danger' : ''}`}
           >
             <option value="">Select therapist</option>
-            {MOCK_THERAPISTS.map((t) => (
+            {therapists.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name} — {t.specialty}
               </option>

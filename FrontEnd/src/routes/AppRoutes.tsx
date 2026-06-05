@@ -16,6 +16,7 @@ const CustomerLoginPage = lazy(() => import('@/pages/customer/CustomerLoginPage'
 const CustomerRegisterPage = lazy(() => import('@/pages/customer/CustomerRegisterPage'));
 const CustomerVerifyOtpPage = lazy(() => import('@/pages/customer/CustomerVerifyOtpPage'));
 const CustomerHomePage = lazy(() => import('@/pages/customer/CustomerHomePage'));
+const CustomerAppointmentsPage = lazy(() => import('@/pages/customer/CustomerAppointmentsPage'));
 const CustomerProfilePage = lazy(() => import('@/pages/customer/CustomerProfilePage'));
 
 const LoginPage = lazy(() => import('@/pages/auth/Login/LoginPage'));
@@ -84,6 +85,10 @@ export const AppRoutes = () => (
       }
     >
       <Route path={ROUTES.CUSTOMER_HOME} element={withSuspense(<CustomerHomePage />)} />
+      <Route
+        path={ROUTES.CUSTOMER_APPOINTMENTS}
+        element={withSuspense(<CustomerAppointmentsPage />)}
+      />
       <Route path={ROUTES.CUSTOMER_PROFILE} element={withSuspense(<CustomerProfilePage />)} />
     </Route>
 

@@ -1,8 +1,16 @@
-export const getInitials = (first?: string, last?: string, fallback = 'AD') => {
+export const getInitials = (first?: string, last?: string, nameOrFallback = 'AD') => {
   const f = first?.charAt(0) ?? '';
   const l = last?.charAt(0) ?? '';
-  const initials = `${f}${l}`.toUpperCase();
-  return initials || fallback;
+  let initials = `${f}${l}`.toUpperCase();
+  if (!initials && nameOrFallback && nameOrFallback !== 'AD') {
+    const parts = nameOrFallback.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      initials = `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+    } else {
+      initials = nameOrFallback.slice(0, 2).toUpperCase();
+    }
+  }
+  return initials || 'AD';
 };
 
 export const formatDisplayName = (

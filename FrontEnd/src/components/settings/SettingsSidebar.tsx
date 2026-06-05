@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarDays,
   Leaf,
+  LockKeyhole,
   Receipt,
   Shield,
   User,
@@ -10,24 +11,29 @@ import {
 } from 'lucide-react';
 import type { SettingsSectionId } from '@/pages/settings/data/mockSettings';
 
-const NAV: { id: SettingsSectionId; label: string; icon: LucideIcon }[] = [
-  { id: 'clinic', label: 'Clinic Profile', icon: Building2 },
-  { id: 'account', label: 'My Account', icon: User },
-  { id: 'appointments', label: 'Appointments', icon: CalendarDays },
-  { id: 'billing', label: 'Billing', icon: Receipt },
-  { id: 'panchakarma', label: 'Panchakarma', icon: Leaf },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'security', label: 'Security', icon: Shield },
-];
+const ALL_NAV: { id: SettingsSectionId; label: string; icon: LucideIcon; adminOnly?: boolean }[] =
+  [
+    { id: 'clinic', label: 'Clinic Profile', icon: Building2, adminOnly: true },
+    { id: 'account', label: 'My Account', icon: User },
+    { id: 'appointments', label: 'Appointments', icon: CalendarDays, adminOnly: true },
+    { id: 'billing', label: 'Billing', icon: Receipt, adminOnly: true },
+    { id: 'panchakarma', label: 'Panchakarma', icon: Leaf, adminOnly: true },
+    { id: 'notifications', label: 'Notifications', icon: Bell, adminOnly: true },
+    { id: 'security', label: 'Security', icon: Shield },
+    { id: 'rbac', label: 'Access Control', icon: LockKeyhole, adminOnly: true },
+  ];
 
 interface Props {
   active: SettingsSectionId;
   onChange: (id: SettingsSectionId) => void;
+  isAdmin?: boolean;
 }
 
-export const SettingsSidebar = ({ active, onChange }: Props) => (
+export const SettingsSidebar = ({ active, onChange, isAdmin = false }: Props) => {
+  const nav = ALL_NAV.filter((item) => !item.adminOnly || isAdmin);
+  return (
   <nav className="flex flex-row gap-1 overflow-x-auto rounded-2xl border border-border-sage bg-white p-1.5 shadow-sm scrollbar-thin lg:flex-col lg:overflow-visible">
-    {NAV.map(({ id, label, icon: Icon }) => {
+    {nav.map(({ id, label, icon: Icon }) => {
       const isActive = active === id;
       return (
         <button
@@ -46,4 +52,5 @@ export const SettingsSidebar = ({ active, onChange }: Props) => (
       );
     })}
   </nav>
-);
+  );
+};

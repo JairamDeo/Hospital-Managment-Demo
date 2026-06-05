@@ -1,11 +1,12 @@
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import type { StaffMember } from '@/pages/staff/data/mockStaff';
-import { STAFF_STATS } from '@/pages/staff/data/mockStaff';
+import type { StaffMember, StaffStats } from '@/types/staff.types';
+import { defaultStaffStats } from '@/utils/staffHelpers';
 
 interface Props {
   open: boolean;
   staff: StaffMember[];
+  stats?: StaffStats;
   onClose: () => void;
 }
 
@@ -54,7 +55,8 @@ const ScheduleRow = ({ member }: { member: StaffMember }) => {
   );
 };
 
-export const StaffScheduleModal = ({ open, staff, onClose }: Props) => {
+export const StaffScheduleModal = ({ open, staff, stats, onClose }: Props) => {
+  const summary = stats ?? defaultStaffStats();
   const onDuty = staff.filter((s) => s.status === 'On Duty');
   const offDuty = staff.filter((s) => s.status === 'Off Duty');
   const today = new Date().toLocaleDateString('en-US', {
@@ -69,7 +71,7 @@ export const StaffScheduleModal = ({ open, staff, onClose }: Props) => {
       open={open}
       onClose={onClose}
       title="Today's Staff Schedule"
-      subtitle={`${today} · ${STAFF_STATS.onDuty} on duty`}
+      subtitle={`${today} · ${summary.onDuty} on duty`}
       size="lg"
       footer={
         <Button variant="secondary" onClick={onClose}>

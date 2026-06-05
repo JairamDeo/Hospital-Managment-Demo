@@ -1,0 +1,71 @@
+export const RBAC_MODULE_KEYS = [
+  'dashboard',
+  'patients',
+  'appointments',
+  'panchakarma',
+  'masterData',
+  'pharmacy',
+  'staff',
+  'analytics',
+  'billing',
+  'settings',
+];
+
+const full = () => ({ view: true, edit: true });
+const viewOnly = () => ({ view: true, edit: false });
+
+const denied = () => ({ view: false, edit: false });
+
+export const DEFAULT_RBAC_BY_ROLE = {
+  Doctor: {
+    dashboard: viewOnly(),
+    patients: viewOnly(),
+    appointments: { view: true, edit: true },
+    panchakarma: denied(),
+    masterData: denied(),
+    pharmacy: denied(),
+    staff: denied(),
+    analytics: denied(),
+    billing: denied(),
+    settings: denied(),
+  },
+  Therapist: {
+    dashboard: viewOnly(),
+    patients: denied(),
+    appointments: denied(),
+    panchakarma: { view: true, edit: true },
+    masterData: denied(),
+    pharmacy: denied(),
+    staff: denied(),
+    analytics: denied(),
+    billing: denied(),
+    settings: denied(),
+  },
+  Pharmacist: {
+    dashboard: viewOnly(),
+    patients: viewOnly(),
+    appointments: { view: false, edit: false },
+    panchakarma: { view: false, edit: false },
+    masterData: { view: false, edit: false },
+    pharmacy: { view: true, edit: true },
+    staff: viewOnly(),
+    analytics: { view: false, edit: false },
+    billing: { view: false, edit: false },
+    settings: viewOnly(),
+  },
+  Support: {
+    dashboard: viewOnly(),
+    patients: { view: true, edit: true },
+    appointments: { view: true, edit: true },
+    panchakarma: viewOnly(),
+    masterData: { view: false, edit: false },
+    pharmacy: viewOnly(),
+    staff: viewOnly(),
+    analytics: { view: false, edit: false },
+    billing: viewOnly(),
+    settings: viewOnly(),
+  },
+};
+
+export const adminPermissions = () =>
+  Object.fromEntries(RBAC_MODULE_KEYS.map((key) => [key, full()]));

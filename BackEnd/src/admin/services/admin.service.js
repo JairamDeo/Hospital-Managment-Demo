@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import User from '../../models/user.model.js';
+import HmsStaff from '../../models/hmsStaff.model.js';
 import { generateToken } from '../../utils/tokenUtil.js';
+import { getPortalPermissions } from '../../utils/rbac.service.js';
 import { ErrorMessages, ADMIN_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { CLIENT } from '../../utils/constants.js';
@@ -43,28 +45,70 @@ const issueResetToken = async (user) => {
   return resetToken;
 };
 
-export const loginAdmin = async (email, password) => {
-  const user = await User.findOne({ email: email.toLowerCase(), role: 'admin' });
-  if (!user) {
-    throw new Error(ErrorMessages.INVALID_CREDENTIALS);
-  }
-  const isValid = await user.comparePassword(password);
-  if (!isValid) {
-    throw new Error(ErrorMessages.INVALID_CREDENTIALS);
-  }
-  if (!user.status) {
-    throw new Error(ADMIN_MESSAGES.ACCOUNT_INACTIVE);
-  }
-  const token = generateToken(user._id, { role: 'admin' });
-  return { token, user: sanitizeUser(user) };
+const formatStaffUser = async (staff) => {
+  const permissions = await getPortalPermissions('staff', staff.role);
+  return {
+    _id: String(staff._id),
+    accountType: 'staff',
+    role: 'staff',
+    staffRole: staff.role,
+    staffCode: staff.staffCode,
+    name: staff.name,
+    email: staff.email,
+    title: staff.title,
+    permissions,
+  };
 };
 
-export const getAdminProfile = async (userId) => {
+export const loginAdmin = async (email, password) => {
+  const normalized = email.toLowerCase().trim();
+
+  const admin = await User.findOne({ email: normalized, role: 'admin' });
+  if (admin) {
+    const isValid = await admin.comparePassword(password);
+    if (!isValid) throw new Error(ErrorMessages.INVALID_CREDENTIALS);
+    if (!admin.status) throw new Error(ADMIN_MESSAGES.ACCOUNT_INACTIVE);
+    const permissions = await getPortalPermissions('admin');
+    const token = generateToken(admin._id, { role: 'admin' });
+    return {
+      token,
+      user: {
+        ...sanitizeUser(admin),
+        accountType: 'admin',
+        role: 'admin',
+        permissions,
+      },
+    };
+  }
+
+  const staff = await HmsStaff.findOne({ email: normalized, status: true });
+  if (!staff) throw new Error(ErrorMessages.INVALID_CREDENTIALS);
+
+  const staffValid = await staff.comparePassword(password);
+  if (!staffValid) throw new Error(ErrorMessages.INVALID_CREDENTIALS);
+
+  const token = generateToken(staff._id, { role: 'staff', staffRole: staff.role });
+  return { token, user: await formatStaffUser(staff) };
+};
+
+export const getAdminProfile = async (userId, jwtRole = 'admin') => {
+  if (jwtRole === 'staff') {
+    const staff = await HmsStaff.findById(userId).select('-password');
+    if (!staff || !staff.status) throw new Error(ErrorMessages.USER_NOT_FOUND);
+    return formatStaffUser(staff);
+  }
+
   const user = await User.findById(userId).select('-password -otp -resetToken');
   if (!user || user.role !== 'admin') {
     throw new Error(ErrorMessages.USER_NOT_FOUND);
   }
-  return user;
+  const permissions = await getPortalPermissions('admin');
+  return {
+    ...sanitizeUser(user),
+    accountType: 'admin',
+    role: 'admin',
+    permissions,
+  };
 };
 
 export const sendForgotPasswordOtp = async (mobileNumber) => {

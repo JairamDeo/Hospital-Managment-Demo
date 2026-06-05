@@ -6,7 +6,7 @@ import { APP_NAME } from '@/constants/constants';
 
 const navItems = [
   { to: ROUTES.CUSTOMER_HOME, label: 'Home', icon: Home },
-  { to: ROUTES.CUSTOMER_HOME, label: 'Appointments', icon: CalendarDays, disabled: true },
+  { to: ROUTES.CUSTOMER_APPOINTMENTS, label: 'Appointments', icon: CalendarDays },
   { to: ROUTES.CUSTOMER_HOME, label: 'Therapies', icon: Leaf, disabled: true },
   { to: ROUTES.CUSTOMER_PROFILE, label: 'Profile', icon: UserRound },
 ];

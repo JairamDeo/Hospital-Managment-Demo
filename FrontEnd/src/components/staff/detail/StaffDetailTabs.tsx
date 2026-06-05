@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { StaffDetail, StaffDetailTab } from '@/pages/staff/data/mockStaffDetails';
+import type { StaffAssignment, StaffDetail, StaffDetailTab } from '@/pages/staff/data/mockStaffDetails';
 import { StaffActivityItem } from './StaffActivityItem';
 import {
   StaffAssignmentsTab,
@@ -29,10 +29,21 @@ const TABS: { id: StaffDetailTab; label: string; icon: LucideIcon }[] = [
 
 interface Props {
   staff: StaffDetail;
+  appointmentAssignments?: StaffAssignment[];
+  assignmentsLoading?: boolean;
+  assignmentsMode?: 'appointments' | 'panchakarma';
 }
 
-export const StaffDetailTabs = ({ staff }: Props) => {
-  const [activeTab, setActiveTab] = useState<StaffDetailTab>('activity');
+export const StaffDetailTabs = ({
+  staff,
+  appointmentAssignments = [],
+  assignmentsLoading = false,
+  assignmentsMode = 'appointments',
+}: Props) => {
+  const [activeTab, setActiveTab] = useState<StaffDetailTab>('assignments');
+  const assignments =
+    appointmentAssignments.length > 0 ? appointmentAssignments : staff.assignments;
+  const showAppointments = assignmentsMode === 'appointments';
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border-sage bg-white shadow-sm">
@@ -74,7 +85,15 @@ export const StaffDetailTabs = ({ staff }: Props) => {
         ) : null}
         {activeTab === 'schedule' ? <StaffScheduleTab slots={staff.weeklySchedule} /> : null}
         {activeTab === 'assignments' ? (
-          <StaffAssignmentsTab assignments={staff.assignments} />
+          assignmentsLoading ? (
+            <p className="py-8 text-center text-sm text-ink-soft">Loading appointments…</p>
+          ) : (
+            <StaffAssignmentsTab
+              assignments={assignments}
+              showAppointments={showAppointments}
+              showPanchakarma={assignmentsMode === 'panchakarma'}
+            />
+          )
         ) : null}
         {activeTab === 'performance' ? (
           <StaffPerformanceTab records={staff.performanceRecords} />

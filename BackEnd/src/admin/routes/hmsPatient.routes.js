@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
-import { adminAuth } from '../../middleware/adminAuthMiddleware.js';
+import { portalAuth } from '../../middleware/portalAuthMiddleware.js';
 import {
   adminCreatePatientSchema,
   adminUpdatePatientSchema,
@@ -28,7 +28,7 @@ import { PATIENT_MESSAGES } from '../../utils/constants.js';
 
 const router = Router();
 
-router.use(adminAuth);
+router.use(portalAuth);
 
 router.get('/', getPatients);
 router.get('/stats/summary', getPatientsStats);

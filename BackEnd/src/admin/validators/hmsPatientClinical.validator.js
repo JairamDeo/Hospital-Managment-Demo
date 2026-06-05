@@ -4,6 +4,7 @@ const trimStr = Joi.string().trim().allow('').optional();
 const section = (shape) => Joi.object(shape).optional();
 
 const generalExaminationSchema = section({
+  prakriti: trimStr,
   nadi: trimStr,
   jivha: trimStr,
   stool: trimStr,

@@ -30,7 +30,7 @@ export const adminLogin = async (req, res) => {
 
 export const adminMe = async (req, res) => {
   try {
-    const user = await getAdminProfile(req.user.id);
+    const user = await getAdminProfile(req.user.id, req.user.role);
     return customResponse(res, ADMIN_MESSAGES.PROFILE_FETCHED, 200, { user });
   } catch (error) {
     if (error.message === ErrorMessages.USER_NOT_FOUND) {

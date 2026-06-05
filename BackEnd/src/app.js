@@ -9,12 +9,12 @@ import userRoutes from './routes/user.routes.js';
 import adminRoutes from './admin/routes/admin.routes.js';
 import patientPortalRoutes from './patient-portal/routes/patientPortal.routes.js';
 import hmsPatientRoutes from './admin/routes/hmsPatient.routes.js';
+import hmsStaffRoutes from './admin/routes/hmsStaff.routes.js';
+import hmsAppointmentRoutes from './admin/routes/hmsAppointment.routes.js';
+import hmsPanchakarmaRoutes from './admin/routes/hmsPanchakarma.routes.js';
+import rbacRoutes from './admin/routes/rbac.routes.js';
 import masterRoutes from './admin/routes/master.routes.js';
 import pharmacyRoutes from './admin/routes/pharmacy.routes.js';
-import { seedMastersIfEmpty } from './seed/seedMasters.js';
-import { seedPharmacyIfEmpty } from './seed/seedPharmacy.js';
-import { migratePharmacyItems } from './seed/migratePharmacyItems.js';
-import { seedHmsPatients } from './seed/seedHmsPatients.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
 
@@ -53,12 +53,7 @@ app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-connectDB().then(async () => {
-  await seedMastersIfEmpty();
-  await seedPharmacyIfEmpty();
-  await migratePharmacyItems();
-  await seedHmsPatients();
-});
+connectDB();
 
 app.get('/api/health', (_req, res) => {
   customResponse(res, 'OK', 200, { status: 'healthy' });
@@ -68,6 +63,10 @@ app.use('/api/patient', patientRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/patients', hmsPatientRoutes);
+app.use('/api/admin/staff', hmsStaffRoutes);
+app.use('/api/admin/appointments', hmsAppointmentRoutes);
+app.use('/api/admin/panchakarma', hmsPanchakarmaRoutes);
+app.use('/api/admin/rbac', rbacRoutes);
 app.use('/api/admin/master', masterRoutes);
 app.use('/api/admin/pharmacy', pharmacyRoutes);
 app.use('/api/patient-portal', patientPortalRoutes);

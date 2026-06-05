@@ -5,6 +5,8 @@ import { SettingsToggle } from '@/components/settings/SettingsToggle';
 import { Input } from '@/components/ui/Input';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
+import { RbacSettingsPanel } from '@/components/settings/RbacSettingsPanel';
 import { useToast } from '@/hooks/useToast';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
 import {
@@ -30,8 +32,9 @@ const Field = ({
 
 export const SettingsPage = () => {
   const { user } = useAuth();
+  const { isAdmin } = usePermissions();
   const { showToast } = useToast();
-  const [active, setActive] = useState<SettingsSectionId>('clinic');
+  const [active, setActive] = useState<SettingsSectionId>(isAdmin ? 'clinic' : 'account');
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
   const [security, setSecurity] = useState({
@@ -89,7 +92,7 @@ export const SettingsPage = () => {
 
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
         <aside className="w-full shrink-0 lg:w-[220px] xl:w-[240px]">
-          <SettingsSidebar active={active} onChange={setActive} />
+          <SettingsSidebar active={active} onChange={setActive} isAdmin={isAdmin} />
         </aside>
 
         <div className="min-w-0 flex-1">
@@ -420,6 +423,10 @@ export const SettingsPage = () => {
                 />
               </div>
             </SettingsSectionCard>
+          ) : null}
+
+          {active === 'rbac' && isAdmin ? (
+            <RbacSettingsPanel />
           ) : null}
 
           {active === 'security' ? (

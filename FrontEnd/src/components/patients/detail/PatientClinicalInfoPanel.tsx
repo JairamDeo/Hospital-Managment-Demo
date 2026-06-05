@@ -15,7 +15,9 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { formInputClass, formLabelClass } from '@/components/ui/formStyles';
+import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
+import { GENERAL_EXAMINATION_OPTIONS } from '@/constants/patientGeneralExaminationOptions';
+import type { MasterItem } from '@/types/api.types';
 import type {
   ClinicalSectionKey,
   PatientClinicalProfile,
@@ -91,6 +93,7 @@ const SECTIONS: SectionDef[] = [
 
 const GENERAL_FIELDS: { key: keyof PatientClinicalProfile['generalExamination']; label: string }[] =
   [
+    { key: 'prakriti', label: 'Prakriti' },
     { key: 'nadi', label: 'Nadi (pulse)' },
     { key: 'jivha', label: 'Jivha (tongue)' },
     { key: 'stool', label: 'Stool' },
@@ -148,6 +151,7 @@ const METABOLIC_PAIRS: {
 
 interface Props {
   clinical: PatientClinicalProfile;
+  prakritiMasters?: MasterItem[];
   loading?: boolean;
   saving?: boolean;
   editing?: boolean;
@@ -203,6 +207,47 @@ const Field = ({
   );
 };
 
+const SelectField = ({
+  label,
+  value,
+  options,
+  onChange,
+  readOnly,
+  placeholder = 'Select',
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+  readOnly?: boolean;
+  placeholder?: string;
+}) => {
+  const optionList =
+    value && !options.includes(value) ? [value, ...options] : options;
+  const locked = readOnly
+    ? 'cursor-default border-border-sage/60 bg-cream/40 text-ink-soft'
+    : 'border-border-sage/90 bg-white';
+
+  return (
+    <div className="group">
+      <label className={`${formLabelClass} text-ink-soft`}>{label}</label>
+      <select
+        value={value}
+        disabled={readOnly}
+        onChange={(e) => onChange(e.target.value)}
+        className={`${formSelectClass} transition-shadow focus:shadow-sm ${locked}`}
+      >
+        <option value="">{readOnly ? '—' : placeholder}</option>
+        {optionList.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 const StatCard = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-xl border border-sage/20 bg-gradient-to-br from-sage-mist/80 to-white px-4 py-3 shadow-sm">
     <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{label}</p>
@@ -212,6 +257,7 @@ const StatCard = ({ label, value }: { label: string; value: string }) => (
 
 export const PatientClinicalInfoPanel = ({
   clinical,
+  prakritiMasters = [],
   loading = false,
   saving = false,
   editing = false,
@@ -273,21 +319,30 @@ export const PatientClinicalInfoPanel = ({
           />
         );
 
-      case 'generalExamination':
+      case 'generalExamination': {
+        const prakritiOptions = prakritiMasters.map((m) => m.name);
         return (
           <div className="grid gap-4 sm:grid-cols-2">
-            {GENERAL_FIELDS.map((f) => (
-              <Field
-                key={f.key}
-                label={f.label}
-                value={clinical.generalExamination[f.key]}
-                onChange={(v) => patchNested('generalExamination', f.key, v)}
-                readOnly={readOnly}
-                placeholder="e.g. Normal, irregular…"
-              />
-            ))}
+            {GENERAL_FIELDS.map((f) => {
+              const value = clinical.generalExamination[f.key];
+              const options =
+                f.key === 'prakriti'
+                  ? prakritiOptions
+                  : GENERAL_EXAMINATION_OPTIONS[f.key];
+              return (
+                <SelectField
+                  key={f.key}
+                  label={f.label}
+                  value={value}
+                  options={options}
+                  onChange={(v) => patchNested('generalExamination', f.key, v)}
+                  readOnly={readOnly}
+                />
+              );
+            })}
           </div>
         );
+      }
 
       case 'diseaseHistory':
         return (
