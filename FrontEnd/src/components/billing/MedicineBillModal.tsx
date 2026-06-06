@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { NumericInput } from '@/components/ui/NumericInput';
 import { billingAdminService } from '@/services/billing/billingAdmin.service';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { pharmacyService } from '@/services/pharmacy/pharmacy.service';
 import { useToast } from '@/hooks/useToast';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
+import { FORM_DRAFT_CATEGORIES, draftContextKeys } from '@/store/formDraftStorage';
 import { getApiErrorMessage } from '@/utils/helpers';
-import { formatRupee, type PaymentMethodType } from '@/types/billing.types';
+import { formatRupee, PAYMENT_METHOD_OPTIONS, type PaymentMethodType } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
 import type { PharmacyItemApi } from '@/types/pharmacy.types';
 
@@ -23,6 +27,13 @@ interface LineRow {
   quantity: number;
   unitPrice: number;
   stock: number;
+}
+
+interface MedicineBillModalDraft {
+  patientCode: string;
+  search: string;
+  lines: LineRow[];
+  paymentMethod: PaymentMethodType;
 }
 
 const matchesSearch = (item: PharmacyItemApi, query: string) => {
@@ -46,10 +57,66 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const [selectedItem, setSelectedItem] = useState('');
   const [search, setSearch] = useState('');
   const [qty, setQty] = useState(1);
-  const [markPaid, setMarkPaid] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const buildDraftLabel = useCallback(
+    (draft: MedicineBillModalDraft) => {
+      const patient = patients.find((p) => p.patientCode === draft.patientCode);
+      const name = patient?.name ?? (draft.patientCode || 'No patient');
+      return `${name} · ${draft.lines.length} medicine${draft.lines.length === 1 ? '' : 's'}`;
+    },
+    [patients]
+  );
+
+  const {
+    drafts,
+    hasDrafts,
+    activeDraftId,
+    saveDraft,
+    saveNewDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraftAfterSubmit,
+  } = useFormDraft<MedicineBillModalDraft>(FORM_DRAFT_CATEGORIES.medicineBillModal, {
+    buildLabel: buildDraftLabel,
+  });
+
+  const draftPayload = (): MedicineBillModalDraft => ({
+    patientCode,
+    search,
+    lines,
+    paymentMethod,
+  });
+
+  const applyDraft = (draft: MedicineBillModalDraft) => {
+    setPatientCode(draft.patientCode);
+    setSearch(draft.search);
+    setLines(draft.lines);
+    setPaymentMethod(draft.paymentMethod ?? 'Cash');
+  };
+
+  const handleSaveDraft = () => {
+    saveDraft(draftPayload(), {
+      contextKey: patientCode ? draftContextKeys.patient(patientCode) : 'unsaved',
+    });
+    showToast('Medicine bill draft saved', 'success');
+  };
+
+  const handleSaveNewDraft = () => {
+    saveNewDraft(draftPayload(), {
+      contextKey: patientCode ? draftContextKeys.patient(patientCode) : 'unsaved',
+    });
+    showToast('New draft saved', 'success');
+  };
+
+  const handleRestoreDraft = (id: string) => {
+    const draft = restoreDraft(id);
+    if (!draft) return;
+    applyDraft(draft);
+    showToast('Draft restored — continue editing', 'success');
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -149,10 +216,11 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
           quantity: l.quantity,
           unitPrice: l.unitPrice,
         })),
-        markPaid,
-        paymentMethod: markPaid ? paymentMethod : undefined,
+        markPaid: true,
+        paymentMethod,
       });
       showToast('Medicine bill created', 'success');
+      clearDraftAfterSubmit(patientCode ? draftContextKeys.patient(patientCode) : undefined);
       setLines([]);
       setPatientCode('');
       setSearch('');
@@ -194,6 +262,18 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
           <p className="py-12 text-center text-sm text-ink-soft">Loading medicines…</p>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+            {hasDrafts ? (
+              <FormDraftPanel
+                drafts={drafts}
+                activeDraftId={activeDraftId}
+                onRestore={handleRestoreDraft}
+                onDiscard={(id) => {
+                  discardDraft(id);
+                  showToast('Draft discarded', 'success');
+                }}
+              />
+            ) : null}
+
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-ink-ghost">Patient</span>
               <select
@@ -283,14 +363,13 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
               </div>
 
               <div className="mt-3 flex flex-wrap items-end gap-2">
-                <div>
+                <div className="w-24">
                   <label className="mb-1 block text-[11px] font-semibold text-ink-ghost">Qty</label>
-                  <input
-                    type="number"
-                    min={1}
+                  <NumericInput
                     value={qty}
-                    onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
-                    className="w-20 rounded-lg border border-border-sage px-2 py-1.5 text-sm"
+                    onChange={setQty}
+                    min={1}
+                    className="px-2 py-1.5"
                   />
                 </div>
                 <Button
@@ -349,27 +428,20 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
               </div>
             ) : null}
 
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={markPaid}
-                onChange={(e) => setMarkPaid(e.target.checked)}
-              />
-              Collect payment now
-            </label>
-
-            {markPaid ? (
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-ink-ghost">Payment method</span>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
                 className="w-full rounded-lg border border-border-sage px-3 py-2 text-sm"
               >
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-                <option value="Net Banking">Net Banking</option>
+                {PAYMENT_METHOD_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
               </select>
-            ) : null}
+            </label>
           </div>
         )}
 
@@ -380,6 +452,14 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
           >
             Create bill {lines.length > 0 ? `· ${formatRupee(total)}` : ''}
           </Button>
+          <Button type="button" variant="secondary" onClick={handleSaveDraft} disabled={submitting}>
+            Save as draft
+          </Button>
+          {activeDraftId ? (
+            <Button type="button" variant="secondary" onClick={handleSaveNewDraft} disabled={submitting}>
+              Save as new draft
+            </Button>
+          ) : null}
           <Button variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
           </Button>

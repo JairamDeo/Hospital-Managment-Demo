@@ -43,7 +43,7 @@ export const AppointmentVisitSummaryRow = ({ appointment }: Props) => (
     <MetricCard
       icon={IndianRupee}
       label="Fee"
-      value={`${formatRupee(appointment.fee)} · ${appointment.paymentStatus}`}
+      value={`${formatRupee(appointment.fee ?? 0)} · ${appointment.paymentStatus}`}
     />
   </div>
 );

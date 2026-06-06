@@ -1,5 +1,5 @@
 import { customResponse } from '../../utils/response.js';
-import { BILLING_MESSAGES, ErrorMessages } from '../../utils/constants.js';
+import { BILLING_MESSAGES, ErrorMessages, PANCHAKARMA_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { resolveApiErrorMessage } from '../../utils/resolveApiErrorMessage.js';
 import {
@@ -8,6 +8,7 @@ import {
   getBillingStats,
   createMedicineInvoice,
   collectInvoicePayment,
+  createPanchakarmaInvoice,
 } from '../services/hmsBilling.service.js';
 
 const decodeParam = (param) => decodeURIComponent(param ?? '');
@@ -86,6 +87,26 @@ export const patchCollectPayment = async (req, res) => {
     const status = billingErrorStatus(error.message);
     if (status !== 500) return customResponse(res, error.message, status);
     logger.error('Collect payment error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postPanchakarmaPayment = async (req, res) => {
+  try {
+    const HmsPanchakarmaProgram = (await import('../../models/hmsPanchakarmaProgram.model.js')).default;
+    const program = await HmsPanchakarmaProgram.findOne({ programCode: req.body.programCode });
+    if (!program) throw new Error(PANCHAKARMA_MESSAGES.NOT_FOUND);
+
+    const invoice = await createPanchakarmaInvoice(program, req, {
+      markPaid: req.body.markPaid === true,
+      paymentMethod: req.body.paymentMethod,
+      payAmount: req.body.amount,
+    });
+    return customResponse(res, BILLING_MESSAGES.PAYMENT_COLLECTED, 200, { invoice });
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Panchakarma payment error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

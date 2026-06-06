@@ -36,6 +36,26 @@ const hmsPanchakarmaProgramSchema = new Schema({
     enum: ['Starting', 'Ongoing', 'Complete', 'Cancelled'],
     default: 'Starting',
   },
+  treatmentName: { type: String, trim: true, default: '' },
+  totalFees: { type: Number, min: 0, default: 0 },
+  amountPaid: { type: Number, min: 0, default: 0 },
+  appointmentCode: { type: String, default: '', index: true },
+  dailySessions: {
+    type: [
+      new Schema(
+        {
+          dayNumber: { type: Number, required: true, min: 1 },
+          sessionDate: { type: Date, default: null },
+          time: { type: String, default: '' },
+          duration: { type: String, default: '' },
+          panchakarmaType: { type: String, default: '' },
+          medicineContent: { type: String, default: '' },
+        },
+        { _id: true }
+      ),
+    ],
+    default: [],
+  },
   createdBy: { type: createdBySchema, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

@@ -4,17 +4,20 @@ import { PatientProfileCard } from '@/components/patients/detail/PatientProfileC
 import { PatientVitalsRow } from '@/components/patients/detail/PatientVitalsCard';
 import { PatientActiveTreatmentCard } from '@/components/patients/detail/PatientActiveTreatmentCard';
 import { PatientDetailTabs } from '@/components/patients/detail/PatientDetailTabs';
+import { AddVitalsModal } from '@/components/patients/detail/AddVitalsModal';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { buildPatientDetail } from '@/utils/buildPatientDetail';
 import { mergeClinicalFromApi, emptyClinicalProfile } from '@/utils/patientClinicalHelpers';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
+import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
 import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { detailToProfileForm } from '@/utils/patientHelpers';
-import type { MasterItem } from '@/types/api.types';
+import type { MasterItem, HmsPanchakarmaProgram } from '@/types/api.types';
 import type { PatientClinicalProfile } from '@/types/patientClinical.types';
-import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
+import type { StructuredPrescription } from '@/types/structuredPrescription.types';
+import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
 import type { PatientProfileFormValues } from '@/types/patient.types';
 import type { PatientDetail, PatientDetailTab } from '@/types/patientDetail.types';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -23,10 +26,11 @@ export const PatientDetailPage = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const location = useLocation();
   const { showToast } = useToast();
-  const { isAdmin, canEdit, staffRole } = usePermissions();
+  const { isAdmin, canEdit, staffRole, canCreatePrescription, canView } = usePermissions();
   const canManageVisits =
     (isAdmin && canEdit('appointments')) ||
     (staffRole === 'Doctor' && canEdit('appointments'));
+  const canRecordVitals = isAdmin || staffRole === 'Doctor';
   const [loading, setLoading] = useState(true);
   const [clinicalLoading, setClinicalLoading] = useState(true);
   const [savingClinical, setSavingClinical] = useState(false);
@@ -40,15 +44,19 @@ export const PatientDetailPage = () => {
   const [activeTab, setActiveTab] = useState<PatientDetailTab>('patient-info');
   const [prakritiMasters, setPrakritiMasters] = useState<MasterItem[]>([]);
   const [treatmentMasters, setTreatmentMasters] = useState<MasterItem[]>([]);
-  const [prescriptions, setPrescriptions] = useState<PatientPrescriptionPdf[]>([]);
+  const [prescriptions, setPrescriptions] = useState<StructuredPrescription[]>([]);
   const [rxLoading, setRxLoading] = useState(true);
-  const [rxUploading, setRxUploading] = useState(false);
+  const [panchakarmaPrograms, setPanchakarmaPrograms] = useState<HmsPanchakarmaProgram[]>([]);
+  const [pkLoading, setPkLoading] = useState(true);
+  const [vitalsHistory, setVitalsHistory] = useState<PatientVitalsEntry[]>([]);
+  const [vitalsOpen, setVitalsOpen] = useState(false);
+  const [vitalsSubmitting, setVitalsSubmitting] = useState(false);
 
   const loadPrescriptions = useCallback(async () => {
     if (!patientId) return;
     setRxLoading(true);
     try {
-      const { data } = await patientAdminService.listPrescriptions(patientId);
+      const { data } = await patientAdminService.listStructuredPrescriptions(patientId);
       setPrescriptions(data.res?.prescriptions ?? []);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
@@ -57,6 +65,29 @@ export const PatientDetailPage = () => {
       setRxLoading(false);
     }
   }, [patientId, showToast]);
+
+  const loadPanchakarmaPrograms = useCallback(async () => {
+    if (!patientId) return;
+    setPkLoading(true);
+    try {
+      const { data } = await panchakarmaAdminService.listByPatient(patientId);
+      setPanchakarmaPrograms(data.res?.programs ?? []);
+    } catch {
+      setPanchakarmaPrograms([]);
+    } finally {
+      setPkLoading(false);
+    }
+  }, [patientId]);
+
+  const loadVitalsHistory = useCallback(async () => {
+    if (!patientId) return;
+    try {
+      const { data } = await patientAdminService.listVitalsHistory(patientId);
+      setVitalsHistory(data.res?.vitalsHistory ?? []);
+    } catch {
+      setVitalsHistory([]);
+    }
+  }, [patientId]);
 
   const applyPatient = useCallback((detail: PatientDetail, clinicalData: PatientClinicalProfile) => {
     setPatient(detail);
@@ -85,6 +116,8 @@ export const PatientDetailPage = () => {
       setPrakritiMasters(prakritiRes.data.res?.items ?? []);
       setTreatmentMasters(treatmentRes.data.res?.items ?? []);
       void loadPrescriptions();
+      void loadPanchakarmaPrograms();
+      void loadVitalsHistory();
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
       setPatient(null);
@@ -92,7 +125,7 @@ export const PatientDetailPage = () => {
       setLoading(false);
       setClinicalLoading(false);
     }
-  }, [patientId, showToast, loadPrescriptions, applyPatient]);
+  }, [patientId, showToast, loadPrescriptions, loadPanchakarmaPrograms, loadVitalsHistory, applyPatient]);
 
   useEffect(() => {
     load();
@@ -184,35 +217,25 @@ export const PatientDetailPage = () => {
     }
   };
 
-  const handleUploadPrescription = async (file: File) => {
+  const handleAddVitals = async (payload: PatientVitalsPayload) => {
     if (!patientId) return;
-    setRxUploading(true);
+    setVitalsSubmitting(true);
     try {
-      const { data } = await patientAdminService.uploadPrescription(patientId, file);
-      if (data.status_code === 201 && data.res?.prescription) {
-        setPrescriptions((prev) => [data.res!.prescription, ...prev]);
-        showToast('Prescription PDF uploaded', 'success');
-      } else {
-        showToast(data.message || 'Upload failed', 'error');
-      }
-    } catch (err) {
-      showToast(getApiErrorMessage(err, 'Could not upload PDF.'), 'error');
-    } finally {
-      setRxUploading(false);
-    }
-  };
-
-  const handleDeletePrescription = async (id: string) => {
-    if (!patientId) return;
-    if (!window.confirm('Remove this prescription PDF?')) return;
-    try {
-      const { data } = await patientAdminService.deletePrescription(patientId, id);
-      if (data.status_code === 200) {
-        setPrescriptions((prev) => prev.filter((p) => p.id !== id));
-        showToast('Prescription removed', 'success');
+      const { data } = await patientAdminService.addVitals(patientId, payload);
+      if (data.res?.vitalsHistory) {
+        setVitalsHistory(data.res.vitalsHistory);
+        showToast('Vitals recorded', 'success');
+        setVitalsOpen(false);
+        const overviewRes = await patientAdminService.getOverview(patientId);
+        if (overviewRes.data.res?.patient) {
+          const detail = buildPatientDetail(overviewRes.data.res.patient, overviewRes.data.res.care);
+          applyPatient(detail, overviewRes.data.res.clinical ?? clinical);
+        }
       }
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setVitalsSubmitting(false);
     }
   };
 
@@ -249,9 +272,20 @@ export const PatientDetailPage = () => {
             <PatientActiveTreatmentCard treatment={patient.activeTreatment} />
           ) : null}
           <div className="hidden lg:block">
-            <h3 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Current Vitals
-            </h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+                Current Vitals
+              </h3>
+              {canRecordVitals ? (
+                <button
+                  type="button"
+                  onClick={() => setVitalsOpen(true)}
+                  className="text-[11px] font-semibold text-sage-deep hover:underline"
+                >
+                  Add vitals
+                </button>
+              ) : null}
+            </div>
             <PatientVitalsRow vitals={patient.vitals} layout="sidebar" />
           </div>
         </aside>
@@ -277,20 +311,45 @@ export const PatientDetailPage = () => {
               patientCode: patient.id,
               prescriptions,
               loading: rxLoading,
-              uploading: rxUploading,
-              onUpload: handleUploadPrescription,
-              onDelete: handleDeletePrescription,
+              canCreate: canCreatePrescription,
+              canView: canView('prescriptions'),
             }}
+            panchakarma={{
+              patientCode: patient.id,
+              programs: panchakarmaPrograms,
+              loading: pkLoading,
+            }}
+            vitalsHistory={vitalsHistory}
+            canRecordVitals={canRecordVitals}
+            onAddVitals={() => setVitalsOpen(true)}
           />
 
           <div className="lg:hidden">
-            <h3 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Current Vitals
-            </h3>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+                Current Vitals
+              </h3>
+              {canRecordVitals ? (
+                <button
+                  type="button"
+                  onClick={() => setVitalsOpen(true)}
+                  className="text-[11px] font-semibold text-sage-deep hover:underline"
+                >
+                  Add vitals
+                </button>
+              ) : null}
+            </div>
             <PatientVitalsRow vitals={patient.vitals} />
           </div>
         </section>
       </div>
+
+      <AddVitalsModal
+        open={vitalsOpen}
+        submitting={vitalsSubmitting}
+        onClose={() => !vitalsSubmitting && setVitalsOpen(false)}
+        onSubmit={handleAddVitals}
+      />
     </div>
   );
 };

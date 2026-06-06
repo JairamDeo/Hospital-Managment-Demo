@@ -1,16 +1,37 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
-import { CalendarCheck, UserRound } from 'lucide-react';
+import { CalendarCheck, FileText, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmActionModal } from '@/components/staff/detail/ConfirmActionModal';
+import { formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
+import { staffAdminService } from '@/services/staff/staffAdmin.service';
 import { useToast } from '@/hooks/useToast';
+import { useFormDraft } from '@/hooks/useFormDraft';
+import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
+import { FORM_DRAFT_CATEGORIES, draftContextKeys } from '@/store/formDraftStorage';
 import { usePermissions } from '@/hooks/usePermissions';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { formatDateLabel, formatTimeLabel } from '@/utils/appointmentHelpers';
 import { TIME_SLOTS } from '@/types/appointment.types';
-import { ROUTES, patientDetailPath } from '@/constants/routes';
+import { ROUTES, patientDetailPath, prescriptionPath } from '@/constants/routes';
+import {
+  PAYMENT_METHOD_OPTIONS,
+  type PaymentMethodType,
+} from '@/types/billing.types';
 import type { HmsAppointment } from '@/types/api.types';
+
+interface AppointmentAttendDraft {
+  appointmentCode: string;
+  patientName: string;
+  consultationFee: string;
+  visitNotes: string;
+  followUpDate: string;
+  followUpTimeSlot: string;
+  followUpNotes: string;
+  markPaid: boolean;
+  paymentMethod: PaymentMethodType;
+}
 
 const addDaysIso = (days: number) => {
   const d = new Date();
@@ -22,7 +43,7 @@ export const AppointmentFollowUpPage = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { isAdmin, isStaff, staffCode, canEdit } = usePermissions();
+  const { isAdmin, isStaff, staffCode, staffRole, canEdit, canCreatePrescription } = usePermissions();
   const [appointment, setAppointment] = useState<HmsAppointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -30,7 +51,74 @@ export const AppointmentFollowUpPage = () => {
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTimeSlot, setFollowUpTimeSlot] = useState('10:30');
   const [followUpNotes, setFollowUpNotes] = useState('');
+  const [visitNotes, setVisitNotes] = useState('');
   const [consultationFee, setConsultationFee] = useState('');
+  const [profileFee, setProfileFee] = useState<number | null>(null);
+  const [markPaid, setMarkPaid] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const canCollectPayment = staffRole !== 'Doctor';
+
+  const buildDraftLabel = useCallback((draft: AppointmentAttendDraft) => {
+    const parts = [draft.patientName || 'Patient', draft.appointmentCode].filter(Boolean);
+    if (draft.followUpDate) parts.push(`follow-up ${draft.followUpDate}`);
+    return parts.join(' · ');
+  }, []);
+
+  const {
+    drafts,
+    hasDrafts,
+    activeDraftId,
+    saveDraft,
+    saveNewDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraftAfterSubmit,
+  } = useFormDraft<AppointmentAttendDraft>(FORM_DRAFT_CATEGORIES.appointmentAttend, {
+    buildLabel: buildDraftLabel,
+  });
+
+  const draftPayload = (): AppointmentAttendDraft => ({
+    appointmentCode: appointment?.appointmentCode ?? appointmentId ?? '',
+    patientName: appointment?.patientName ?? '',
+    consultationFee,
+    visitNotes,
+    followUpDate,
+    followUpTimeSlot,
+    followUpNotes,
+    markPaid,
+    paymentMethod,
+  });
+
+  const applyDraft = (draft: AppointmentAttendDraft) => {
+    setConsultationFee(draft.consultationFee);
+    setVisitNotes(draft.visitNotes);
+    setFollowUpDate(draft.followUpDate);
+    setFollowUpTimeSlot(draft.followUpTimeSlot);
+    setFollowUpNotes(draft.followUpNotes);
+    setMarkPaid(draft.markPaid);
+    setPaymentMethod(draft.paymentMethod);
+  };
+
+  const handleSaveDraft = () => {
+    saveDraft(draftPayload(), {
+      contextKey: appointmentId ? draftContextKeys.appointment(appointmentId) : 'unsaved',
+    });
+    showToast('Visit draft saved', 'success');
+  };
+
+  const handleSaveNewDraft = () => {
+    saveNewDraft(draftPayload(), {
+      contextKey: appointmentId ? draftContextKeys.appointment(appointmentId) : 'unsaved',
+    });
+    showToast('New draft saved', 'success');
+  };
+
+  const handleRestoreDraft = (id: string) => {
+    const draft = restoreDraft(id);
+    if (!draft) return;
+    applyDraft(draft);
+    showToast('Draft restored — continue editing', 'success');
+  };
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -47,6 +135,26 @@ export const AppointmentFollowUpPage = () => {
           setFollowUpDate(row.followUpDate ?? '');
           setFollowUpTimeSlot(row.followUpTimeSlot ?? row.timeSlot ?? row.time ?? '10:30');
           setFollowUpNotes(row.followUpNotes ?? '');
+          setVisitNotes(row.visitNotes ?? '');
+          if (row.consultationFeeCharged != null) {
+            setConsultationFee(String(row.consultationFeeCharged));
+          }
+        }
+
+        if (row?.staffCode) {
+          try {
+            const staffRes = await staffAdminService.get(row.staffCode);
+            const doctor = staffRes.data.res?.staff;
+            if (doctor && !cancelled) {
+              const fee = doctor.consultationFee;
+              if (fee != null && fee > 0) {
+                setProfileFee(fee);
+                setConsultationFee((prev) => prev || String(fee));
+              }
+            }
+          } catch {
+            /* optional prefill */
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -91,36 +199,49 @@ export const AppointmentFollowUpPage = () => {
 
   const isCompleted = appointment.status === 'Completed';
   const isCancelled = appointment.status === 'Cancelled';
-  const isFollowUpVisit = appointment.appointmentType === 'Follow-up';
-  const feeLabel = isFollowUpVisit ? 'Follow-up visit fee (₹)' : 'Consultation fee (₹)';
+  const feeLabel = 'Consultation fee (₹)';
 
   const handleSave = async () => {
     if (!isCompleted) {
       const fee = Number(consultationFee);
-      if (!consultationFee.trim() || !Number.isFinite(fee) || fee < 0) {
-        showToast(`Please enter the ${isFollowUpVisit ? 'follow-up' : 'consultation'} fee`, 'error');
+      const hasFeeInput = consultationFee.trim() && Number.isFinite(fee) && fee >= 0;
+      if (!hasFeeInput && profileFee == null) {
+        showToast('Please enter the consultation fee', 'error');
         return;
       }
     }
 
     setSubmitting(true);
     try {
+      const feeNum = consultationFee.trim() ? Number(consultationFee) : undefined;
       const { data } = await appointmentAdminService.attend(appointmentId, {
-        consultationFee: !isCompleted ? Number(consultationFee) : undefined,
+        consultationFee: !isCompleted ? feeNum : undefined,
+        visitNotes: visitNotes.trim() || undefined,
         followUpDate: followUpDate || undefined,
         followUpTimeSlot: followUpDate ? followUpTimeSlot : undefined,
         followUpNotes: followUpNotes.trim() || undefined,
+        markPaid: !isCompleted && canCollectPayment && markPaid ? true : undefined,
+        paymentMethod: !isCompleted && canCollectPayment && markPaid ? paymentMethod : undefined,
       });
       if (data.res?.appointment) {
+        clearDraftAfterSubmit(
+          appointmentId ? draftContextKeys.appointment(appointmentId) : undefined
+        );
         showToast(
           followUpDate || followUpNotes.trim()
             ? 'Visit completed and follow-up saved'
             : 'Visit marked as attended',
           'success'
         );
-        navigate(patientDetailPath(appointment.patientCode), {
-          state: { activeTab: 'appointments' as const },
-        });
+        if (!isCompleted && canCreatePrescription) {
+          navigate(prescriptionPath(appointment.patientCode, appointment.appointmentCode));
+        } else {
+          navigate(patientDetailPath(appointment.patientCode), {
+            state: {
+              activeTab: canCreatePrescription ? ('prescriptions' as const) : ('appointments' as const),
+            },
+          });
+        }
       }
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
@@ -210,12 +331,24 @@ export const AppointmentFollowUpPage = () => {
         </p>
       ) : canManage ? (
         <div className="space-y-5">
+          {hasDrafts ? (
+            <FormDraftPanel
+              drafts={drafts}
+              activeDraftId={activeDraftId}
+              onRestore={handleRestoreDraft}
+              onDiscard={(id) => {
+                discardDraft(id);
+                showToast('Draft discarded', 'success');
+              }}
+            />
+          ) : null}
+
           {!isCompleted ? (
             <div className="rounded-2xl border border-border-sage bg-white p-5 shadow-sm">
               <h2 className="mb-1 font-serif text-lg font-semibold text-ink">Visit fee</h2>
               <p className="mb-4 text-sm text-ink-soft">
-                Enter the fee charged for this {isFollowUpVisit ? 'follow-up' : 'consultation'}{' '}
-                visit. Support staff will collect payment from billing.
+                Same consultation fee for new visits and follow-ups. Prefilled from the doctor
+                profile — change if needed. Support staff collects payment from billing.
               </p>
               <label className="block">
                 <span className="mb-1 block text-xs font-semibold text-ink-ghost">{feeLabel}</span>
@@ -225,10 +358,73 @@ export const AppointmentFollowUpPage = () => {
                   step={1}
                   value={consultationFee}
                   onChange={(e) => setConsultationFee(e.target.value)}
-                  placeholder="Enter amount"
+                  placeholder={profileFee != null ? String(profileFee) : 'Enter amount'}
                   className="w-full max-w-xs rounded-lg border border-border-sage bg-white px-3 py-2 text-sm outline-none focus:border-sage focus:ring-2 focus:ring-sage-pale"
                 />
+                {profileFee != null ? (
+                  <p className="mt-1 text-xs text-ink-ghost">
+                    Doctor profile fee: ₹{profileFee}
+                  </p>
+                ) : null}
               </label>
+
+              <label className="mt-4 block">
+                <span className="mb-1 block text-xs font-semibold text-ink-ghost">
+                  Visit notes for patient
+                </span>
+                <textarea
+                  value={visitNotes}
+                  onChange={(e) => setVisitNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Doctor suggestions, lifestyle advice, diet changes…"
+                  className="w-full resize-none rounded-lg border border-border-sage bg-white px-3 py-2 text-sm outline-none focus:border-sage focus:ring-2 focus:ring-sage-pale"
+                />
+              </label>
+
+              {canCollectPayment ? (
+                <>
+                  <label className="mt-3 flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={markPaid}
+                      onChange={(e) => setMarkPaid(e.target.checked)}
+                    />
+                    Collect payment now
+                  </label>
+
+                  {markPaid ? (
+                    <label className="mt-2 block max-w-xs">
+                      <span className={formLabelClass}>Payment method</span>
+                      <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                        className={formSelectClass}
+                      >
+                        {PAYMENT_METHOD_OPTIONS.map((m) => (
+                          <option key={m} value={m}>
+                            {m}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          {isCompleted && canCreatePrescription ? (
+            <div className="rounded-2xl border border-sage/40 bg-sage-mist/20 p-5 shadow-sm">
+              <h2 className="mb-1 font-serif text-lg font-semibold text-ink">Prescription</h2>
+              <p className="mb-4 text-sm text-ink-soft">
+                Visit completed. Write a structured prescription for this patient.
+              </p>
+              <Link to={prescriptionPath(appointment.patientCode, appointment.appointmentCode)}>
+                <Button type="button" className="gap-2 rounded-xl">
+                  <FileText className="h-4 w-4" />
+                  Write prescription
+                </Button>
+              </Link>
             </div>
           ) : null}
 
@@ -314,6 +510,19 @@ export const AppointmentFollowUpPage = () => {
             >
               {isCompleted ? 'Update follow-up' : 'Complete visit & save'}
             </Button>
+            <Button type="button" variant="secondary" onClick={handleSaveDraft} disabled={submitting}>
+              Save as draft
+            </Button>
+            {activeDraftId ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveNewDraft}
+                disabled={submitting}
+              >
+                Save as new draft
+              </Button>
+            ) : null}
             <Button
               variant="secondary"
               onClick={() => navigate(patientDetailPath(appointment.patientCode))}

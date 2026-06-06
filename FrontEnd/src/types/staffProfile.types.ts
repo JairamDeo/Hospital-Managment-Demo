@@ -55,4 +55,9 @@ export interface StaffProfileCardData {
   experience: string;
   shift: string;
   tags: string[];
+  consultationFee?: number;
+  qualifications?: { level: string; degree: string }[];
+  registrationNumber?: string;
+  aadharNumber?: string;
+  panNumber?: string;
 }

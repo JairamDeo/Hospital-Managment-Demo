@@ -21,6 +21,7 @@ const SEED_STAFF = [
     rating: 4.9,
     tags: ['Panchakarma', 'Prakriti'],
     shift: '9AM – 5PM',
+    consultationFee: 600,
   },
   {
     staffCode: 'STF-007',
@@ -34,6 +35,7 @@ const SEED_STAFF = [
     rating: 4.7,
     tags: ['IPD', 'Follow-up'],
     shift: '9AM – 5PM',
+    consultationFee: 500,
   },
   {
     staffCode: 'STF-008',
@@ -47,6 +49,7 @@ const SEED_STAFF = [
     rating: 4.8,
     tags: ['Diet', 'Prakriti'],
     shift: '10AM – 4PM',
+    consultationFee: 450,
   },
   // Therapists (3)
   {
@@ -88,7 +91,7 @@ const SEED_STAFF = [
     tags: ['Nasya', 'Shirodhara'],
     shift: '11AM – 7PM',
   },
-  // Support (3)
+  // Support (1)
   {
     staffCode: 'STF-006',
     name: 'Amit Verma',
@@ -101,32 +104,6 @@ const SEED_STAFF = [
     rating: 4.9,
     tags: ['Front Desk', 'Billing'],
     shift: '8AM – 5PM',
-  },
-  {
-    staffCode: 'STF-016',
-    name: 'Suresh Iyer',
-    role: 'Support',
-    title: 'Billing Executive',
-    dutyStatus: 'On Duty',
-    statPrimaryValue: 156,
-    statPrimaryLabel: 'Handled',
-    todayCount: 20,
-    rating: 4.8,
-    tags: ['Billing', 'Insurance'],
-    shift: '9AM – 5PM',
-  },
-  {
-    staffCode: 'STF-017',
-    name: 'Pooja Nair',
-    role: 'Support',
-    title: 'Front Desk Associate',
-    dutyStatus: 'On Duty',
-    statPrimaryValue: 142,
-    statPrimaryLabel: 'Handled',
-    todayCount: 18,
-    rating: 4.7,
-    tags: ['Appointments', 'Enquiry'],
-    shift: '8AM – 4PM',
   },
 ];
 

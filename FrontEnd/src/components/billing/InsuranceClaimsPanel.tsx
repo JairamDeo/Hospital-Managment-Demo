@@ -1,5 +1,11 @@
-import type { InsuranceClaim } from '@/pages/billing/data/mockBilling';
-import { formatRupee } from '@/pages/billing/data/mockBilling';
+import { formatRupee } from '@/types/billing.types';
+
+export interface InsuranceClaim {
+  id: string;
+  provider: string;
+  claims: number;
+  amount: number;
+}
 
 interface Props {
   claims: InsuranceClaim[];

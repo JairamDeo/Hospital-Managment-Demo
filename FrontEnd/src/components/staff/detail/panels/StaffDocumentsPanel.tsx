@@ -40,7 +40,9 @@ export const StaffDocumentsPanel = ({ staffCode, canUpload }: Props) => {
   const openBlob = async (docId: string, name: string, viewOnly: boolean) => {
     try {
       const res = await staffProfileService.downloadDocument(staffCode, docId);
-      const blob = new Blob([res.data], { type: res.headers['content-type'] ?? 'application/octet-stream' });
+      const blob = new Blob([res.data], {
+        type: String(res.headers['content-type'] ?? 'application/octet-stream'),
+      });
       const url = URL.createObjectURL(blob);
       if (viewOnly) {
         window.open(url, '_blank', 'noopener,noreferrer');

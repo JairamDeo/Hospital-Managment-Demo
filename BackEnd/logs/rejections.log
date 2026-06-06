@@ -1,7 +1,20 @@
-2026-06-06 02:59:24 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: attendAppointmentSchema is not defined
-ReferenceError: attendAppointmentSchema is not defined
-    at file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/admin/routes/hmsAppointment.routes.js:30:19
-    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+2026-06-06 22:16:26 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: Cannot find module 'C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\config\prescriptionBranding.config.js' imported from C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\validators\hmsStaff.validator.js
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\config\prescriptionBranding.config.js' imported from C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\validators\hmsStaff.validator.js
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at #link (node:internal/modules/esm/module_job:208:49)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-06-06 22:56:15 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: The requested module '../controllers/hmsPanchakarma.controller.js' does not provide an export named 'postAttendProgram'
+file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/admin/routes/hmsPanchakarma.routes.js:16
+  postAttendProgram,
+  ^^^^^^^^^^^^^^^^^
+SyntaxError: The requested module '../controllers/hmsPanchakarma.controller.js' does not provide an export named 'postAttendProgram'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
     at async start (file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/server.js:8:28)

@@ -6,13 +6,15 @@ import {
   History,
   Pill,
   Receipt,
+  Sparkles,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import type { MasterItem } from '@/types/api.types';
 import type { PatientDetail, PatientDetailTab } from '@/types/patientDetail.types';
 import type { PatientClinicalProfile } from '@/types/patientClinical.types';
-import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
+import type { StructuredPrescription } from '@/types/structuredPrescription.types';
+import type { PatientVitalsEntry } from '@/types/patientVitals.types';
 import { PatientClinicalInfoPanel } from './PatientClinicalInfoPanel';
 import { TreatmentHistoryItem } from './TreatmentHistoryItem';
 import {
@@ -22,12 +24,15 @@ import {
 } from './tabs/PatientTabPanels';
 import { PatientAppointmentsTab } from './tabs/PatientAppointmentsTab';
 import { PatientPrescriptionsTab } from './tabs/PatientPrescriptionsTab';
+import { PatientPanchakarmaTab } from './tabs/PatientPanchakarmaTab';
+import type { HmsPanchakarmaProgram } from '@/types/api.types';
 
 const MAIN_TABS: { id: PatientDetailTab; label: string; icon: LucideIcon }[] = [
   { id: 'patient-info', label: 'Patient Info', icon: ClipboardList },
   { id: 'history', label: 'Treatment History', icon: History },
   { id: 'appointments', label: 'Appointments', icon: CalendarDays },
   { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
+  { id: 'panchakarma', label: 'Panchakarma', icon: Sparkles },
   { id: 'labs', label: 'Lab Reports', icon: FlaskConical },
   { id: 'billing', label: 'Billing', icon: Receipt },
   { id: 'documents', label: 'Documents', icon: FileText },
@@ -46,12 +51,16 @@ interface ClinicalProps {
 
 interface PrescriptionProps {
   patientCode: string;
-  prescriptions: PatientPrescriptionPdf[];
+  prescriptions: StructuredPrescription[];
   loading: boolean;
-  uploading: boolean;
-  readOnly?: boolean;
-  onUpload: (file: File) => void | Promise<void>;
-  onDelete: (id: string) => void | Promise<void>;
+  canCreate?: boolean;
+  canView?: boolean;
+}
+
+interface PanchakarmaProps {
+  patientCode: string;
+  programs: HmsPanchakarmaProgram[];
+  loading: boolean;
 }
 
 interface Props {
@@ -62,6 +71,10 @@ interface Props {
   clinical?: ClinicalProps;
   prakritiMasters?: MasterItem[];
   prescriptions?: PrescriptionProps;
+  panchakarma?: PanchakarmaProps;
+  vitalsHistory?: PatientVitalsEntry[];
+  canRecordVitals?: boolean;
+  onAddVitals?: () => void;
 }
 
 export const PatientDetailTabs = ({
@@ -72,6 +85,10 @@ export const PatientDetailTabs = ({
   clinical,
   prakritiMasters = [],
   prescriptions,
+  panchakarma,
+  vitalsHistory = [],
+  canRecordVitals = false,
+  onAddVitals,
 }: Props) => {
   const [internalTab, setInternalTab] = useState<PatientDetailTab>('patient-info');
   const activeTab = controlledTab ?? internalTab;
@@ -127,17 +144,69 @@ export const PatientDetailTabs = ({
 
       <div className="p-4 sm:p-5">
         {activeTab === 'patient-info' && clinical ? (
-          <PatientClinicalInfoPanel
-            clinical={clinical.clinical}
-            prakritiMasters={prakritiMasters}
-            loading={clinical.clinicalLoading}
-            saving={clinical.savingClinical}
-            editing={clinical.clinicalEditing}
-            onChange={clinical.onClinicalChange}
-            onStartEdit={clinical.onClinicalStartEdit}
-            onCancelEdit={clinical.onClinicalCancelEdit}
-            onSave={clinical.onClinicalSave}
-          />
+          <>
+            <PatientClinicalInfoPanel
+              clinical={clinical.clinical}
+              prakritiMasters={prakritiMasters}
+              loading={clinical.clinicalLoading}
+              saving={clinical.savingClinical}
+              editing={clinical.clinicalEditing}
+              onChange={clinical.onClinicalChange}
+              onStartEdit={clinical.onClinicalStartEdit}
+              onCancelEdit={clinical.onClinicalCancelEdit}
+              onSave={clinical.onClinicalSave}
+            />
+            {vitalsHistory.length > 0 || canRecordVitals ? (
+              <div className="mt-6 border-t border-border-sage pt-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+                    Vitals history
+                  </h3>
+                  {canRecordVitals && onAddVitals ? (
+                    <button
+                      type="button"
+                      onClick={onAddVitals}
+                      className="text-[11px] font-semibold text-sage-deep hover:underline"
+                    >
+                      Add vitals
+                    </button>
+                  ) : null}
+                </div>
+                {vitalsHistory.length === 0 ? (
+                  <p className="text-sm text-ink-soft">No vitals recorded yet</p>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl border border-border-sage">
+                    <table className="w-full min-w-[520px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border-sage bg-cream/50 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+                          {['Date', 'BP', 'Fasting', 'Post-meal', 'Random', 'Weight', 'By'].map(
+                            (col) => (
+                              <th key={col} className="px-3 py-2">
+                                {col}
+                              </th>
+                            )
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {vitalsHistory.map((row) => (
+                          <tr key={row.id} className="border-b border-border-sage/60 last:border-0">
+                            <td className="px-3 py-2 text-ink-soft">{row.date}</td>
+                            <td className="px-3 py-2">{row.bp || '—'}</td>
+                            <td className="px-3 py-2">{row.fasting || '—'}</td>
+                            <td className="px-3 py-2">{row.postMeal || '—'}</td>
+                            <td className="px-3 py-2">{row.random || '—'}</td>
+                            <td className="px-3 py-2">{row.weight || '—'}</td>
+                            <td className="px-3 py-2 text-xs text-ink-ghost">{row.recordedByName}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {activeTab === 'patient-info' && !clinical ? (
@@ -168,15 +237,24 @@ export const PatientDetailTabs = ({
             patientCode={prescriptions.patientCode}
             prescriptions={prescriptions.prescriptions}
             loading={prescriptions.loading}
-            uploading={prescriptions.uploading}
-            readOnly={prescriptions.readOnly}
-            onUpload={prescriptions.onUpload}
-            onDelete={prescriptions.onDelete}
+            canCreate={prescriptions.canCreate}
           />
         ) : null}
 
         {activeTab === 'prescriptions' && !prescriptions ? (
           <p className="py-8 text-center text-sm text-ink-soft">Prescriptions unavailable.</p>
+        ) : null}
+
+        {activeTab === 'panchakarma' && panchakarma ? (
+          <PatientPanchakarmaTab
+            patientCode={panchakarma.patientCode}
+            programs={panchakarma.programs}
+            loading={panchakarma.loading}
+          />
+        ) : null}
+
+        {activeTab === 'panchakarma' && !panchakarma ? (
+          <p className="py-8 text-center text-sm text-ink-soft">Panchakarma data unavailable.</p>
         ) : null}
 
         {activeTab === 'labs' ? <PatientLabReportsTab reports={patient.labReports} /> : null}

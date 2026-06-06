@@ -11,18 +11,35 @@ import {
 } from './hmsAppointment.service.js';
 import { listInvoicesByPatient } from './hmsBilling.service.js';
 import { mapInvoiceToPatientCare } from '../../utils/formatHmsInvoice.js';
+import {
+  assertStaffCanAccessPatient,
+  getStaffScopedPatientCodes,
+} from '../../utils/staffPatientScope.util.js';
 
-export const getPatientStats = async () => {
-  const total = await HmsPatient.countDocuments({ status: true });
+export const getPatientStats = async (req) => {
   const weekAgo = moment().subtract(7, 'days').startOf('day').toDate();
-  const newThisWeek = await HmsPatient.countDocuments({
-    status: true,
-    createdAt: { $gte: weekAgo },
-  });
+  let filter = {};
+  let newFilter = { createdAt: { $gte: weekAgo } };
+
+  if (req?.accountType === 'staff' && req.staff) {
+    const patientCodes = await getStaffScopedPatientCodes(req.staff);
+    if (patientCodes !== null) {
+      if (!patientCodes.length) return { total: 0, newThisWeek: 0 };
+      filter = { patientCode: { $in: patientCodes } };
+      newFilter = { patientCode: { $in: patientCodes }, createdAt: { $gte: weekAgo } };
+    }
+  }
+
+  const [total, newThisWeek] = await Promise.all([
+    HmsPatient.countDocuments(filter),
+    HmsPatient.countDocuments(newFilter),
+  ]);
   return { total, newThisWeek };
 };
 
-export const getPatientOverview = async (patientCode) => {
+export const getPatientOverview = async (patientCode, req) => {
+  await assertStaffCanAccessPatient(req, patientCode);
+
   const patient = await HmsPatient.findOne({ patientCode })
     .populate('prakriti', 'name')
     .populate('treatment', 'name');
@@ -33,7 +50,10 @@ export const getPatientOverview = async (patientCode) => {
   const careData = formatPatientCare(care);
   const clinical = formatClinicalProfile(patient.clinicalProfile);
 
-  const hmsAppts = await listAppointmentsByPatient(patientCode);
+  let hmsAppts = await listAppointmentsByPatient(patientCode);
+  if (req?.accountType === 'staff' && req.staff?.role === 'Doctor') {
+    hmsAppts = hmsAppts.filter((a) => a.staffCode === req.staff.staffCode);
+  }
   if (hmsAppts.length > 0) {
     careData.appointments = hmsAppts.map(mapHmsToPatientCareAppointment);
   }

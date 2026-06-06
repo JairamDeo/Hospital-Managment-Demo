@@ -6,7 +6,7 @@ export const adminCreatePatientSchema = Joi.object({
   mobileNumber: Joi.string().pattern(/^[0-9]{10}$/).required(),
   age: Joi.number().integer().min(1).max(120).required(),
   prakritiId: Joi.string().hex().length(24).allow('', null).empty('').optional(),
-  treatmentId: Joi.string().hex().length(24).required(),
+  treatmentId: Joi.string().hex().length(24).allow('', null).empty('').optional(),
   lastVisit: Joi.date().optional(),
   recordStatus: Joi.string().valid('Active', 'Pending', 'Inactive').required(),
 });

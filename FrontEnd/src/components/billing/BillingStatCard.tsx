@@ -1,4 +1,4 @@
-import { Banknote, CheckCircle2, Clock, TriangleAlert } from 'lucide-react';
+import { Banknote } from 'lucide-react';
 
 interface Props {
   label: string;

@@ -138,6 +138,9 @@ export const PANCHAKARMA_MESSAGES = {
   ROOM_UNAVAILABLE:
     'This treatment room is already occupied by an active program. Please choose another room.',
   STAFF_NOT_THERAPIST: 'Selected staff member is not a therapist',
+  NOT_FOUND: 'Panchakarma program not found',
+  PLAN_CREATED: 'Panchakarma treatment plan created successfully',
+  ATTENDED: 'Panchakarma program plan saved successfully',
 };
 
 export const APPOINTMENT_MESSAGES = {
@@ -170,6 +173,8 @@ export const BILLING_MESSAGES = {
   INSUFFICIENT_STOCK: 'Insufficient stock',
   PRICE_REQUIRED: 'Sale price required for item',
   ITEM_EXPIRED: 'Medicine has expired',
+  INVALID_PAYMENT_AMOUNT: 'Invalid payment amount',
+  PAYMENT_EXCEEDS_BALANCE: 'Payment exceeds remaining balance',
   FEE_REQUIRED: 'Consultation fee is required',
 };
 
@@ -193,6 +198,8 @@ export const PATIENT_MESSAGES = {
   PRESCRIPTION_UPLOADED: 'Prescription PDF uploaded successfully',
   PRESCRIPTION_DELETED: 'Prescription removed successfully',
   PRESCRIPTION_FILE_REQUIRED: 'Please upload a PDF file',
+  PRESCRIPTION_NOT_FOUND: 'Prescription not found',
+  VITALS_ADDED: 'Vitals recorded successfully',
   MOBILE_ALREADY_REGISTERED:
     'This mobile number is already registered. Please use a different number.',
   EMAIL_ALREADY_REGISTERED:

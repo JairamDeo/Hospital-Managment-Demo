@@ -23,4 +23,9 @@ export const hmsToStaffProfileCard = (s: HmsStaff): StaffProfileCardData => ({
   experience: '—',
   shift: s.shift ?? '9AM – 5PM',
   tags: s.tags ?? [],
+  consultationFee: s.role === 'Doctor' ? Number(s.consultationFee) || 0 : undefined,
+  qualifications: s.qualifications ?? [],
+  registrationNumber: s.registrationNumber ?? '',
+  aadharNumber: s.aadharNumber ?? '',
+  panNumber: s.panNumber ?? '',
 });

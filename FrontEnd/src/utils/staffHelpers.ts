@@ -33,6 +33,11 @@ export const emptyStaffForm = (): StaffFormValues => ({
   role: 'Doctor',
   title: '',
   shift: '9AM – 5PM',
+  consultationFee: '',
+  registrationNumber: '',
+  aadharNumber: '',
+  panNumber: '',
+  qualifications: [{ level: 'UG', degree: '' }],
 });
 
 export const filterToRole = (filter: StaffFilter): StaffRole | null => {

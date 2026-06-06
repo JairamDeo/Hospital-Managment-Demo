@@ -334,7 +334,7 @@ export const PatientClinicalInfoPanel = ({
                   key={f.key}
                   label={f.label}
                   value={value}
-                  options={options}
+                  options={[...options]}
                   onChange={(v) => patchNested('generalExamination', f.key, v)}
                   readOnly={readOnly}
                 />

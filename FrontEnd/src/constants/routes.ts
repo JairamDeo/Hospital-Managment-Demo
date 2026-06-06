@@ -22,12 +22,18 @@ export const ROUTES = {
   ADMIN_APPOINTMENT_DETAIL: `${ADMIN}/appointments/:appointmentId`,
   ADMIN_APPOINTMENT_FOLLOWUP: `${ADMIN}/appointments/:appointmentId/follow-up`,
   ADMIN_PANCHAKARMA: `${ADMIN}/panchakarma`,
+  ADMIN_PANCHAKARMA_PROGRAM_ATTEND: `${ADMIN}/panchakarma/programs/:programCode/attend`,
   ADMIN_PHARMACY: `${ADMIN}/pharmacy`,
   ADMIN_STAFF: `${ADMIN}/staff`,
   ADMIN_STAFF_DETAIL: `${ADMIN}/staff/:staffId`,
   ADMIN_ANALYTICS: `${ADMIN}/analytics`,
   ADMIN_BILLING: `${ADMIN}/billing`,
+  ADMIN_BILLING_MEDICINE: `${ADMIN}/billing/medicine`,
+  ADMIN_BILLING_CONSULTATION: `${ADMIN}/billing/consultation`,
+  ADMIN_BILLING_PANCHAKARMA: `${ADMIN}/billing/panchakarma`,
   ADMIN_INVOICE_DETAIL: `${ADMIN}/billing/:invoiceId`,
+  ADMIN_PRESCRIPTION: `${ADMIN}/prescriptions`,
+  ADMIN_PANCHAKARMA_TREATMENT: `${ADMIN}/panchakarma/appointments/:appointmentId/treatment`,
   ADMIN_SETTINGS: `${ADMIN}/settings`,
   ADMIN_MASTER_DATA: `${ADMIN}/master-data`,
   ADMIN_ACCESS_DENIED: `${ADMIN}/access-denied`,
@@ -41,3 +47,12 @@ export const appointmentDetailPath = (appointmentId: string) =>
   `${ADMIN}/appointments/${encodeURIComponent(appointmentId)}`;
 export const appointmentFollowUpPath = (appointmentId: string) =>
   `${ADMIN}/appointments/${encodeURIComponent(appointmentId)}/follow-up`;
+export const prescriptionPath = (patientCode: string, appointmentCode?: string) => {
+  const params = new URLSearchParams({ patientCode });
+  if (appointmentCode) params.set('appointmentCode', appointmentCode);
+  return `${ADMIN}/prescriptions?${params.toString()}`;
+};
+export const panchakarmaTreatmentPath = (appointmentId: string) =>
+  `${ADMIN}/panchakarma/appointments/${encodeURIComponent(appointmentId)}/treatment`;
+export const programAttendPath = (programCode: string) =>
+  `${ADMIN}/panchakarma/programs/${encodeURIComponent(programCode)}/attend`;

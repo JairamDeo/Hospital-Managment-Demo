@@ -21,13 +21,25 @@ const activeTreatmentSchema = new Schema(
   { _id: false }
 );
 
+const vitalsHistorySchema = new Schema({
+  recordedAt: { type: Date, default: Date.now },
+  recordedByName: { type: String, default: '' },
+  date: { type: String, default: '' },
+  bp: { type: String, default: '' },
+  fasting: { type: String, default: '' },
+  postMeal: { type: String, default: '' },
+  random: { type: String, default: '' },
+  weight: { type: String, default: '' },
+});
+
 const treatmentHistorySchema = new Schema({
   title: { type: String, required: true },
-  doctor: { type: String, default: 'Dr. Ananya Sharma' },
+  doctor: { type: String, default: '' },
   status: { type: String, enum: ['Active', 'Completed'], default: 'Completed' },
   dateRange: { type: String, default: '' },
   description: { type: String, default: '' },
   medicines: [{ type: String }],
+  appointmentCode: { type: String, default: '' },
   sortOrder: { type: Number, default: 0 },
 });
 
@@ -76,6 +88,7 @@ const patientCareProfileSchema = new Schema(
     patientCode: { type: String, required: true, unique: true, index: true },
     patient: { type: Schema.Types.ObjectId, ref: 'HmsPatient' },
     vitals: { type: vitalsSchema, default: () => ({}) },
+    vitalsHistory: { type: [vitalsHistorySchema], default: [] },
     activeTreatment: { type: activeTreatmentSchema, default: null },
     treatmentHistory: [treatmentHistorySchema],
     appointments: [appointmentSchema],

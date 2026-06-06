@@ -22,10 +22,10 @@ class BillingAdminService {
     );
   }
 
-  collectPayment(invoiceCode: string, paymentMethod: PaymentMethodType) {
+  collectPayment(invoiceCode: string, paymentMethod: PaymentMethodType, amount?: number) {
     return axiosInstance.patch<ApiResponse<{ invoice: InvoiceDetail }>>(
       `/admin/billing/${encodeURIComponent(invoiceCode)}/collect`,
-      { paymentMethod }
+      { paymentMethod, ...(amount != null ? { amount } : {}) }
     );
   }
 
@@ -36,6 +36,18 @@ class BillingAdminService {
     markPaid?: boolean;
   }) {
     return axiosInstance.post<ApiResponse<{ invoice: InvoiceDetail }>>('/admin/billing/medicine', payload);
+  }
+
+  createPanchakarmaPayment(payload: {
+    programCode: string;
+    amount?: number;
+    paymentMethod?: PaymentMethodType;
+    markPaid?: boolean;
+  }) {
+    return axiosInstance.post<ApiResponse<{ invoice: InvoiceDetail }>>(
+      '/admin/billing/panchakarma',
+      payload
+    );
   }
 }
 

@@ -28,7 +28,10 @@ export const patientCreateAppointmentSchema = Joi.object({
 
 export const attendAppointmentSchema = Joi.object({
   consultationFee: Joi.number().min(0).optional(),
+  visitNotes: Joi.string().max(2000).allow('', null).optional(),
   followUpDate: Joi.string().allow('', null).optional(),
   followUpTimeSlot: timeSlot.allow('', null).optional(),
   followUpNotes: Joi.string().max(500).allow('', null).optional(),
+  markPaid: Joi.boolean().optional(),
+  paymentMethod: Joi.string().valid('Cash', 'UPI', 'Card').optional(),
 });

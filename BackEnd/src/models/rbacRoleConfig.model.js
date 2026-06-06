@@ -13,6 +13,7 @@ const modulesSchema = new Schema(
     dashboard: { type: permissionSchema, default: () => ({}) },
     patients: { type: permissionSchema, default: () => ({}) },
     appointments: { type: permissionSchema, default: () => ({}) },
+    prescriptions: { type: permissionSchema, default: () => ({}) },
     panchakarma: { type: permissionSchema, default: () => ({}) },
     masterData: { type: permissionSchema, default: () => ({}) },
     pharmacy: { type: permissionSchema, default: () => ({}) },

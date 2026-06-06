@@ -47,9 +47,12 @@ class AppointmentAdminService {
     appointmentCode: string,
     payload: {
       consultationFee?: number;
+      visitNotes?: string;
       followUpDate?: string;
       followUpTimeSlot?: string;
       followUpNotes?: string;
+      markPaid?: boolean;
+      paymentMethod?: 'Cash' | 'UPI' | 'Card';
     }
   ) {
     return axiosInstance.patch<ApiResponse<{ appointment: HmsAppointment }>>(

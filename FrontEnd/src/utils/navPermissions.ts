@@ -20,6 +20,8 @@ export const moduleForPath = (pathname: string): RbacModuleKey | null => {
   if (pathname.startsWith(ROUTES.ADMIN_APPOINTMENTS)) return 'appointments';
   if (pathname.startsWith(ROUTES.ADMIN_STAFF)) return 'staff';
   if (pathname.startsWith(ROUTES.ADMIN_BILLING)) return 'billing';
+  if (pathname.startsWith(`${ROUTES.ADMIN_PANCHAKARMA}/programs/`)) return 'panchakarma';
+  if (pathname.startsWith(ROUTES.ADMIN_PANCHAKARMA)) return 'panchakarma';
   return ROUTE_MODULE_MAP[pathname] ?? null;
 };
 

@@ -43,6 +43,8 @@ export const formatHmsAppointment = (doc) => {
     followUpTimeSlot: a.followUpTimeSlot || null,
     followUpTimeDisplay: a.followUpTimeDisplay || null,
     followUpNotes: a.followUpNotes || '',
+    visitNotes: a.visitNotes || '',
+    consultationFeeCharged: a.consultationFeeCharged ?? null,
     followUpAddedBy: a.followUpAddedBy,
     followUpAddedAt: a.followUpAddedAt,
     createdBy: a.createdBy,

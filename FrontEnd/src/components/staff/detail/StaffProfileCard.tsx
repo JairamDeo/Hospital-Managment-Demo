@@ -74,6 +74,40 @@ export const StaffProfileCard = ({ staff, onEdit }: Props) => {
           <DetailCell label="Experience" value={staff.experience} />
           <DetailCell label="Joined" value={staff.joinedDate} />
           <DetailCell label="Shift" value={staff.shift} />
+          {staff.role === 'Doctor' && (staff.consultationFee ?? 0) > 0 ? (
+            <DetailCell
+              label="Consultation fee"
+              value={`₹${staff.consultationFee}`}
+            />
+          ) : null}
+          {staff.registrationNumber ? (
+            <DetailCell label="Reg. number" value={staff.registrationNumber} />
+          ) : null}
+        </div>
+
+        {staff.qualifications?.length ? (
+          <div className="rounded-lg border border-border-sage/80 bg-white px-3 py-2">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              Qualifications
+            </p>
+            <ul className="mt-1 space-y-0.5">
+              {staff.qualifications.map((q, i) => (
+                <li key={i} className="text-sm text-ink-soft">
+                  <span className="font-medium text-ink">{q.degree}</span>
+                  <span className="text-ink-ghost"> · {q.level}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-2 gap-2">
+          {staff.aadharNumber ? (
+            <DetailCell label="Aadhar" value={`XXXX-XXXX-${staff.aadharNumber.slice(-4)}`} />
+          ) : null}
+          {staff.panNumber ? (
+            <DetailCell label="PAN" value={staff.panNumber} />
+          ) : null}
         </div>
 
         <div className="space-y-2 rounded-xl border border-border-sage/80 bg-cream/30 p-3">

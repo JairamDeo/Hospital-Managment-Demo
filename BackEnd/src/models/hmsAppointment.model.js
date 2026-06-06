@@ -53,6 +53,8 @@ const hmsAppointmentSchema = new Schema({
   followUpAddedAt: { type: Date, default: null },
   appointmentReminderSentAt: { type: Date, default: null },
   followUpReminderSentAt: { type: Date, default: null },
+  visitNotes: { type: String, trim: true, default: '' },
+  consultationFeeCharged: { type: Number, min: 0, default: null },
   createdBy: { type: createdBySchema, required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },

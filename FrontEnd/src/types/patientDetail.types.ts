@@ -75,6 +75,7 @@ export type PatientDetailTab =
   | 'history'
   | 'appointments'
   | 'prescriptions'
+  | 'panchakarma'
   | 'labs'
   | 'billing'
   | 'documents';

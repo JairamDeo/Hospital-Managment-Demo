@@ -129,6 +129,11 @@ export interface HmsStaff {
   shift: string;
   email?: string;
   accountActive?: boolean;
+  consultationFee?: number;
+  qualifications?: { level: string; degree: string }[];
+  registrationNumber?: string;
+  aadharNumber?: string;
+  panNumber?: string;
 }
 
 export interface HmsAppointment {
@@ -167,6 +172,8 @@ export interface HmsAppointment {
   followUpTimeSlot?: string | null;
   followUpTimeDisplay?: string | null;
   followUpNotes?: string;
+  visitNotes?: string;
+  consultationFeeCharged?: number | null;
   followUpAddedBy?: { type: string; name?: string; staffCode?: string };
   followUpAddedAt?: string;
 }
@@ -184,6 +191,10 @@ export interface HmsPanchakarmaProgram {
   therapistId: string;
   therapistName: string;
   therapy: 'Vamana' | 'Virechana' | 'Basti' | 'Nasya';
+  treatmentName?: string;
+  totalFees?: number;
+  amountPaid?: number;
+  appointmentCode?: string;
   totalDays: number;
   currentDay: number;
   room: string;
@@ -191,4 +202,14 @@ export interface HmsPanchakarmaProgram {
   startDateDisplay?: string;
   progress: number;
   status: 'Starting' | 'Ongoing' | 'Complete' | 'Cancelled';
+  needsAttend?: boolean;
+  dailySessions?: Array<{
+    id: string;
+    dayNumber: number;
+    sessionDate?: string | null;
+    time: string;
+    duration: string;
+    panchakarmaType: string;
+    medicineContent: string;
+  }>;
 }

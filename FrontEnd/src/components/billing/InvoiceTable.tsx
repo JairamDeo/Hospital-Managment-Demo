@@ -56,7 +56,9 @@ export const InvoiceTable = ({ invoices, onView }: Props) => (
                   className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                     inv.feeType === 'Medicine'
                       ? 'bg-violet-100 text-violet-700'
-                      : 'bg-blue-50 text-blue-700'
+                      : inv.feeType === 'Panchakarma'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-blue-50 text-blue-700'
                   }`}
                 >
                   {inv.feeType}

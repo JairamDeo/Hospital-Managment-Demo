@@ -6,7 +6,7 @@ const STATUS_STYLES = {
   Completed: 'bg-sage-mist text-ink-soft',
 };
 
-const TYPE_LABELS: Partial<Record<StaffActivityRecord['activityType'], string>> = {
+const TYPE_LABELS: Record<string, string> = {
   check_in: 'Check-in',
   check_out: 'Check-out',
   leave_applied: 'Leave applied',

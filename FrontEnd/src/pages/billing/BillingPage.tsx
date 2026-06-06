@@ -1,26 +1,29 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { BillingStatCard } from '@/components/billing/BillingStatCard';
 import { InvoiceTable } from '@/components/billing/InvoiceTable';
 import { PaymentMethodsPanel } from '@/components/billing/PaymentMethodsPanel';
-import { MedicineBillModal } from '@/components/billing/MedicineBillModal';
 import { StaffPagination } from '@/components/staff/StaffPagination';
 import { useToast } from '@/hooks/useToast';
-import { invoiceDetailPath } from '@/constants/routes';
+import {
+  invoiceDetailPath,
+  ROUTES,
+} from '@/constants/routes';
 import { billingAdminService } from '@/services/billing/billingAdmin.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import {
-  formatRupee,
   formatRupeeCompact,
   type BillingStats,
+  type FeeType,
   type Invoice,
   type InvoiceFilter,
 } from '@/types/billing.types';
 import { Banknote, CheckCircle2, Clock, TriangleAlert } from 'lucide-react';
 
 const PAGE_SIZE = 6;
+
+type FeeFilter = 'all' | FeeType;
 
 export const BillingPage = () => {
   const navigate = useNavigate();
@@ -29,9 +32,8 @@ export const BillingPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<InvoiceFilter>('all');
-  const [feeFilter, setFeeFilter] = useState<'all' | 'Consultation' | 'Medicine'>('all');
+  const [feeFilter, setFeeFilter] = useState<FeeFilter>('all');
   const [page, setPage] = useState(1);
-  const [medicineModalOpen, setMedicineModalOpen] = useState(false);
   const { showToast } = useToast();
 
   const load = useCallback(async () => {
@@ -107,13 +109,15 @@ export const BillingPage = () => {
     { id: 'all', label: 'All', activeClass: 'border-sage-deep bg-sage-mist text-sage-deep' },
     { id: 'paid', label: 'Paid', activeClass: 'border-success/30 bg-success-bg text-success' },
     { id: 'pending', label: 'Pending', activeClass: 'border-warning/40 bg-warning-bg text-warning' },
+    { id: 'partial', label: 'Partial', activeClass: 'border-blue-200 bg-blue-50 text-blue-700' },
     { id: 'overdue', label: 'Overdue', activeClass: 'border-danger/40 bg-danger-bg text-danger' },
   ];
 
-  const feeFilters: { id: typeof feeFilter; label: string }[] = [
+  const feeFilters: { id: FeeFilter; label: string }[] = [
     { id: 'all', label: 'All types' },
     { id: 'Consultation', label: 'Consultation' },
     { id: 'Medicine', label: 'Medicine' },
+    { id: 'Panchakarma', label: 'Panchakarma' },
   ];
 
   return (
@@ -124,17 +128,29 @@ export const BillingPage = () => {
             Billing & Invoices
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Consultation fees (on visit) and medicine fees (pharmacy)
+            Consultation, medicine, and Panchakarma fees
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button
-            className="gap-2 rounded-lg px-4 py-2"
-            onClick={() => setMedicineModalOpen(true)}
+          <Link
+            to={ROUTES.ADMIN_BILLING_MEDICINE}
+            className="inline-flex items-center gap-2 rounded-lg bg-sage-deep px-4 py-2 text-sm font-medium text-white hover:bg-sage-mid"
           >
             <Plus className="h-4 w-4" strokeWidth={2} />
             Medicine Bill
-          </Button>
+          </Link>
+          <Link
+            to={ROUTES.ADMIN_BILLING_CONSULTATION}
+            className="inline-flex items-center gap-2 rounded-lg border border-border-sage bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-sage-mist"
+          >
+            Consultation
+          </Link>
+          <Link
+            to={ROUTES.ADMIN_BILLING_PANCHAKARMA}
+            className="inline-flex items-center gap-2 rounded-lg border border-border-sage bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-sage-mist"
+          >
+            Panchakarma
+          </Link>
         </div>
       </div>
 
@@ -232,27 +248,21 @@ export const BillingPage = () => {
             </p>
             <ul className="mt-2 list-inside list-disc space-y-1.5 text-xs">
               <li>
-                <strong className="font-semibold text-ink">Consultation</strong> — doctor enters the
-                visit fee when marking a patient as attended.
+                <strong className="font-semibold text-ink">Consultation</strong> — collected when
+                marking a visit or from the consultation page.
               </li>
               <li>
-                <strong className="font-semibold text-ink">Medicine</strong> — support staff creates
-                a bill when dispensing pharmacy items.
+                <strong className="font-semibold text-ink">Medicine</strong> — pharmacy dispensing
+                bills with multi-item selection.
               </li>
-              <li>Collect payment from the invoice detail page.</li>
+              <li>
+                <strong className="font-semibold text-ink">Panchakarma</strong> — full or partial
+                payments for treatment programs.
+              </li>
             </ul>
           </div>
         </aside>
       </div>
-
-      <MedicineBillModal
-        open={medicineModalOpen}
-        onClose={() => setMedicineModalOpen(false)}
-        onCreated={() => {
-          setMedicineModalOpen(false);
-          void load();
-        }}
-      />
     </div>
   );
 };

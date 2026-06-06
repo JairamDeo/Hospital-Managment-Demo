@@ -1,10 +1,12 @@
-export type InvoiceStatus = 'Paid' | 'Pending' | 'Overdue';
+export type InvoiceStatus = 'Paid' | 'Pending' | 'Partial' | 'Overdue';
 
-export type InvoiceFilter = 'all' | 'paid' | 'pending' | 'overdue';
+export type InvoiceFilter = 'all' | 'paid' | 'pending' | 'partial' | 'overdue';
 
-export type FeeType = 'Consultation' | 'Medicine';
+export type FeeType = 'Consultation' | 'Medicine' | 'Panchakarma';
 
-export type PaymentMethodType = 'Cash' | 'UPI' | 'Card' | 'Net Banking';
+export type PaymentMethodType = 'Cash' | 'UPI' | 'Card';
+
+export const PAYMENT_METHOD_OPTIONS: PaymentMethodType[] = ['Cash', 'UPI', 'Card'];
 
 export interface Invoice {
   id: string;
@@ -19,8 +21,11 @@ export interface Invoice {
   feeType: FeeType;
   visitType?: string | null;
   appointmentCode?: string | null;
+  programCode?: string | null;
   doctorName?: string;
   amount: number;
+  amountPaid?: number;
+  balance?: number;
   status: InvoiceStatus;
   paymentMethod?: string;
 }

@@ -1,6 +1,16 @@
 import { Link } from 'react-router-dom';
-import { appointmentFollowUpPath } from '@/constants/routes';
+import { appointmentFollowUpPath, panchakarmaTreatmentPath } from '@/constants/routes';
 import type { PatientAppointment } from '@/types/patientDetail.types';
+
+const isPanchakarmaAppointment = (type: string) =>
+  type.toLowerCase().includes('panchakarma');
+
+const attendPathFor = (a: PatientAppointment) => {
+  const code = a.appointmentCode ?? a.id;
+  return isPanchakarmaAppointment(a.type)
+    ? panchakarmaTreatmentPath(code)
+    : appointmentFollowUpPath(code);
+};
 
 const APPT_STATUS: Record<PatientAppointment['status'], string> = {
   Upcoming: 'bg-blue-50 text-blue-700',
@@ -82,12 +92,12 @@ export const PatientAppointmentsTab = ({ appointments, canManageVisits = false }
                   <td className="px-4 py-3">
                     {a.status === 'Upcoming' ? (
                       <Link
-                        to={appointmentFollowUpPath(code)}
+                        to={attendPathFor(a)}
                         className="inline-flex cursor-pointer rounded-lg bg-sage-deep px-3 py-1.5 text-xs font-semibold text-white hover:bg-sage-deep/90"
                       >
                         Attend
                       </Link>
-                    ) : a.status === 'Completed' ? (
+                    ) : a.status === 'Completed' && !isPanchakarmaAppointment(a.type) ? (
                       <Link
                         to={appointmentFollowUpPath(code)}
                         className="inline-flex cursor-pointer rounded-lg border border-border-sage bg-white px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-sage-mist"

@@ -5,7 +5,6 @@ import type {
   ScheduleProgramFormValues,
   TherapistOnDuty,
   TherapySummary,
-  TherapyType,
 } from '@/types/panchakarma.types';
 import { THERAPY_SUMMARY_META, THERAPY_OPTIONS } from '@/types/panchakarma.types';
 import { getInitials, pickAvatarClass } from '@/utils/staffHelpers';
@@ -35,7 +34,33 @@ export const hmsToActiveProgram = (p: HmsPanchakarmaProgram): ActiveProgram => (
   therapistId: p.staffCode ?? p.therapistId,
   therapistName: p.therapistName,
   startDate: p.startDate,
+  hasDailyPlan: (p.dailySessions?.length ?? 0) > 0,
+  needsAttend: p.needsAttend ?? programNeedsAttend(p),
 });
+
+export const normalizeStaffCode = (code?: string | null) =>
+  (code ?? '').trim().toUpperCase();
+
+export const isTherapistAssignedToProgram = (
+  program: { staffCode?: string; therapistId?: string },
+  therapistStaffCode?: string
+) => {
+  if (!therapistStaffCode) return false;
+  const assigned = program.staffCode ?? program.therapistId;
+  return normalizeStaffCode(assigned) === normalizeStaffCode(therapistStaffCode);
+};
+
+export const programNeedsAttend = (program: {
+  dailySessions?: unknown[] | null;
+  status?: string;
+  needsAttend?: boolean;
+}) => {
+  if (program.needsAttend != null) return program.needsAttend;
+  return (
+    (program.dailySessions?.length ?? 0) === 0 &&
+    (program.status === 'Starting' || program.status === 'Ongoing')
+  );
+};
 
 export const programsToStaffAssignments = (
   programs: HmsPanchakarmaProgram[]

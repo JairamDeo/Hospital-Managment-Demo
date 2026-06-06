@@ -3,12 +3,25 @@ import bcrypt from 'bcrypt';
 
 const STAFF_ROLES = ['Doctor', 'Therapist', 'Support'];
 const DUTY_STATUSES = ['On Duty', 'Off Duty'];
+const QUALIFICATION_LEVELS = ['UG', 'PG', 'Doctorate', 'Diploma', 'Certificate', 'Other'];
+
+const qualificationSchema = new Schema(
+  {
+    level: { type: String, enum: QUALIFICATION_LEVELS, required: true },
+    degree: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
 
 const hmsStaffSchema = new Schema({
   staffCode: { type: String, unique: true, required: true, trim: true },
   name: { type: String, required: true, trim: true },
   role: { type: String, enum: STAFF_ROLES, required: true },
   title: { type: String, trim: true, default: '' },
+  qualifications: { type: [qualificationSchema], default: [] },
+  registrationNumber: { type: String, trim: true, default: '' },
+  aadharNumber: { type: String, trim: true, default: '' },
+  panNumber: { type: String, trim: true, default: '' },
   dutyStatus: { type: String, enum: DUTY_STATUSES, default: 'On Duty' },
   statPrimaryValue: { type: Number, default: 0, min: 0 },
   statPrimaryLabel: { type: String, trim: true, default: 'Patients' },
@@ -17,6 +30,7 @@ const hmsStaffSchema = new Schema({
   rating: { type: Number, default: 5, min: 0, max: 5 },
   tags: { type: [String], default: [] },
   shift: { type: String, trim: true, default: '9AM – 5PM' },
+  consultationFee: { type: Number, min: 0, default: 0 },
   email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
   password: { type: String },
   status: { type: Boolean, default: true },

@@ -2,6 +2,7 @@ export type RbacModuleKey =
   | 'dashboard'
   | 'patients'
   | 'appointments'
+  | 'prescriptions'
   | 'panchakarma'
   | 'masterData'
   | 'pharmacy'
@@ -28,6 +29,7 @@ export const RBAC_MODULE_LABELS: Record<RbacModuleKey, string> = {
   dashboard: 'Dashboard',
   patients: 'Patients',
   appointments: 'Appointments',
+  prescriptions: 'Prescriptions',
   panchakarma: 'Panchakarma',
   masterData: 'Master Data',
   pharmacy: 'Pharmacy',
@@ -41,6 +43,7 @@ export const RBAC_MODULE_KEYS: RbacModuleKey[] = [
   'dashboard',
   'patients',
   'appointments',
+  'prescriptions',
   'panchakarma',
   'masterData',
   'pharmacy',

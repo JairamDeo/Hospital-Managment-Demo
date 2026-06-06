@@ -52,6 +52,10 @@ export const createStaffByAdmin = async (payload) => {
     name,
     role,
     title: payload.title?.trim() || '',
+    qualifications: payload.qualifications || [],
+    registrationNumber: payload.registrationNumber?.trim() || '',
+    aadharNumber: payload.aadharNumber?.trim() || '',
+    panNumber: payload.panNumber?.trim().toUpperCase() || '',
     dutyStatus: 'On Duty',
     statPrimaryValue: 0,
     statPrimaryLabel: statLabelForRole(role),
@@ -60,6 +64,7 @@ export const createStaffByAdmin = async (payload) => {
     rating: 5,
     tags: payload.tags?.length ? payload.tags : [role],
     shift: payload.shift?.trim() || '9AM – 5PM',
+    consultationFee: Number(payload.consultationFee) || 0,
     email,
     password: STAFF_DEFAULT_PASSWORD,
     status: true,
@@ -81,6 +86,13 @@ export const updateStaffByAdmin = async (staffCode, payload) => {
   if (payload.rating !== undefined) member.rating = payload.rating;
   if (payload.statPrimaryValue !== undefined) member.statPrimaryValue = payload.statPrimaryValue;
   if (payload.todayCount !== undefined) member.todayCount = payload.todayCount;
+  if (payload.consultationFee !== undefined) member.consultationFee = payload.consultationFee;
+  if (payload.qualifications !== undefined) member.qualifications = payload.qualifications;
+  if (payload.registrationNumber !== undefined) {
+    member.registrationNumber = payload.registrationNumber.trim();
+  }
+  if (payload.aadharNumber !== undefined) member.aadharNumber = payload.aadharNumber.trim();
+  if (payload.panNumber !== undefined) member.panNumber = payload.panNumber.trim().toUpperCase();
 
   if (payload.role !== undefined) {
     member.statPrimaryLabel = statLabelForRole(member.role);

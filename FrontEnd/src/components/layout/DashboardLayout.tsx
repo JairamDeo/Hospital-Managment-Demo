@@ -14,6 +14,10 @@ const titles: Record<string, string> = {
   [ROUTES.ADMIN_STAFF]: 'Staff',
   [ROUTES.ADMIN_ANALYTICS]: 'Analytics',
   [ROUTES.ADMIN_BILLING]: 'Billing',
+  [ROUTES.ADMIN_BILLING_MEDICINE]: 'Medicine Bill',
+  [ROUTES.ADMIN_BILLING_CONSULTATION]: 'Consultation Bill',
+  [ROUTES.ADMIN_BILLING_PANCHAKARMA]: 'Panchakarma Bill',
+  [ROUTES.ADMIN_PRESCRIPTION]: 'Prescription',
   [ROUTES.ADMIN_SETTINGS]: 'Settings',
 };
 
@@ -37,6 +41,18 @@ const LayoutContent = () => {
     ? decodeURIComponent(appointmentFollowUpMatch[1])
     : null;
 
+  const panchakarmaTreatmentMatch = pathname.match(
+    /^\/admin\/panchakarma\/appointments\/([^/]+)\/treatment$/
+  );
+  const panchakarmaTreatmentId = panchakarmaTreatmentMatch?.[1]
+    ? decodeURIComponent(panchakarmaTreatmentMatch[1])
+    : null;
+
+  const prescriptionMatch = pathname === ROUTES.ADMIN_PRESCRIPTION;
+
+  const billingSubMatch = pathname.match(/^\/admin\/billing\/(medicine|consultation|panchakarma)$/);
+  const billingSubPage = billingSubMatch?.[1];
+
   const appointmentMatch = pathname.match(/^\/admin\/appointments\/([^/]+)$/);
   const appointmentId = appointmentMatch?.[1]
     ? decodeURIComponent(appointmentMatch[1])
@@ -49,6 +65,35 @@ const LayoutContent = () => {
           { label: patientBreadcrumbLabel },
         ],
       }
+    : panchakarmaTreatmentId
+      ? {
+          breadcrumbs: [
+            { label: 'Appointments', href: ROUTES.ADMIN_APPOINTMENTS },
+            { label: panchakarmaTreatmentId },
+            { label: 'Treatment plan' },
+          ],
+        }
+      : prescriptionMatch
+        ? {
+            breadcrumbs: [
+              { label: 'Patients', href: ROUTES.ADMIN_PATIENTS },
+              { label: 'New prescription' },
+            ],
+          }
+        : billingSubPage
+          ? {
+              breadcrumbs: [
+                { label: 'Billing', href: ROUTES.ADMIN_BILLING },
+                {
+                  label:
+                    billingSubPage === 'medicine'
+                      ? 'Medicine bill'
+                      : billingSubPage === 'consultation'
+                        ? 'Consultation bill'
+                        : 'Panchakarma bill',
+                },
+              ],
+            }
     : staffMember
       ? {
           breadcrumbs: [

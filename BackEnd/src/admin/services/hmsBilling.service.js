@@ -60,11 +60,12 @@ export const listInvoices = async ({ status, feeType, patientCode, search } = {}
   if (feeType) query.feeType = feeType;
 
   if (status === 'paid') query.status = 'Paid';
+  else if (status === 'partial') query.status = 'Partial';
   else if (status === 'pending') {
-    query.status = 'Pending';
+    query.status = { $in: ['Pending', 'Partial'] };
     query.createdAt = { $gte: moment().subtract(7, 'days').toDate() };
   } else if (status === 'overdue') {
-    query.status = 'Pending';
+    query.status = { $in: ['Pending', 'Partial'] };
     query.createdAt = { $lt: moment().subtract(7, 'days').toDate() };
   }
 
@@ -109,11 +110,16 @@ export const getBillingStats = async () => {
 
   for (const inv of rows) {
     totalRevenue += inv.amount;
+    const paid = inv.status === 'Paid' ? inv.amount : Number(inv.amountPaid) || 0;
     if (inv.status === 'Paid') {
       collected += inv.amount;
       if (inv.paymentMethod && methodTotals[inv.paymentMethod] !== undefined) {
         methodTotals[inv.paymentMethod] += inv.amount;
       }
+    } else if (inv.status === 'Partial') {
+      collected += paid;
+      pending += inv.amount - paid;
+      pendingCount += 1;
     } else {
       const daysOld = moment().diff(inv.createdAt, 'days');
       if (daysOld > 7) {
@@ -151,7 +157,12 @@ export const getBillingStats = async () => {
   };
 };
 
-export const createConsultationInvoiceFromAppointment = async (appointment, req, consultationFee) => {
+export const createConsultationInvoiceFromAppointment = async (
+  appointment,
+  req,
+  consultationFee,
+  { markPaid = false, paymentMethod = '' } = {}
+) => {
   const existing = await HmsInvoice.findOne({
     appointmentCode: appointment.appointmentCode,
     feeType: 'Consultation',
@@ -170,6 +181,7 @@ export const createConsultationInvoiceFromAppointment = async (appointment, req,
       : `${appointment.appointmentType} — ${appointment.doctorName}`;
 
   const actor = req ? performerFromReq(req) : { type: 'admin', name: 'System' };
+  const paidNow = markPaid === true;
 
   const row = await HmsInvoice.create({
     invoiceCode: await generateInvoiceCode(),
@@ -190,7 +202,11 @@ export const createConsultationInvoiceFromAppointment = async (appointment, req,
       },
     ],
     amount: fee,
-    status: 'Pending',
+    amountPaid: paidNow ? fee : 0,
+    status: paidNow ? 'Paid' : 'Pending',
+    paymentMethod: paidNow ? paymentMethod || 'Cash' : '',
+    paidAt: paidNow ? new Date() : null,
+    collectedBy: paidNow ? actor : null,
     createdBy: actor,
   });
 
@@ -255,6 +271,7 @@ export const createMedicineInvoice = async (payload, req) => {
     description: 'Pharmacy medicines',
     lineItems,
     amount: total,
+    amountPaid: markPaid ? total : 0,
     status: markPaid ? 'Paid' : 'Pending',
     paymentMethod: markPaid ? paymentMethod || 'Cash' : '',
     paidAt: markPaid ? new Date() : null,
@@ -272,12 +289,100 @@ export const collectInvoicePayment = async (invoiceCode, payload, req) => {
   if (!row) throw new Error(BILLING_MESSAGES.NOT_FOUND);
   if (row.status === 'Paid') throw new Error(BILLING_MESSAGES.ALREADY_PAID);
 
+  const currentPaid = Number(row.amountPaid) || 0;
+  const balance = row.amount - currentPaid;
+  const payAmount =
+    payload.amount != null && payload.amount !== ''
+      ? Number(payload.amount)
+      : balance;
+
+  if (!Number.isFinite(payAmount) || payAmount <= 0) {
+    throw new Error(BILLING_MESSAGES.INVALID_PAYMENT_AMOUNT);
+  }
+  if (payAmount > balance) {
+    throw new Error(BILLING_MESSAGES.PAYMENT_EXCEEDS_BALANCE);
+  }
+
   const actor = performerFromReq(req);
-  row.status = 'Paid';
+  const newPaid = currentPaid + payAmount;
+  row.amountPaid = newPaid;
   row.paymentMethod = payload.paymentMethod || 'Cash';
-  row.paidAt = new Date();
-  row.collectedBy = actor;
+
+  if (newPaid >= row.amount) {
+    row.status = 'Paid';
+    row.paidAt = new Date();
+    row.collectedBy = actor;
+  } else {
+    row.status = 'Partial';
+  }
+
+  if (row.programCode) {
+    const HmsPanchakarmaProgram = (await import('../../models/hmsPanchakarmaProgram.model.js')).default;
+    await HmsPanchakarmaProgram.updateOne(
+      { programCode: row.programCode },
+      { amountPaid: newPaid }
+    );
+  }
+
   await row.save();
+
+  const formatted = formatHmsInvoice(row);
+  await syncInvoiceToPatientCare(formatted);
+  return formatted;
+};
+
+export const createPanchakarmaInvoice = async (program, req, { markPaid = false, paymentMethod = '', payAmount = null } = {}) => {
+  const existing = await HmsInvoice.findOne({
+    programCode: program.programCode,
+    feeType: 'Panchakarma',
+  });
+
+  const actor = performerFromReq(req);
+  const totalFees = Number(program.totalFees) || 0;
+  if (totalFees <= 0) throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
+
+  const label = program.treatmentName?.trim()
+    ? `Panchakarma — ${program.treatmentName}`
+    : `Panchakarma — ${program.therapy}`;
+
+  if (existing) {
+    if (markPaid || payAmount) {
+      const amount = payAmount != null ? Number(payAmount) : totalFees - (existing.amountPaid || 0);
+      return collectInvoicePayment(existing.invoiceCode, { amount, paymentMethod }, req);
+    }
+    return formatHmsInvoice(existing);
+  }
+
+  const initialPay = markPaid ? totalFees : payAmount != null ? Number(payAmount) : 0;
+  const paid = Math.min(totalFees, Math.max(0, initialPay));
+
+  const row = await HmsInvoice.create({
+    invoiceCode: await generateInvoiceCode(),
+    patientCode: program.patientCode,
+    patient: program.patient,
+    patientName: program.patientName,
+    feeType: 'Panchakarma',
+    visitType: '',
+    programCode: program.programCode,
+    appointmentCode: program.appointmentCode || '',
+    doctorName: program.therapistName,
+    description: label,
+    lineItems: [
+      {
+        description: label,
+        quantity: 1,
+        unitPrice: totalFees,
+        amount: totalFees,
+      },
+    ],
+    amount: totalFees,
+    amountPaid: paid,
+    status: paid >= totalFees ? 'Paid' : paid > 0 ? 'Partial' : 'Pending',
+    paymentMethod: paid > 0 ? paymentMethod || 'Cash' : '',
+    paidAt: paid >= totalFees ? new Date() : null,
+    collectedBy: paid > 0 ? actor : null,
+    createdBy: actor,
+  });
 
   const formatted = formatHmsInvoice(row);
   await syncInvoiceToPatientCare(formatted);

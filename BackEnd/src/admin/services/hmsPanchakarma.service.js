@@ -1,10 +1,13 @@
 import HmsPanchakarmaProgram from '../../models/hmsPanchakarmaProgram.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
+import HmsAppointment from '../../models/hmsAppointment.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
-import { ErrorMessages, PANCHAKARMA_MESSAGES } from '../../utils/constants.js';
+import { ErrorMessages, PANCHAKARMA_MESSAGES, APPOINTMENT_MESSAGES } from '../../utils/constants.js';
 import { formatHmsPanchakarmaProgram } from '../../utils/formatHmsPanchakarmaProgram.js';
 import { generatePanchakarmaCode } from '../../utils/generatePanchakarmaCode.js';
+import { formatAppointmentDateDisplay } from '../../utils/appointment.util.js';
+import { createPanchakarmaInvoice } from './hmsBilling.service.js';
 import {
   computeProgramProgress,
   normalizeProgramStartDate,
@@ -67,6 +70,16 @@ export const listProgramsByStaff = async (staffCode) => {
     staffCode,
     status: { $ne: 'Cancelled' },
   }).sort({ startDate: -1 });
+  return rows.map(formatHmsPanchakarmaProgram);
+};
+
+export const listProgramsByPatient = async (patientCode, staffCode) => {
+  const query = { patientCode };
+  if (staffCode) query.staffCode = staffCode;
+  const rows = await HmsPanchakarmaProgram.find(query).sort({
+    startDate: -1,
+    createdAt: -1,
+  });
   return rows.map(formatHmsPanchakarmaProgram);
 };
 
@@ -158,6 +171,15 @@ export const createProgram = async (payload, createdBy) => {
     throw new Error(PANCHAKARMA_MESSAGES.ROOM_UNAVAILABLE);
   }
 
+  const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
+    dayNumber: Number(row.dayNumber) || index + 1,
+    sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
+    time: row.time?.trim() || '',
+    duration: row.duration?.trim() || '',
+    panchakarmaType: row.panchakarmaType?.trim() || payload.therapy,
+    medicineContent: row.medicineContent?.trim() || '',
+  }));
+
   const program = await HmsPanchakarmaProgram.create({
     programCode: await generatePanchakarmaCode(),
     patientCode: patient.patientCode,
@@ -167,14 +189,199 @@ export const createProgram = async (payload, createdBy) => {
     staff: therapist._id,
     therapistName: therapist.name,
     therapy: payload.therapy,
+    treatmentName: payload.treatmentName?.trim() || payload.therapy,
+    totalFees: Number(payload.totalFees) || 0,
     totalDays: payload.totalDays,
     currentDay: 1,
     room: payload.room,
     startDate: normalizeProgramStartDate(payload.startDate),
-    status: 'Starting',
+    dailySessions,
+    status: dailySessions.length > 0 ? 'Ongoing' : 'Starting',
     createdBy,
   });
 
   await syncProgramToPatientCare(program);
+  if (dailySessions.length > 0) {
+    await syncPanchakarmaTreatmentHistory(program);
+  }
   return formatHmsPanchakarmaProgram(program);
+};
+
+export const attendPanchakarmaProgram = async (programCode, payload, req) => {
+  if (req.accountType !== 'staff' || req.staff?.role !== 'Therapist') {
+    throw new Error(ErrorMessages.ACCESS_DENIED);
+  }
+
+  const program = await HmsPanchakarmaProgram.findOne({ programCode });
+  if (!program) throw new Error(PANCHAKARMA_MESSAGES.NOT_FOUND);
+  if (program.staffCode !== req.staff.staffCode) {
+    throw new Error(ErrorMessages.ACCESS_DENIED);
+  }
+  if (program.status === 'Cancelled' || program.status === 'Complete') {
+    throw new Error('This program cannot be updated');
+  }
+
+  const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
+    dayNumber: Number(row.dayNumber) || index + 1,
+    sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
+    time: row.time?.trim() || '',
+    duration: row.duration?.trim() || '',
+    panchakarmaType: row.panchakarmaType?.trim() || program.therapy,
+    medicineContent: row.medicineContent?.trim() || '',
+  }));
+
+  if (!dailySessions.length) {
+    throw new Error('Daily session schedule is required');
+  }
+
+  program.treatmentName =
+    payload.treatmentName?.trim() || program.treatmentName?.trim() || program.therapy;
+  if (payload.totalFees == null || Number.isNaN(Number(payload.totalFees))) {
+    throw new Error('Total fees is required');
+  }
+  program.totalFees = Number(payload.totalFees);
+  program.dailySessions = dailySessions;
+  program.status = 'Ongoing';
+  program.currentDay = program.currentDay || 1;
+  await program.save();
+
+  await syncProgramToPatientCare(program);
+  await syncPanchakarmaTreatmentHistory(program);
+
+  return formatHmsPanchakarmaProgram(program);
+};
+
+const syncPanchakarmaTreatmentHistory = async (program) => {
+  const care =
+    (await PatientCareProfile.findOne({ patientCode: program.patientCode })) ??
+    (await PatientCareProfile.create({
+      patientCode: program.patientCode,
+      patient: program.patient,
+    }));
+
+  const title = program.treatmentName?.trim() || `Panchakarma — ${program.therapy}`;
+  const entry = {
+    title,
+    doctor: program.therapistName,
+    status: program.status === 'Complete' ? 'Completed' : 'Active',
+    dateRange: `${program.totalDays} day plan`,
+    description: `Treatment plan by ${program.therapistName}`,
+    medicines: [],
+    appointmentCode: program.appointmentCode || '',
+    sortOrder: Date.now(),
+  };
+
+  const idx = care.treatmentHistory.findIndex(
+    (t) => t.appointmentCode && t.appointmentCode === program.appointmentCode
+  );
+  if (idx >= 0) Object.assign(care.treatmentHistory[idx], entry);
+  else care.treatmentHistory.unshift(entry);
+
+  await care.save();
+};
+
+export const createTreatmentPlanFromAppointment = async (appointmentCode, payload, req) => {
+  if (req.accountType === 'staff' && req.staff?.role !== 'Therapist') {
+    throw new Error(ErrorMessages.ACCESS_DENIED);
+  }
+
+  const staffCode =
+    req.accountType === 'staff' && req.staff?.role === 'Therapist' ? req.staff.staffCode : null;
+
+  const apptQuery = { appointmentCode };
+  if (staffCode) apptQuery.staffCode = staffCode;
+
+  const appointment = await HmsAppointment.findOne(apptQuery);
+  if (!appointment) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  if (appointment.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
+
+  const therapist = await HmsStaff.findById(appointment.staff);
+  if (!therapist || therapist.role !== 'Therapist') {
+    throw new Error(PANCHAKARMA_MESSAGES.STAFF_NOT_THERAPIST);
+  }
+
+  const totalDays = Number(payload.totalDays);
+  const totalFees = Number(payload.totalFees);
+  if (!totalDays || totalDays < 1) throw new Error('Number of days is required');
+  if (!Number.isFinite(totalFees) || totalFees < 0) throw new Error('Treatment fees are required');
+
+  const therapyType = payload.therapy?.trim() || payload.panchakarmaType?.trim() || 'Basti';
+  const allowed = PANCHAKARMA_THERAPIES.includes(therapyType) ? therapyType : 'Basti';
+
+  const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
+    dayNumber: Number(row.dayNumber) || index + 1,
+    sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
+    time: row.time?.trim() || '',
+    duration: row.duration?.trim() || '',
+    panchakarmaType: row.panchakarmaType?.trim() || therapyType,
+    medicineContent: row.medicineContent?.trim() || '',
+  }));
+
+  let program = await HmsPanchakarmaProgram.findOne({ appointmentCode });
+  if (program) {
+    program.treatmentName = payload.treatmentName?.trim() || program.treatmentName;
+    program.totalFees = totalFees;
+    program.totalDays = totalDays;
+    program.dailySessions = dailySessions;
+    program.status = 'Ongoing';
+    await program.save();
+  } else {
+    program = await HmsPanchakarmaProgram.create({
+      programCode: await generatePanchakarmaCode(),
+      patientCode: appointment.patientCode,
+      patient: appointment.patient,
+      patientName: appointment.patientName,
+      staffCode: therapist.staffCode,
+      staff: therapist._id,
+      therapistName: therapist.name,
+      therapy: allowed,
+      treatmentName: payload.treatmentName?.trim() || therapyType,
+      totalFees,
+      amountPaid: 0,
+      totalDays,
+      currentDay: 1,
+      room: payload.room || 'Room 1',
+      startDate: normalizeProgramStartDate(payload.startDate || new Date()),
+      appointmentCode,
+      dailySessions,
+      status: 'Ongoing',
+      createdBy: {
+        type: req.accountType === 'admin' ? 'admin' : 'patient',
+        adminId: req.admin?._id,
+        patientCode: appointment.patientCode,
+        name: therapist.name,
+      },
+    });
+  }
+
+  if (appointment.status !== 'Completed') {
+    appointment.status = 'Completed';
+    appointment.attendedAt = new Date();
+    appointment.attendedBy = {
+      type: 'staff',
+      staffCode: therapist.staffCode,
+      name: therapist.name,
+    };
+    await appointment.save();
+  }
+
+  await syncProgramToPatientCare(program);
+  await syncPanchakarmaTreatmentHistory(program);
+
+  const invoice = await createPanchakarmaInvoice(program, req, {
+    markPaid: payload.markPaid === true,
+    paymentMethod: payload.paymentMethod,
+    payAmount: payload.payAmount,
+  });
+
+  return {
+    program: formatHmsPanchakarmaProgram(program),
+    invoice,
+  };
+};
+
+export const getProgramByCode = async (programCode) => {
+  const row = await HmsPanchakarmaProgram.findOne({ programCode });
+  if (!row) throw new Error(PANCHAKARMA_MESSAGES.NOT_FOUND);
+  return formatHmsPanchakarmaProgram(row);
 };

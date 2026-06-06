@@ -4,6 +4,8 @@ import type { PatientFormValues, PatientProfileFormValues, PatientStats } from '
 import type { PatientCareApi } from '@/utils/buildPatientDetail';
 import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
+import type { StructuredPrescription, StructuredPrescriptionPayload } from '@/types/structuredPrescription.types';
+import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
 import { clinicalPayloadForApi } from '@/utils/patientClinicalHelpers';
 
 class PatientAdminService {
@@ -37,16 +39,19 @@ class PatientAdminService {
   }
 
   create(values: PatientFormValues) {
-    return axiosInstance.post<ApiResponse<{ patient: HmsPatient }>>('/admin/patients', {
+    const payload: Record<string, unknown> = {
       name: values.name,
       email: values.email || undefined,
       mobileNumber: values.mobile.replace(/\D/g, '').slice(0, 10),
       age: values.age === '' ? 0 : values.age,
       prakritiId: values.prakritiId || undefined,
-      treatmentId: values.treatmentId,
       lastVisit: values.lastVisit,
       recordStatus: values.status,
-    });
+    };
+    if (values.treatmentId?.trim()) {
+      payload.treatmentId = values.treatmentId;
+    }
+    return axiosInstance.post<ApiResponse<{ patient: HmsPatient }>>('/admin/patients', payload);
   }
 
   update(patientCode: string, values: PatientFormValues) {
@@ -122,6 +127,55 @@ class PatientAdminService {
     const res = await axiosInstance.get<Blob>(
       `/admin/patients/${encodeURIComponent(patientCode)}/prescriptions/${prescriptionId}/view`,
       { responseType: 'blob' }
+    );
+    const contentType = String(res.headers['content-type'] ?? '');
+    if (contentType.includes('application/json')) {
+      const text = await (res.data as Blob).text();
+      try {
+        const body = JSON.parse(text) as { message?: string };
+        throw new Error(body.message || 'Could not load PDF.');
+      } catch (e) {
+        if (e instanceof Error && e.message !== 'Could not load PDF.') throw e;
+        throw new Error('Could not load PDF.');
+      }
+    }
+    return res.data;
+  }
+
+  listVitalsHistory(patientCode: string) {
+    return axiosInstance.get<ApiResponse<{ vitalsHistory: PatientVitalsEntry[] }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/vitals`
+    );
+  }
+
+  addVitals(patientCode: string, payload: PatientVitalsPayload) {
+    return axiosInstance.post<ApiResponse<{ vitalsHistory: PatientVitalsEntry[] }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/vitals`,
+      payload
+    );
+  }
+
+  listStructuredPrescriptions(patientCode: string) {
+    return axiosInstance.get<ApiResponse<{ prescriptions: StructuredPrescription[] }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/structured-prescriptions`
+    );
+  }
+
+  createStructuredPrescription(patientCode: string, payload: StructuredPrescriptionPayload) {
+    return axiosInstance.post<ApiResponse<{ prescription: StructuredPrescription }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/structured-prescriptions`,
+      payload
+    );
+  }
+
+  async fetchStructuredPrescriptionPdfBlob(
+    patientCode: string,
+    prescriptionCode: string,
+    audience: 'patient' | 'staff' = 'staff'
+  ): Promise<Blob> {
+    const res = await axiosInstance.get<Blob>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/structured-prescriptions/${encodeURIComponent(prescriptionCode)}/pdf`,
+      { params: { audience }, responseType: 'blob' }
     );
     const contentType = String(res.headers['content-type'] ?? '');
     if (contentType.includes('application/json')) {

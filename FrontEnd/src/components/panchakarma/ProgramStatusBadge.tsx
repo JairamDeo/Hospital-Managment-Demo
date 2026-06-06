@@ -4,6 +4,7 @@ const styles: Record<ProgramStatus, { dot: string; text: string }> = {
   Ongoing: { dot: 'bg-success', text: 'text-success' },
   Starting: { dot: 'bg-warning', text: 'text-warning' },
   Complete: { dot: 'bg-success', text: 'text-success' },
+  Cancelled: { dot: 'bg-ink-ghost', text: 'text-ink-ghost' },
 };
 
 export const ProgramStatusBadge = ({ status }: { status: ProgramStatus }) => (

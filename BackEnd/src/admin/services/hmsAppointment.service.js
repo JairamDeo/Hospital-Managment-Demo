@@ -80,6 +80,56 @@ const syncCareFromAppointment = async (appointment) => {
   await care.save();
 };
 
+const syncTreatmentHistoryFromAppointment = async (appointment, visitNotes) => {
+  const care =
+    (await PatientCareProfile.findOne({ patientCode: appointment.patientCode })) ??
+    (await PatientCareProfile.create({
+      patientCode: appointment.patientCode,
+      patient: appointment.patient,
+    }));
+
+  const notes = visitNotes?.trim() || appointment.visitNotes?.trim() || appointment.followUpNotes?.trim() || '';
+  const entry = {
+    title: `${appointment.appointmentType} visit`,
+    doctor: appointment.doctorName,
+    status: 'Completed',
+    dateRange: formatAppointmentDateDisplay(appointment.appointmentDate),
+    description: notes || 'Visit completed',
+    medicines: [],
+    appointmentCode: appointment.appointmentCode,
+    sortOrder: Date.now(),
+  };
+
+  const idx = care.treatmentHistory.findIndex(
+    (t) => t.appointmentCode === appointment.appointmentCode
+  );
+
+  if (idx >= 0) {
+    Object.assign(care.treatmentHistory[idx], entry);
+  } else {
+    care.treatmentHistory.unshift(entry);
+  }
+
+  await care.save();
+};
+
+const resolveConsultationFee = async (appointment, payloadFee) => {
+  const raw = payloadFee?.toString?.().trim?.() ?? payloadFee;
+  if (raw !== '' && raw != null && Number.isFinite(Number(raw))) {
+    return Number(raw);
+  }
+
+  const doctor = await HmsStaff.findById(appointment.staff);
+  if (!doctor) throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
+
+  const profileFee = Number(doctor.consultationFee);
+  if (Number.isFinite(profileFee) && profileFee > 0) {
+    return profileFee;
+  }
+
+  throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
+};
+
 export const mapHmsToPatientCareAppointment = (a) => ({
   id: a.appointmentCode,
   appointmentCode: a.appointmentCode,
@@ -231,6 +281,7 @@ export const listDoctorsForBooking = async (staffCode) => {
     name: d.name,
     title: d.title,
     role: d.role,
+    consultationFee: Number(d.consultationFee) || 0,
   }));
 };
 
@@ -279,17 +330,21 @@ export const attendAppointmentWithFollowUp = async (appointmentCode, payload, re
 
   const wasCompleted = row.status === 'Completed';
 
+  let resolvedFee = null;
   if (!wasCompleted) {
-    const fee = Number(payload.consultationFee);
-    if (!Number.isFinite(fee) || fee < 0) {
-      throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
-    }
+    resolvedFee = await resolveConsultationFee(row, payload.consultationFee);
   }
 
   if (row.status !== 'Completed') {
     row.status = 'Completed';
     row.attendedAt = now;
     row.attendedBy = actor;
+    row.consultationFeeCharged = resolvedFee;
+  }
+
+  const visitNotes = payload.visitNotes?.trim?.() || '';
+  if (visitNotes) {
+    row.visitNotes = visitNotes;
   }
 
   const followUpDateRaw = payload.followUpDate?.trim?.() || payload.followUpDate;
@@ -321,9 +376,13 @@ export const attendAppointmentWithFollowUp = async (appointmentCode, payload, re
 
   await row.save();
   await syncCareFromAppointment(row);
+  await syncTreatmentHistoryFromAppointment(row, visitNotes);
 
   if (!wasCompleted) {
-    await createConsultationInvoiceFromAppointment(row, req, payload.consultationFee);
+    await createConsultationInvoiceFromAppointment(row, req, resolvedFee, {
+      markPaid: payload.markPaid === true,
+      paymentMethod: payload.paymentMethod,
+    });
   }
 
   return formatHmsAppointment(row);

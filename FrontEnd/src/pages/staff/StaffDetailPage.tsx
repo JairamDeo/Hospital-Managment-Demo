@@ -14,7 +14,7 @@ import { StaffDetailTabs } from '@/components/staff/detail/StaffDetailTabs';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROUTES } from '@/constants/routes';
-import type { StaffFormValues } from './data/mockStaff';
+import type { StaffFormValues } from '@/types/staff.types';
 import type { StaffProfileCardData } from '@/types/staffProfile.types';
 
 export const StaffDetailPage = () => {
@@ -23,6 +23,7 @@ export const StaffDetailPage = () => {
   const { isAdmin, isStaff, staffCode, canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
   const [staff, setStaff] = useState<StaffProfileCardData | null>(null);
+  const [staffFees, setStaffFees] = useState({ consultationFee: '' });
   const [loading, setLoading] = useState(true);
   const [assignmentRows, setAssignmentRows] = useState<StaffAssignment[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -40,7 +41,12 @@ export const StaffDetailPage = () => {
         const { data } = await staffAdminService.get(staffId);
         const member = data.res?.staff;
         if (!member) throw new Error('Staff not found');
-        if (!cancelled) setStaff(hmsToStaffProfileCard(member));
+        if (!cancelled) {
+          setStaff(hmsToStaffProfileCard(member));
+          setStaffFees({
+            consultationFee: member.consultationFee ? String(member.consultationFee) : '',
+          });
+        }
       } catch (err) {
         if (!cancelled) {
           showToast(getApiErrorMessage(err), 'error');
@@ -109,8 +115,18 @@ export const StaffDetailPage = () => {
       role: staff.role,
       title: staff.title,
       shift: staff.shift,
+      consultationFee: staffFees.consultationFee,
+      registrationNumber: staff.registrationNumber ?? '',
+      aadharNumber: staff.aadharNumber ?? '',
+      panNumber: staff.panNumber ?? '',
+      qualifications: staff.qualifications?.length
+        ? staff.qualifications.map((q) => ({
+            level: q.level as StaffFormValues['qualifications'][0]['level'],
+            degree: q.degree,
+          }))
+        : [{ level: 'UG' as const, degree: '' }],
     } satisfies StaffFormValues;
-  }, [staff]);
+  }, [staff, staffFees]);
 
   if (!staffId) {
     return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
@@ -129,19 +145,32 @@ export const StaffDetailPage = () => {
   }
 
   const handleEditSubmit = async (values: StaffFormValues) => {
-    showToast('Staff profile updated successfully', 'success');
-    setEditOpen(false);
-    setStaff((prev) =>
-      prev
-        ? {
-            ...prev,
-            name: values.name.trim(),
-            role: values.role,
-            title: values.title.trim(),
-            shift: values.shift.trim() || prev.shift,
-          }
-        : prev
-    );
+    if (!staffId) return;
+    try {
+      await staffAdminService.update(staffId, values);
+      showToast('Staff profile updated successfully', 'success');
+      setEditOpen(false);
+      setStaffFees({
+        consultationFee: values.consultationFee,
+      });
+      setStaff((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: values.name.trim(),
+              role: values.role,
+              title: values.title.trim(),
+              shift: values.shift.trim() || prev.shift,
+              registrationNumber: values.registrationNumber.trim(),
+              aadharNumber: values.aadharNumber,
+              panNumber: values.panNumber,
+              qualifications: values.qualifications,
+            }
+          : prev
+      );
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    }
   };
 
   const canCheckInOut = isOwnProfile;
@@ -178,6 +207,7 @@ export const StaffDetailPage = () => {
         <AddStaffModal
           key={`edit-${staff.id}`}
           open={editOpen}
+          mode="edit"
           initial={formInitial}
           onClose={() => setEditOpen(false)}
           onSubmit={handleEditSubmit}

@@ -4,12 +4,13 @@ import { seedAdminUser } from '../admin/services/admin.service.js';
 import { seedMastersIfEmpty } from './seedMasters.js';
 import { seedPharmacyIfEmpty } from './seedPharmacy.js';
 import { migratePharmacyItems } from './migratePharmacyItems.js';
-import { seedHmsPatients } from './seedHmsPatients.js';
 import { seedHmsStaff } from './seedHmsStaff.js';
+import { migrateDoctorConsultationFees } from './migrateDoctorFees.js';
+import { migrateStaffProfessionalFields } from './migrateStaffProfile.js';
 import { purgePharmacistRole } from './purgePharmacistRole.js';
 import { seedStaffActivityIfEmpty } from './seedStaffActivity.js';
 import { seedHmsPanchakarma } from './seedHmsPanchakarma.js';
-import { seedRbacIfEmpty } from '../utils/rbac.service.js';
+import { seedRbacIfEmpty, mergeRbacDefaults } from '../utils/rbac.service.js';
 import { logger } from '../utils/logger.js';
 
 config();
@@ -23,12 +24,14 @@ const run = async () => {
     await seedMastersIfEmpty();
     await seedPharmacyIfEmpty();
     await migratePharmacyItems();
-    await seedHmsPatients();
     await purgePharmacistRole();
     await seedHmsStaff();
+    await migrateDoctorConsultationFees();
+    await migrateStaffProfessionalFields();
     await seedStaffActivityIfEmpty();
     await seedHmsPanchakarma();
     await seedRbacIfEmpty();
+    await mergeRbacDefaults();
     logger.info('Database seed completed');
 
     process.exit(0);

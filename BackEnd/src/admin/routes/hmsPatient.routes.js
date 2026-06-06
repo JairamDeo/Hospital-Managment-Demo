@@ -19,6 +19,16 @@ import {
   patchPatientClinical,
 } from '../controllers/hmsPatient.controller.js';
 import {
+  getStructuredPrescriptions,
+  postStructuredPrescription,
+  getStructuredPrescriptionPdf,
+  getStructuredPrescriptionByCode,
+} from '../controllers/hmsStructuredPrescription.controller.js';
+import {
+  getPatientVitalsHistory,
+  postPatientVitals,
+} from '../controllers/patientVitals.controller.js';
+import {
   getPatientPrescriptions,
   postPatientPrescription,
   viewPatientPrescriptionPdf,
@@ -38,6 +48,18 @@ router.patch(
   '/:patientCode/clinical',
   validateRequest(adminUpdatePatientClinicalSchema),
   patchPatientClinical
+);
+router.get('/:patientCode/vitals', getPatientVitalsHistory);
+router.post('/:patientCode/vitals', postPatientVitals);
+router.get('/:patientCode/structured-prescriptions', getStructuredPrescriptions);
+router.post('/:patientCode/structured-prescriptions', postStructuredPrescription);
+router.get(
+  '/:patientCode/structured-prescriptions/:prescriptionCode',
+  getStructuredPrescriptionByCode
+);
+router.get(
+  '/:patientCode/structured-prescriptions/:prescriptionCode/pdf',
+  getStructuredPrescriptionPdf
 );
 router.get('/:patientCode/prescriptions', getPatientPrescriptions);
 router.post('/:patientCode/prescriptions', (req, res, next) => {

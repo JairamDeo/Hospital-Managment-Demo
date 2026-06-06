@@ -3,9 +3,10 @@ import { getInitialsFromName, pickAvatarClass } from './staffDisplay.util.js';
 
 export const getInvoiceDisplayStatus = (invoice) => {
   if (invoice.status === 'Paid') return 'Paid';
+  if (invoice.status === 'Partial') return 'Partial';
   const daysOld = moment().diff(invoice.createdAt, 'days');
-  if (daysOld > 7) return 'Overdue';
-  return 'Pending';
+  if (daysOld > 7 && invoice.status === 'Pending') return 'Overdue';
+  return invoice.status === 'Partial' ? 'Partial' : 'Pending';
 };
 
 export const formatHmsInvoice = (doc) => {
@@ -23,7 +24,12 @@ export const formatHmsInvoice = (doc) => {
   const treatment =
     inv.feeType === 'Medicine'
       ? 'Medicine / Pharmacy'
-      : inv.description || `${inv.visitType || 'Consultation'} fee`;
+      : inv.feeType === 'Panchakarma'
+        ? inv.description || 'Panchakarma treatment'
+        : inv.description || `${inv.visitType || 'Consultation'} fee`;
+
+  const amountPaid = Number(inv.amountPaid) || 0;
+  const balance = Math.max(0, inv.amount - amountPaid);
 
   return {
     _id: String(inv._id),
@@ -37,6 +43,7 @@ export const formatHmsInvoice = (doc) => {
     feeType: inv.feeType,
     visitType: inv.visitType || null,
     appointmentCode: inv.appointmentCode || null,
+    programCode: inv.programCode || null,
     doctorName: inv.doctorName || '',
     doctor: inv.doctorName || '—',
     description: inv.description,
@@ -45,12 +52,13 @@ export const formatHmsInvoice = (doc) => {
     dateIso: moment(inv.createdAt).format('YYYY-MM-DD'),
     dueDate: moment(inv.createdAt).add(7, 'days').format('MMM D, YYYY'),
     amount: inv.amount,
+    amountPaid,
     status: displayStatus,
     paymentStatus: inv.status,
     paymentMethod: inv.paymentMethod || undefined,
     paidAt: inv.paidAt,
-    paidAmount: inv.status === 'Paid' ? inv.amount : 0,
-    balance: inv.status === 'Paid' ? 0 : inv.amount,
+    paidAmount: amountPaid,
+    balance,
     subtotal: inv.amount,
     tax: 0,
     discount: 0,

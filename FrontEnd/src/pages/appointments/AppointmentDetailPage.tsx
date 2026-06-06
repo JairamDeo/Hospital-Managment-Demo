@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
 import { AppointmentProfileCard } from '@/components/appointments/detail/AppointmentProfileCard';
@@ -11,7 +11,7 @@ import { appointmentAdminService } from '@/services/appointment/appointmentAdmin
 import { buildAppointmentDetail, hmsToAppointment } from '@/utils/appointmentHelpers';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
-import type { AppointmentFormValues } from '@/types/appointment.types';
+import type { AppointmentFormValues, AppointmentDoctor } from '@/types/appointment.types';
 import type { AppointmentDetail } from '@/types/appointmentDetail.types';
 
 export const AppointmentDetailPage = () => {
@@ -22,6 +22,7 @@ export const AppointmentDetailPage = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [appointment, setAppointment] = useState<AppointmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [doctors, setDoctors] = useState<AppointmentDoctor[]>([]);
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -47,6 +48,10 @@ export const AppointmentDetailPage = () => {
     };
 
     void load();
+    appointmentAdminService
+      .listDoctors()
+      .then((res) => setDoctors(res.data.res?.doctors ?? []))
+      .catch(() => setDoctors([]));
     return () => {
       cancelled = true;
     };
@@ -105,6 +110,7 @@ export const AppointmentDetailPage = () => {
           open={editOpen}
           initial={formInitial}
           patients={patients}
+          doctors={doctors}
           onClose={() => setEditOpen(false)}
           onSubmit={() => {
             setEditOpen(false);

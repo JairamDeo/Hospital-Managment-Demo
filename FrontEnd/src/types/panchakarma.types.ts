@@ -19,6 +19,8 @@ export interface ActiveProgram {
   therapistId?: string;
   therapistName?: string;
   startDate?: string;
+  hasDailyPlan?: boolean;
+  needsAttend?: boolean;
 }
 
 export interface TherapySummary {
@@ -54,6 +56,27 @@ export interface ScheduleProgramFormValues {
   room: string;
   therapistId: string;
   startDate: string;
+  treatmentName?: string;
+  totalFees?: string;
+}
+
+export interface ScheduleProgramDailySession {
+  dayNumber: number;
+  sessionDate: string;
+  time: string;
+  duration: string;
+  panchakarmaType: string;
+  medicineContent: string;
+}
+
+export interface ScheduleProgramPayload extends ScheduleProgramFormValues {
+  dailySessions: ScheduleProgramDailySession[];
+}
+
+export interface ProgramAttendPayload {
+  treatmentName: string;
+  totalFees: number;
+  dailySessions: ScheduleProgramDailySession[];
 }
 
 export interface PanchakarmaStats {

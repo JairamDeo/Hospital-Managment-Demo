@@ -34,31 +34,36 @@ const defaultStats = (): PanchakarmaStats => ({
 });
 
 export const PanchakarmaPage = () => {
-  const { patients } = useAdminPatientsList();
   const [programs, setPrograms] = useState<ActiveProgram[]>([]);
   const [stats, setStats] = useState<PanchakarmaStats>(defaultStats());
   const [therapists, setTherapists] = useState<TherapistOnDuty[]>([]);
   const [rooms, setRooms] = useState<TreatmentRoom[]>([]);
   const [listLoading, setListLoading] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleInitial, setScheduleInitial] = useState(emptyScheduleProgramForm());
   const [submitting, setSubmitting] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formInitial, setFormInitial] = useState(emptyScheduleProgramForm());
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { canEdit, isStaff, staffRole, staffCode } = usePermissions();
+  const { canEdit, staffRole, staffCode } = usePermissions();
+  const { patients } = useAdminPatientsList();
+
+  const isTherapist = staffRole === 'Therapist' && Boolean(staffCode);
+  const canCreateProgram = !isTherapist && canEdit('panchakarma');
 
   const lockedTherapist = useMemo((): TherapistOnDuty | null => {
-    if (!isStaff || staffRole !== 'Therapist' || !staffCode) return null;
+    if (!isTherapist || !staffCode) return null;
     const fromList = therapists.find((t) => t.id === staffCode);
     if (fromList) return fromList;
     return {
       id: staffCode,
+      staffCode,
       name: user?.name ?? 'You',
       specialty: user?.title ?? 'Therapist',
       patientCount: 0,
-      dutyStatus: 'On Duty',
+      initials: (user?.name ?? 'YO').slice(0, 2).toUpperCase(),
+      avatarClass: 'bg-emerald-100 text-emerald-800',
     };
-  }, [isStaff, staffRole, staffCode, therapists, user]);
+  }, [isTherapist, staffCode, therapists, user]);
 
   const therapySummaries = useMemo(() => buildTherapySummaries(stats), [stats]);
 
@@ -86,12 +91,9 @@ export const PanchakarmaPage = () => {
     void loadData();
   }, [loadData]);
 
-  const openSchedule = () => {
-    setFormInitial({
-      ...emptyScheduleProgramForm(),
-      therapistId: lockedTherapist?.id ?? '',
-    });
-    setModalOpen(true);
+  const openScheduleModal = () => {
+    setScheduleInitial(emptyScheduleProgramForm());
+    setScheduleOpen(true);
   };
 
   const handleCreate = async (values: ScheduleProgramFormValues) => {
@@ -99,8 +101,8 @@ export const PanchakarmaPage = () => {
     try {
       const { data } = await panchakarmaAdminService.create(values);
       if (data.status_code === 201) {
-        setModalOpen(false);
-        showToast('Panchakarma program scheduled successfully', 'success');
+        showToast('Panchakarma program scheduled', 'success');
+        setScheduleOpen(false);
         await loadData();
       }
     } catch (err) {
@@ -124,8 +126,8 @@ export const PanchakarmaPage = () => {
               : ` · ${stats.therapistsOnDuty} therapists on duty · ${stats.roomsAvailable} rooms available`}
           </p>
         </div>
-        {canEdit('panchakarma') ? (
-          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openSchedule}>
+        {canCreateProgram ? (
+          <Button className="gap-2 rounded-lg px-4 py-2" onClick={openScheduleModal}>
             <Plus className="h-4 w-4" strokeWidth={2} />
             Schedule Program
           </Button>
@@ -161,15 +163,13 @@ export const PanchakarmaPage = () => {
       </div>
 
       <ScheduleProgramModal
-        key={modalOpen ? 'open' : 'closed'}
-        open={modalOpen}
-        initial={formInitial}
+        open={scheduleOpen}
+        initial={scheduleInitial}
         patients={patients}
         therapists={therapists}
         rooms={rooms}
-        lockedTherapist={lockedTherapist}
         submitting={submitting}
-        onClose={() => setModalOpen(false)}
+        onClose={() => setScheduleOpen(false)}
         onSubmit={handleCreate}
       />
     </div>

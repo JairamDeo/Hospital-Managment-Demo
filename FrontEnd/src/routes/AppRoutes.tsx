@@ -35,7 +35,13 @@ const StaffPage = lazy(() => import('@/pages/staff/StaffPage'));
 const StaffDetailPage = lazy(() => import('@/pages/staff/StaffDetailPage'));
 const AnalyticsPage = lazy(() => import('@/pages/analytics/AnalyticsPage'));
 const BillingPage = lazy(() => import('@/pages/billing/BillingPage'));
+const MedicineBillPage = lazy(() => import('@/pages/billing/MedicineBillPage'));
+const ConsultationBillPage = lazy(() => import('@/pages/billing/ConsultationBillPage'));
+const PanchakarmaBillPage = lazy(() => import('@/pages/billing/PanchakarmaBillPage'));
 const InvoiceDetailPage = lazy(() => import('@/pages/billing/InvoiceDetailPage'));
+const PrescriptionPage = lazy(() => import('@/pages/prescriptions/PrescriptionPage'));
+const PanchakarmaTreatmentPage = lazy(() => import('@/pages/panchakarma/PanchakarmaTreatmentPage'));
+const ProgramAttendPage = lazy(() => import('@/pages/panchakarma/ProgramAttendPage'));
 const MasterDataPage = lazy(() => import('@/pages/master-data/MasterDataPage'));
 
 const withSuspense = (el: React.ReactNode) => (
@@ -127,12 +133,18 @@ export const AppRoutes = () => (
       <Route path={ROUTES.ADMIN_APPOINTMENT_FOLLOWUP} element={withSuspense(<AppointmentFollowUpPage />)} />
       <Route path={ROUTES.ADMIN_APPOINTMENT_DETAIL} element={withSuspense(<AppointmentDetailPage />)} />
       <Route path={ROUTES.ADMIN_PANCHAKARMA} element={withSuspense(<PanchakarmaPage />)} />
+      <Route path={ROUTES.ADMIN_PANCHAKARMA_PROGRAM_ATTEND} element={withSuspense(<ProgramAttendPage />)} />
       <Route path={ROUTES.ADMIN_PHARMACY} element={withSuspense(<PharmacyPage />)} />
       <Route path={ROUTES.ADMIN_STAFF} element={withSuspense(<StaffPage />)} />
       <Route path={ROUTES.ADMIN_STAFF_DETAIL} element={withSuspense(<StaffDetailPage />)} />
       <Route path={ROUTES.ADMIN_ANALYTICS} element={withSuspense(<AnalyticsPage />)} />
       <Route path={ROUTES.ADMIN_BILLING} element={withSuspense(<BillingPage />)} />
+      <Route path={ROUTES.ADMIN_BILLING_MEDICINE} element={withSuspense(<MedicineBillPage />)} />
+      <Route path={ROUTES.ADMIN_BILLING_CONSULTATION} element={withSuspense(<ConsultationBillPage />)} />
+      <Route path={ROUTES.ADMIN_BILLING_PANCHAKARMA} element={withSuspense(<PanchakarmaBillPage />)} />
       <Route path={ROUTES.ADMIN_INVOICE_DETAIL} element={withSuspense(<InvoiceDetailPage />)} />
+      <Route path={ROUTES.ADMIN_PRESCRIPTION} element={withSuspense(<PrescriptionPage />)} />
+      <Route path={ROUTES.ADMIN_PANCHAKARMA_TREATMENT} element={withSuspense(<PanchakarmaTreatmentPage />)} />
       <Route path={ROUTES.ADMIN_SETTINGS} element={withSuspense(<SettingsPage />)} />
       <Route path={ROUTES.ADMIN_MASTER_DATA} element={withSuspense(<MasterDataPage />)} />
     </Route>

@@ -2,6 +2,7 @@ export const RBAC_MODULE_KEYS = [
   'dashboard',
   'patients',
   'appointments',
+  'prescriptions',
   'panchakarma',
   'masterData',
   'pharmacy',
@@ -21,6 +22,7 @@ export const DEFAULT_RBAC_BY_ROLE = {
     dashboard: viewOnly(),
     patients: viewOnly(),
     appointments: { view: true, edit: true },
+    prescriptions: { view: true, edit: true },
     panchakarma: denied(),
     masterData: denied(),
     pharmacy: denied(),
@@ -31,8 +33,9 @@ export const DEFAULT_RBAC_BY_ROLE = {
   },
   Therapist: {
     dashboard: viewOnly(),
-    patients: denied(),
+    patients: viewOnly(),
     appointments: denied(),
+    prescriptions: denied(),
     panchakarma: { view: true, edit: true },
     masterData: denied(),
     pharmacy: denied(),
@@ -45,6 +48,7 @@ export const DEFAULT_RBAC_BY_ROLE = {
     dashboard: viewOnly(),
     patients: { view: true, edit: true },
     appointments: { view: true, edit: true },
+    prescriptions: viewOnly(),
     panchakarma: viewOnly(),
     masterData: { view: false, edit: false },
     pharmacy: viewOnly(),
@@ -55,5 +59,8 @@ export const DEFAULT_RBAC_BY_ROLE = {
   },
 };
 
-export const adminPermissions = () =>
-  Object.fromEntries(RBAC_MODULE_KEYS.map((key) => [key, full()]));
+export const adminPermissions = () => {
+  const perms = Object.fromEntries(RBAC_MODULE_KEYS.map((key) => [key, full()]));
+  perms.prescriptions = viewOnly();
+  return perms;
+};

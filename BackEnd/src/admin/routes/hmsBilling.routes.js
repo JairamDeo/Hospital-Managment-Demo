@@ -5,6 +5,7 @@ import {
   listBillingQuerySchema,
   collectPaymentSchema,
   createMedicineInvoiceSchema,
+  createPanchakarmaPaymentSchema,
 } from '../validators/hmsBilling.validator.js';
 import {
   getInvoices,
@@ -12,6 +13,7 @@ import {
   getInvoice,
   postMedicineInvoice,
   patchCollectPayment,
+  postPanchakarmaPayment,
 } from '../controllers/hmsBilling.controller.js';
 
 const router = Router();
@@ -21,6 +23,7 @@ router.use(portalAuth);
 router.get('/', validateRequest(listBillingQuerySchema, 'query'), getInvoices);
 router.get('/stats/summary', getBillingStatsSummary);
 router.post('/medicine', validateRequest(createMedicineInvoiceSchema), postMedicineInvoice);
+router.post('/panchakarma', validateRequest(createPanchakarmaPaymentSchema), postPanchakarmaPayment);
 router.patch(
   '/:invoiceCode/collect',
   validateRequest(collectPaymentSchema),

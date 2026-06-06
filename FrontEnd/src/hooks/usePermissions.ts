@@ -11,12 +11,21 @@ export const usePermissions = () => {
     const staffCode = user?.staffCode;
     const staffRole = user?.staffRole;
 
-    const canView = (module: RbacModuleKey) =>
-      isAdmin || Boolean(permissions[module]?.view);
+    const canView = (module: RbacModuleKey) => Boolean(permissions[module]?.view);
 
-    const canEdit = (module: RbacModuleKey) =>
-      isAdmin || Boolean(permissions[module]?.edit);
+    const canEdit = (module: RbacModuleKey) => Boolean(permissions[module]?.edit);
 
-    return { isAdmin, isStaff: !isAdmin && Boolean(staffCode), staffCode, staffRole, canView, canEdit };
+    const canCreatePrescription =
+      staffRole === 'Doctor' && Boolean(permissions.prescriptions?.edit);
+
+    return {
+      isAdmin,
+      isStaff: !isAdmin && Boolean(staffCode),
+      staffCode,
+      staffRole,
+      canView,
+      canEdit,
+      canCreatePrescription,
+    };
   }, [user]);
 };

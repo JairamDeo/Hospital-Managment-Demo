@@ -8,18 +8,28 @@ import {
   findHmsPatientMany,
   findHmsPatientOne,
 } from '../../utils/hmsPatientQuery.js';
+import { assertStaffCanAccessPatient, getStaffScopedPatientCodes } from '../../utils/staffPatientScope.util.js';
 import { assertUniquePatientContact } from '../../utils/patientContact.util.js';
 import {
   formatClinicalProfile,
   mergeClinicalProfile,
 } from '../../utils/patientClinical.util.js';
 
-export const listPatients = async () => {
-  const patients = await findHmsPatientMany().sort({ createdAt: -1 });
+export const listPatients = async (req) => {
+  let filter = {};
+  if (req?.accountType === 'staff' && req.staff) {
+    const patientCodes = await getStaffScopedPatientCodes(req.staff);
+    if (patientCodes !== null) {
+      if (!patientCodes.length) return [];
+      filter = { patientCode: { $in: patientCodes } };
+    }
+  }
+  const patients = await findHmsPatientMany(filter).sort({ createdAt: -1 });
   return patients.map(formatHmsPatient);
 };
 
-export const getPatientByCode = async (patientCode) => {
+export const getPatientByCode = async (patientCode, req) => {
+  if (req) await assertStaffCanAccessPatient(req, patientCode);
   const patient = await findHmsPatientOne({ patientCode });
   if (!patient) return null;
   return formatHmsPatient(patient);
@@ -38,7 +48,7 @@ export const createPatientByAdmin = async (payload) => {
     mobileNumber,
     age: payload.age,
     prakriti: payload.prakritiId || null,
-    treatment: payload.treatmentId,
+    treatment: payload.treatmentId || null,
     lastVisit: payload.lastVisit ? new Date(payload.lastVisit) : new Date(),
     recordStatus: payload.recordStatus || 'Active',
     createdByAdmin: true,
@@ -49,7 +59,8 @@ export const createPatientByAdmin = async (payload) => {
   return formatHmsPatient(populated);
 };
 
-export const updatePatientByAdmin = async (patientCode, payload) => {
+export const updatePatientByAdmin = async (patientCode, payload, req) => {
+  if (req) await assertStaffCanAccessPatient(req, patientCode);
   const patient = await HmsPatient.findOne({ patientCode });
   if (!patient) throw new Error(ErrorMessages.PATIENT_NOT_FOUND);
 
@@ -81,7 +92,8 @@ export const updatePatientByAdmin = async (patientCode, payload) => {
   return formatHmsPatient(populated);
 };
 
-export const getPatientClinicalByCode = async (patientCode) => {
+export const getPatientClinicalByCode = async (patientCode, req) => {
+  await assertStaffCanAccessPatient(req, patientCode);
   const patient = await HmsPatient.findOne({ patientCode }).select('clinicalProfile patientCode');
   if (!patient) throw new Error(ErrorMessages.PATIENT_NOT_FOUND);
   return {
@@ -90,7 +102,8 @@ export const getPatientClinicalByCode = async (patientCode) => {
   };
 };
 
-export const updatePatientClinicalByCode = async (patientCode, payload) => {
+export const updatePatientClinicalByCode = async (patientCode, payload, req) => {
+  await assertStaffCanAccessPatient(req, patientCode);
   const patient = await HmsPatient.findOne({ patientCode });
   if (!patient) throw new Error(ErrorMessages.PATIENT_NOT_FOUND);
 
