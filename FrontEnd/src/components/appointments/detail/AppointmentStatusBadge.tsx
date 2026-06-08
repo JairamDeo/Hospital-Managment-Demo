@@ -1,7 +1,7 @@
 import type { AppointmentStatus } from '@/types/appointment.types';
 
 const STATUS_LABEL: Record<AppointmentStatus, string> = {
-  Soon: 'Scheduled',
+  Soon: 'Pending',
   In: 'Checked In',
   Done: 'Completed',
   Cancelled: 'Cancelled',

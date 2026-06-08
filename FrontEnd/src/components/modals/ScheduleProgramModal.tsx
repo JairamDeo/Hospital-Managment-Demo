@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
+import { NumericInput } from '@/components/ui/NumericInput';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import type { Patient } from '@/types/patient.types';
 import type {
@@ -8,11 +9,7 @@ import type {
   TherapistOnDuty,
   TreatmentRoom,
 } from '@/types/panchakarma.types';
-import {
-  PROGRAM_DAY_OPTIONS,
-  ROOM_OPTIONS,
-  THERAPY_OPTIONS,
-} from '@/types/panchakarma.types';
+import { ROOM_OPTIONS, THERAPY_OPTIONS } from '@/types/panchakarma.types';
 
 interface Props {
   open: boolean;
@@ -64,6 +61,11 @@ export const ScheduleProgramModal = ({
       next.room = 'This room is currently occupied';
     }
     if (!form.startDate) next.startDate = 'Start date is required';
+    if (!form.totalDays || form.totalDays < 1) {
+      next.totalDays = 'Enter at least 1 day';
+    } else if (form.totalDays > 30) {
+      next.totalDays = 'Maximum 30 days';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -140,17 +142,19 @@ export const ScheduleProgramModal = ({
 
         <div>
           <label className={formLabelClass}>Duration (Days) *</label>
-          <select
+          <NumericInput
             value={form.totalDays}
-            onChange={(e) => set('totalDays', parseInt(e.target.value, 10))}
-            className={formSelectClass}
-          >
-            {PROGRAM_DAY_OPTIONS.map((d) => (
-              <option key={d} value={d}>
-                {d} days
-              </option>
-            ))}
-          </select>
+            onChange={(v) => set('totalDays', v)}
+            min={1}
+            max={30}
+            className={errors.totalDays ? 'border-danger' : ''}
+            aria-label="Duration in days"
+          />
+          {errors.totalDays ? (
+            <p className="mt-1 text-xs text-danger">{errors.totalDays}</p>
+          ) : (
+            <p className="mt-1 text-xs text-ink-ghost">Enter any number from 1 to 30</p>
+          )}
         </div>
 
         <div>

@@ -131,6 +131,7 @@ export const FORM_DRAFT_CATEGORIES = {
   medicineBill: 'medicine-bill',
   medicineBillModal: 'medicine-bill-modal',
   appointmentAttend: 'appointment-attend',
+  appointmentFollowUp: 'appointment-follow-up',
   panchakarmaAttend: 'panchakarma-attend',
   panchakarmaTreatment: 'panchakarma-treatment',
   prescription: 'prescription',

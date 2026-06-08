@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NumericInput } from '@/components/ui/NumericInput';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
@@ -8,10 +8,16 @@ import { billingAdminService } from '@/services/billing/billingAdmin.service';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { pharmacyService } from '@/services/pharmacy/pharmacy.service';
 import { useToast } from '@/hooks/useToast';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
 import { FORM_DRAFT_CATEGORIES, draftContextKeys } from '@/store/formDraftStorage';
 import { getApiErrorMessage } from '@/utils/helpers';
+import {
+  PHARMACY_SEARCH_MAX_RESULTS,
+  PHARMACY_SEARCH_MIN_CHARS,
+  searchPharmacyItems,
+} from '@/utils/pharmacySearch.util';
 import { ROUTES } from '@/constants/routes';
 import {
   formatRupee,
@@ -28,20 +34,13 @@ interface MedicineBillDraft {
   paymentMethod: PaymentMethodType;
 }
 
-const matchesSearch = (item: PharmacyItemApi, query: string) => {
-  if (!query.trim()) return true;
-  const q = query.trim().toLowerCase();
-  return [item.name, item.itemCode, item.company, item.category, item.unitSize].some((field) =>
-    field?.toLowerCase().includes(q)
-  );
-};
-
 export const MedicineBillPage = () => {
   const { showToast } = useToast();
   const [patients, setPatients] = useState<HmsPatient[]>([]);
   const [items, setItems] = useState<PharmacyItemApi[]>([]);
   const [patientCode, setPatientCode] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [selected, setSelected] = useState<Record<string, number>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
@@ -111,10 +110,15 @@ export const MedicineBillPage = () => {
       .finally(() => setLoading(false));
   }, [showToast]);
 
-  const filteredItems = useMemo(
-    () => items.filter((item) => matchesSearch(item, search)),
-    [items, search]
+  const searchQuery = debouncedSearch.trim();
+  const searchResults = useMemo(
+    () => searchPharmacyItems(items, debouncedSearch),
+    [items, debouncedSearch]
   );
+  const isSearching =
+    search.trim() !== debouncedSearch.trim() && search.trim().length >= PHARMACY_SEARCH_MIN_CHARS;
+  const showSearchPrompt = search.trim().length < PHARMACY_SEARCH_MIN_CHARS;
+  const hasMoreResults = searchResults.length >= PHARMACY_SEARCH_MAX_RESULTS;
 
   const selectedLines = useMemo(
     () =>
@@ -232,6 +236,16 @@ export const MedicineBillPage = () => {
           </label>
 
           <div className="rounded-xl border border-border-sage bg-white p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold text-ink-ghost">Add medicines</p>
+              {!showSearchPrompt && !isSearching ? (
+                <p className="text-xs text-ink-ghost">
+                  {searchResults.length} result{searchResults.length === 1 ? '' : 's'}
+                  {hasMoreResults ? ' (refine search for more)' : ''}
+                </p>
+              ) : null}
+            </div>
+
             <div className="relative mb-3">
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-ghost"
@@ -241,17 +255,32 @@ export const MedicineBillPage = () => {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search medicines…"
-                className={`${formInputClass} pl-9`}
+                placeholder="Search by name, code, brand, or pack size…"
+                className={`${formInputClass} pl-9 pr-9`}
+                autoComplete="off"
               />
+              {isSearching ? (
+                <Loader2
+                  className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-ink-ghost"
+                  strokeWidth={2}
+                />
+              ) : null}
             </div>
 
-            <div className="max-h-80 overflow-y-auto rounded-lg border border-border-sage">
-              {filteredItems.length === 0 ? (
-                <p className="px-3 py-8 text-center text-sm text-ink-soft">No medicines found</p>
+            <div className="max-h-72 overflow-y-auto rounded-lg border border-border-sage bg-cream/20">
+              {showSearchPrompt ? (
+                <p className="px-4 py-10 text-center text-sm text-ink-soft">
+                  Type at least {PHARMACY_SEARCH_MIN_CHARS} characters to find medicines
+                </p>
+              ) : isSearching ? (
+                <p className="px-4 py-10 text-center text-sm text-ink-soft">Searching…</p>
+              ) : searchResults.length === 0 ? (
+                <p className="px-4 py-10 text-center text-sm text-ink-soft">
+                  No medicines found for &ldquo;{searchQuery}&rdquo;
+                </p>
               ) : (
-                <ul className="divide-y divide-border-sage/60">
-                  {filteredItems.map((item) => {
+                <ul className="divide-y divide-border-sage/60 bg-white">
+                  {searchResults.map((item) => {
                     const checked = item.itemCode in selected;
                     const disabled = item.stock < 1 || (item.salePrice ?? 0) <= 0;
                     return (
@@ -267,8 +296,11 @@ export const MedicineBillPage = () => {
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-ink">{item.name}</p>
                             <p className="text-[11px] text-ink-ghost">
-                              {item.unitSize ? `${item.unitSize} · ` : ''}
-                              stock: {item.stock} ·{' '}
+                              {item.itemCode}
+                              {item.unitSize ? ` · ${item.unitSize}` : ''}
+                              {item.company ? ` · ${item.company}` : ''}
+                              {' · '}stock: {item.stock}
+                              {' · '}
                               {(item.salePrice ?? 0) > 0
                                 ? formatRupee(item.salePrice!)
                                 : 'No price'}

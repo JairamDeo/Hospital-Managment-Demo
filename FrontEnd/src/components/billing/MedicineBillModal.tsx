@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Search, Trash2, X } from 'lucide-react';
+import { Loader2, Search, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NumericInput } from '@/components/ui/NumericInput';
 import { billingAdminService } from '@/services/billing/billingAdmin.service';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { pharmacyService } from '@/services/pharmacy/pharmacy.service';
 import { useToast } from '@/hooks/useToast';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
 import { FORM_DRAFT_CATEGORIES, draftContextKeys } from '@/store/formDraftStorage';
 import { getApiErrorMessage } from '@/utils/helpers';
+import {
+  PHARMACY_SEARCH_MAX_RESULTS,
+  PHARMACY_SEARCH_MIN_CHARS,
+  searchPharmacyItems,
+} from '@/utils/pharmacySearch.util';
 import { formatRupee, PAYMENT_METHOD_OPTIONS, type PaymentMethodType } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
 import type { PharmacyItemApi } from '@/types/pharmacy.types';
@@ -36,18 +42,6 @@ interface MedicineBillModalDraft {
   paymentMethod: PaymentMethodType;
 }
 
-const matchesSearch = (item: PharmacyItemApi, query: string) => {
-  if (!query.trim()) return true;
-  const q = query.trim().toLowerCase();
-  return [
-    item.name,
-    item.itemCode,
-    item.company,
-    item.category,
-    item.unitSize,
-  ].some((field) => field?.toLowerCase().includes(q));
-};
-
 export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const { showToast } = useToast();
   const [patients, setPatients] = useState<HmsPatient[]>([]);
@@ -56,6 +50,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const [lines, setLines] = useState<LineRow[]>([]);
   const [selectedItem, setSelectedItem] = useState('');
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [qty, setQty] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
@@ -133,10 +128,15 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
       .finally(() => setLoading(false));
   }, [open, showToast]);
 
-  const filteredItems = useMemo(
-    () => items.filter((item) => matchesSearch(item, search)),
-    [items, search]
+  const searchQuery = debouncedSearch.trim();
+  const searchResults = useMemo(
+    () => searchPharmacyItems(items, debouncedSearch),
+    [items, debouncedSearch]
   );
+  const isSearching =
+    search.trim() !== debouncedSearch.trim() && search.trim().length >= PHARMACY_SEARCH_MIN_CHARS;
+  const showSearchPrompt = search.trim().length < PHARMACY_SEARCH_MIN_CHARS;
+  const hasMoreResults = searchResults.length >= PHARMACY_SEARCH_MAX_RESULTS;
 
   const selected = items.find((i) => i.itemCode === selectedItem) ?? null;
   const unitPrice = selected?.salePrice ?? 0;
@@ -292,9 +292,13 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
 
             <div className="rounded-xl border border-border-sage bg-cream/30 p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-ink-ghost">
-                  Medicines ({filteredItems.length} of {items.length})
-                </p>
+                <p className="text-xs font-semibold text-ink-ghost">Add medicines</p>
+                {!showSearchPrompt && !isSearching ? (
+                  <p className="text-xs text-ink-ghost">
+                    {searchResults.length} result{searchResults.length === 1 ? '' : 's'}
+                    {hasMoreResults ? ' (refine search)' : ''}
+                  </p>
+                ) : null}
               </div>
 
               <div className="relative mb-3">
@@ -306,17 +310,32 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, code, brand, category…"
-                  className="w-full rounded-lg border border-border-sage py-2 pl-9 pr-3 text-sm"
+                  placeholder="Search by name, code, brand, or pack size…"
+                  className="w-full rounded-lg border border-border-sage py-2 pl-9 pr-9 text-sm"
+                  autoComplete="off"
                 />
+                {isSearching ? (
+                  <Loader2
+                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-ink-ghost"
+                    strokeWidth={2}
+                  />
+                ) : null}
               </div>
 
               <div className="max-h-48 overflow-y-auto rounded-lg border border-border-sage bg-white">
-                {filteredItems.length === 0 ? (
-                  <p className="px-3 py-6 text-center text-sm text-ink-soft">No medicines found</p>
+                {showSearchPrompt ? (
+                  <p className="px-3 py-8 text-center text-sm text-ink-soft">
+                    Type at least {PHARMACY_SEARCH_MIN_CHARS} characters to find medicines
+                  </p>
+                ) : isSearching ? (
+                  <p className="px-3 py-8 text-center text-sm text-ink-soft">Searching…</p>
+                ) : searchResults.length === 0 ? (
+                  <p className="px-3 py-8 text-center text-sm text-ink-soft">
+                    No medicines found for &ldquo;{searchQuery}&rdquo;
+                  </p>
                 ) : (
                   <ul className="divide-y divide-border-sage/60">
-                    {filteredItems.map((item) => {
+                    {searchResults.map((item) => {
                       const isSelected = selectedItem === item.itemCode;
                       const outOfStock = item.stock < 1;
                       const noPrice = (item.salePrice ?? 0) <= 0;
@@ -338,9 +357,10 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                             <span className="min-w-0 flex-1">
                               <span className="font-medium text-ink">{item.name}</span>
                               <span className="mt-0.5 block text-[11px] text-ink-ghost">
-                                {item.unitSize ? `${item.unitSize} · ` : ''}
-                                {item.company ? `${item.company} · ` : ''}
-                                stock: {item.stock}
+                                {item.itemCode}
+                                {item.unitSize ? ` · ${item.unitSize}` : ''}
+                                {item.company ? ` · ${item.company}` : ''}
+                                {' · '}stock: {item.stock}
                                 {item.expiryDate ? ` · exp: ${item.expiryDate}` : ''}
                               </span>
                             </span>

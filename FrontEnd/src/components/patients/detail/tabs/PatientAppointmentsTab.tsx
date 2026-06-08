@@ -12,10 +12,16 @@ const attendPathFor = (a: PatientAppointment) => {
     : appointmentFollowUpPath(code);
 };
 
-const APPT_STATUS: Record<PatientAppointment['status'], string> = {
-  Upcoming: 'bg-blue-50 text-blue-700',
+const APPT_STATUS_STYLE: Record<PatientAppointment['status'], string> = {
+  Upcoming: 'bg-warning-bg text-warning',
   Completed: 'bg-success-bg text-success',
   Cancelled: 'bg-danger-bg text-danger',
+};
+
+const APPT_STATUS_LABEL: Record<PatientAppointment['status'], string> = {
+  Upcoming: 'Pending',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
 };
 
 interface Props {
@@ -73,9 +79,9 @@ export const PatientAppointmentsTab = ({ appointments, canManageVisits = false }
                 <td className="px-4 py-3 text-sm font-medium text-ink">{a.doctor}</td>
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${APPT_STATUS[a.status]}`}
+                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${APPT_STATUS_STYLE[a.status]}`}
                   >
-                    {a.status}
+                    {APPT_STATUS_LABEL[a.status]}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-sm text-ink-soft">
@@ -102,7 +108,7 @@ export const PatientAppointmentsTab = ({ appointments, canManageVisits = false }
                         to={appointmentFollowUpPath(code)}
                         className="inline-flex cursor-pointer rounded-lg border border-border-sage bg-white px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-sage-mist"
                       >
-                        {a.hasFollowUp ? 'View follow-up' : 'Add follow-up'}
+                        {a.hasFollowUp ? 'Follow-up & Rx' : 'Follow-up & Rx'}
                       </Link>
                     ) : (
                       <span className="text-xs text-ink-ghost">—</span>
