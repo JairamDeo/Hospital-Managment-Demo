@@ -3,7 +3,7 @@ import { generateToken } from '../../utils/tokenUtil.js';
 import { ErrorMessages, PATIENT_PORTAL_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { getOtpConfig, isStaticOtpMatch } from '../../config/otp.config.js';
-import { sendOtpSms, isMsg91Enabled } from '../../services/sms/msg91.service.js';
+import { sendOtpNotification, isOtpNotificationEnabled } from '../../services/sms/notify.service.js';
 import { formatHmsPatient } from '../../utils/formatHmsPatient.js';
 import { generateHmsPatientCode } from '../../utils/generateHmsPatientCode.js';
 import { findHmsPatientById } from '../../utils/hmsPatientQuery.js';
@@ -39,7 +39,7 @@ const assignAndSendOtp = async (patient) => {
   await patient.save();
 
   try {
-    await sendOtpSms(patient.mobileNumber, otp);
+    await sendOtpNotification(patient.mobileNumber, otp);
   } catch {
     patient.otp = undefined;
     patient.otpExpiresAt = undefined;
@@ -47,7 +47,7 @@ const assignAndSendOtp = async (patient) => {
     throw new Error(PATIENT_PORTAL_MESSAGES.SMS_SEND_FAILED);
   }
 
-  if (!isMsg91Enabled()) {
+  if (!isOtpNotificationEnabled()) {
     logger.info(`Patient OTP (dev) for ${patient.mobileNumber}: ${otp}`);
   }
 

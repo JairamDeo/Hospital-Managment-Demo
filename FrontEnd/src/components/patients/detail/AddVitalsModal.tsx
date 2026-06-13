@@ -14,6 +14,8 @@ interface Props {
 
 const emptyForm = (): PatientVitalsPayload => ({
   bp: '',
+  pulse: '',
+  spo2: '',
   fasting: '',
   postMeal: '',
   random: '',
@@ -28,9 +30,8 @@ export const AddVitalsModal = ({ open, submitting = false, onClose, onSubmit }: 
   };
 
   const handleSubmit = () => {
-    if (!form.bp?.trim() && !form.weight?.trim() && !form.fasting?.trim()) {
-      return;
-    }
+    const hasValue = Object.values(form).some((v) => v?.trim());
+    if (!hasValue) return;
     void onSubmit(form);
   };
 
@@ -39,7 +40,7 @@ export const AddVitalsModal = ({ open, submitting = false, onClose, onSubmit }: 
       open={open}
       onClose={onClose}
       title="Record vitals"
-      subtitle="Blood pressure, glucose, and weight"
+      subtitle="Blood pressure, pulse, SpO₂, glucose, and weight"
       size="md"
       footer={
         <>
@@ -64,6 +65,26 @@ export const AddVitalsModal = ({ open, submitting = false, onClose, onSubmit }: 
             value={form.bp}
             onChange={(e) => set('bp', e.target.value)}
             placeholder="120/80"
+            className={formInputClass}
+          />
+        </label>
+        <label>
+          <span className={formLabelClass}>Pulse (bpm)</span>
+          <input
+            type="text"
+            value={form.pulse}
+            onChange={(e) => set('pulse', e.target.value)}
+            placeholder="72"
+            className={formInputClass}
+          />
+        </label>
+        <label>
+          <span className={formLabelClass}>SpO₂ (%)</span>
+          <input
+            type="text"
+            value={form.spo2}
+            onChange={(e) => set('spo2', e.target.value)}
+            placeholder="98"
             className={formInputClass}
           />
         </label>

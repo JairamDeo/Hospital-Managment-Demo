@@ -4,9 +4,10 @@ export const getStockStatus = (stock) => {
   return 'OK';
 };
 
-export const buildStockAlertMessage = (name, stock, status) => {
+export const buildStockAlertMessage = (name, stockPacks, status) => {
+  const qty = Math.floor(Number(stockPacks) || 0);
   if (status === 'Critical') {
-    return `Only ${stock} units left. Reorder immediately.`;
+    return `Only ${qty} pack(s) left. Reorder immediately.`;
   }
-  return `${stock} units remaining. Reorder soon.`;
+  return `${qty} pack(s) remaining. Reorder soon.`;
 };

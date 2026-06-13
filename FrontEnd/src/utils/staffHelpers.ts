@@ -33,7 +33,6 @@ export const emptyStaffForm = (): StaffFormValues => ({
   role: 'Doctor',
   title: '',
   shift: '9AM – 5PM',
-  consultationFee: '',
   registrationNumber: '',
   aadharNumber: '',
   panNumber: '',

@@ -15,6 +15,7 @@ import rbacRoutes from './admin/routes/rbac.routes.js';
 import masterRoutes from './admin/routes/master.routes.js';
 import pharmacyRoutes from './admin/routes/pharmacy.routes.js';
 import hmsBillingRoutes from './admin/routes/hmsBilling.routes.js';
+import hmsIpdRoutes from './admin/routes/hmsIpd.routes.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
 
@@ -68,6 +69,7 @@ app.use('/api/admin/rbac', rbacRoutes);
 app.use('/api/admin/master', masterRoutes);
 app.use('/api/admin/pharmacy', pharmacyRoutes);
 app.use('/api/admin/billing', hmsBillingRoutes);
+app.use('/api/admin/ipd', hmsIpdRoutes);
 app.use('/api/patient-portal', patientPortalRoutes);
 
 app.use(

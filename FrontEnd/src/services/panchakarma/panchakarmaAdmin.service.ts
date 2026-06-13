@@ -63,7 +63,7 @@ class PanchakarmaAdminService {
       patientCode: values.patientId,
       therapy: values.therapy,
       totalDays: values.totalDays,
-      room: values.room,
+      roomCode: values.roomCode,
       startDate: values.startDate,
     };
     if (values.therapistId) payload.staffCode = values.therapistId;

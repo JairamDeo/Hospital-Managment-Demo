@@ -1,3 +1,5 @@
+import { attachCompensation } from './staffCompensation.util.js';
+
 const statLabelForRole = (role) => {
   if (role === 'Support') return 'Handled';
   return 'Patients';
@@ -5,6 +7,7 @@ const statLabelForRole = (role) => {
 
 export const formatHmsStaff = (doc) => {
   const s = doc.toObject ? doc.toObject() : { ...doc };
+  const pay = attachCompensation(s);
 
   return {
     _id: String(s._id),
@@ -22,7 +25,11 @@ export const formatHmsStaff = (doc) => {
     rating: s.rating ?? 5,
     tags: Array.isArray(s.tags) ? s.tags : [],
     shift: s.shift || '9AM – 5PM',
-    consultationFee: Number(s.consultationFee) || 0,
+    consultationFee: pay.consultationFee,
+    compensation: pay.compensation,
+    grossMonthly: pay.grossMonthly,
+    totalDeductions: pay.totalDeductions,
+    netMonthly: pay.netMonthly,
     qualifications: Array.isArray(s.qualifications) ? s.qualifications : [],
     registrationNumber: s.registrationNumber || '',
     aadharNumber: s.aadharNumber || '',
@@ -31,5 +38,22 @@ export const formatHmsStaff = (doc) => {
     accountActive: s.status,
     createdAt: s.createdAt,
     updatedAt: s.updatedAt,
+  };
+};
+
+export const formatStaffCompensationRow = (doc) => {
+  const s = doc.toObject ? doc.toObject() : { ...doc };
+  const pay = attachCompensation(s);
+  return {
+    staffCode: s.staffCode,
+    name: s.name,
+    role: s.role,
+    title: s.title || '',
+    shift: s.shift || '9AM – 5PM',
+    consultationFee: pay.consultationFee,
+    compensation: pay.compensation,
+    grossMonthly: pay.grossMonthly,
+    totalDeductions: pay.totalDeductions,
+    netMonthly: pay.netMonthly,
   };
 };

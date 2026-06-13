@@ -27,7 +27,8 @@ export const createMedicineInvoiceSchema = Joi.object({
     .items(
       Joi.object({
         itemCode: Joi.string().required(),
-        quantity: Joi.number().integer().min(1).required(),
+        quantity: Joi.number().positive().required(),
+        saleUnit: Joi.string().valid('pack', 'unit', 'gram', 'spoon').optional(),
         unitPrice: Joi.number().min(0).optional(),
       })
     )

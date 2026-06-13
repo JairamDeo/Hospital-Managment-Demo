@@ -29,6 +29,8 @@ export const diseaseHistorySchema = new Schema(
     menstrual: trimStr,
     bowel: trimStr,
     addiction: trimStr,
+    geneticDisorder: trimStr,
+    accidentalHistory: trimStr,
   },
   { _id: false }
 );
@@ -65,6 +67,8 @@ export const metabolicDisorderSchema = new Schema(
     obesityMedicineDurations: trimStr,
     otherMedicine: trimStr,
     otherMedicineDurations: trimStr,
+    lifestyleMedicine: trimStr,
+    lifestyleMedicineDurations: trimStr,
   },
   { _id: false }
 );

@@ -3,7 +3,7 @@ import { generateToken } from '../../utils/tokenUtil.js';
 import { ErrorMessages, CUSTOMER_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { getOtpConfig, isStaticOtpMatch } from '../../config/otp.config.js';
-import { sendOtpSms, isMsg91Enabled } from '../../services/sms/msg91.service.js';
+import { sendOtpNotification, isOtpNotificationEnabled } from '../../services/sms/notify.service.js';
 
 const generateOtp = () => String(Math.floor(1000 + Math.random() * 9000));
 
@@ -48,7 +48,7 @@ const assignAndSendOtp = async (customer) => {
   await customer.save();
 
   try {
-    await sendOtpSms(customer.mobileNumber, otp);
+    await sendOtpNotification(customer.mobileNumber, otp);
   } catch {
     customer.otp = undefined;
     customer.otpExpiresAt = undefined;
@@ -56,7 +56,7 @@ const assignAndSendOtp = async (customer) => {
     throw new Error(CUSTOMER_MESSAGES.SMS_SEND_FAILED);
   }
 
-  if (!isMsg91Enabled()) {
+  if (!isOtpNotificationEnabled()) {
     logger.info(`Customer OTP (dev) for ${customer.mobileNumber}: ${otp}`);
   }
 

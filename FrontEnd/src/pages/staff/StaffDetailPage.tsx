@@ -23,7 +23,6 @@ export const StaffDetailPage = () => {
   const { isAdmin, isStaff, staffCode, canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
   const [staff, setStaff] = useState<StaffProfileCardData | null>(null);
-  const [staffFees, setStaffFees] = useState({ consultationFee: '' });
   const [loading, setLoading] = useState(true);
   const [assignmentRows, setAssignmentRows] = useState<StaffAssignment[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -43,9 +42,6 @@ export const StaffDetailPage = () => {
         if (!member) throw new Error('Staff not found');
         if (!cancelled) {
           setStaff(hmsToStaffProfileCard(member));
-          setStaffFees({
-            consultationFee: member.consultationFee ? String(member.consultationFee) : '',
-          });
         }
       } catch (err) {
         if (!cancelled) {
@@ -115,7 +111,6 @@ export const StaffDetailPage = () => {
       role: staff.role,
       title: staff.title,
       shift: staff.shift,
-      consultationFee: staffFees.consultationFee,
       registrationNumber: staff.registrationNumber ?? '',
       aadharNumber: staff.aadharNumber ?? '',
       panNumber: staff.panNumber ?? '',
@@ -126,7 +121,7 @@ export const StaffDetailPage = () => {
           }))
         : [{ level: 'UG' as const, degree: '' }],
     } satisfies StaffFormValues;
-  }, [staff, staffFees]);
+  }, [staff]);
 
   if (!staffId) {
     return <Navigate to={ROUTES.ADMIN_STAFF} replace />;
@@ -150,9 +145,6 @@ export const StaffDetailPage = () => {
       await staffAdminService.update(staffId, values);
       showToast('Staff profile updated successfully', 'success');
       setEditOpen(false);
-      setStaffFees({
-        consultationFee: values.consultationFee,
-      });
       setStaff((prev) =>
         prev
           ? {

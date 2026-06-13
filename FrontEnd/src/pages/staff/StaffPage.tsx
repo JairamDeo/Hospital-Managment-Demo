@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
+import { StaffSectionNav } from '@/components/staff/StaffSectionNav';
 import { StaffRoleFilters, StaffFilterChips } from '@/components/staff/StaffRoleFilters';
 import { StaffCard } from '@/components/staff/StaffCard';
 import { StaffPagination } from '@/components/staff/StaffPagination';
@@ -102,6 +103,8 @@ export const StaffPage = () => {
 
   return (
     <div className="pb-4">
+      <StaffSectionNav />
+
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-bold text-sage-deep sm:text-[1.75rem]">

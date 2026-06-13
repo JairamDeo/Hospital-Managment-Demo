@@ -56,6 +56,8 @@ export interface StaffProfileCardData {
   shift: string;
   tags: string[];
   consultationFee?: number;
+  netMonthly?: number;
+  grossMonthly?: number;
   qualifications?: { level: string; degree: string }[];
   registrationNumber?: string;
   aadharNumber?: string;

@@ -10,24 +10,6 @@ const COLUMNS = ['Item', 'Pack', 'Brand', 'Price', 'Expiry', 'Category', 'Stock'
 
 const cellMuted = 'px-3 py-3 text-sm text-ink-soft';
 
-const splitPackDisplay = (unitSize: string, packQuantity: number) => {
-  const size = unitSize.trim();
-  if (!size) return null;
-  const qty =
-    Number.isFinite(packQuantity) && packQuantity > 0
-      ? String(Number.isInteger(packQuantity) ? packQuantity : packQuantity)
-      : '';
-  if (qty && size.startsWith(qty)) {
-    const unit = size.slice(qty.length).trim();
-    return { qty, unit: unit || '—' };
-  }
-  const match = size.match(/^([\d.]+)\s*(.*)$/);
-  if (match) {
-    return { qty: match[1], unit: match[2].trim() || '—' };
-  }
-  return { qty: size, unit: '—' };
-};
-
 const StackedCell = ({
   value,
   label,
@@ -42,6 +24,45 @@ const StackedCell = ({
     <span className="text-[10px] text-ink-ghost">{label}</span>
   </div>
 );
+
+const packDisplay = (item: PharmacyItemView) => {
+  const upp = item.unitsPerPack ?? item.packQuantity;
+  switch (item.itemType) {
+    case 'strip':
+      return { value: upp, label: 'tablets / box' };
+    case 'weight':
+      return { value: upp, label: 'g / box' };
+    default: {
+      const size = item.unitSize?.trim();
+      if (!size) return null;
+      const match = size.match(/^([\d.]+)\s*(.*)$/);
+      if (match) {
+        return { value: match[1], label: match[2].trim() || 'per piece' };
+      }
+      return { value: size, label: 'per piece' };
+    }
+  }
+};
+
+const priceDisplay = (item: PharmacyItemView) => {
+  const price = item.salePrice ?? 0;
+  if (price <= 0) return null;
+
+  switch (item.itemType) {
+    case 'strip':
+      return {
+        main: formatRupee(price),
+        sub: item.pricePerTablet ? `${formatRupee(item.pricePerTablet)}/tablet` : 'per box',
+      };
+    case 'weight':
+      return {
+        main: formatRupee(price),
+        sub: item.pricePerGram ? `${formatRupee(item.pricePerGram)}/g` : 'per box',
+      };
+    default:
+      return { main: formatRupee(price), sub: 'per piece' };
+  }
+};
 
 export const InventoryTable = ({ items }: Props) => (
   <div className="overflow-x-auto">
@@ -68,6 +89,8 @@ export const InventoryTable = ({ items }: Props) => (
         ) : (
           items.map((item) => {
             const Icon = item.icon;
+            const pack = packDisplay(item);
+            const price = priceDisplay(item);
             return (
               <tr
                 key={item.id}
@@ -85,17 +108,21 @@ export const InventoryTable = ({ items }: Props) => (
                   </div>
                 </td>
                 <td className="px-3 py-3">
-                  {(() => {
-                    const pack = splitPackDisplay(item.unitSize, item.packQuantity);
-                    if (!pack) return <span className="text-sm text-ink-ghost">—</span>;
-                    return <StackedCell value={pack.qty} label={pack.unit} />;
-                  })()}
+                  {pack ? (
+                    <StackedCell value={pack.value} label={pack.label} />
+                  ) : (
+                    <span className="text-sm text-ink-ghost">—</span>
+                  )}
                 </td>
                 <td className={`${cellMuted} max-w-[120px] truncate`} title={item.company}>
                   {item.company?.trim() ? item.company : '—'}
                 </td>
                 <td className={`${cellMuted} whitespace-nowrap`}>
-                  {(item.salePrice ?? 0) > 0 ? formatRupee(item.salePrice!) : '—'}
+                  {price ? (
+                    <StackedCell value={price.main} label={price.sub} />
+                  ) : (
+                    '—'
+                  )}
                 </td>
                 <td className={`${cellMuted} whitespace-nowrap`}>
                   {item.expiryDate?.trim() ? item.expiryDate : '—'}
@@ -104,7 +131,17 @@ export const InventoryTable = ({ items }: Props) => (
                   {item.category}
                 </td>
                 <td className="px-3 py-3">
-                  <StackedCell value={item.stock} label="units" />
+                  <StackedCell
+                    value={item.stockDisplay ?? item.stock}
+                    label={
+                      item.itemType === 'strip'
+                        ? 'in stock'
+                        : item.itemType === 'weight'
+                          ? 'in stock'
+                          : 'available'
+                    }
+                    valueClassName="text-sm font-medium text-ink max-w-[160px] truncate"
+                  />
                 </td>
                 <td className="px-4 py-3">
                   <InventoryStatusBadge status={item.status} />

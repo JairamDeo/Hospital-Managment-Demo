@@ -94,7 +94,34 @@ export const MASTER_MESSAGES = {
   TREATMENT_EXISTS: 'Treatment with this name already exists',
   PHARMACY_CATEGORY_EXISTS: 'Pharmacy category with this name already exists',
   PHARMACY_UNIT_EXISTS: 'Pharmacy unit with this name already exists',
+  PHARMACY_SPOON_LIST: 'Pharmacy spoon sizes fetched',
+  PHARMACY_SPOON_CREATED: 'Spoon size created successfully',
+  PHARMACY_SPOON_UPDATED: 'Spoon size updated successfully',
+  PHARMACY_SPOON_EXISTS: 'Spoon size with this name already exists',
+  PHARMACY_SPOON_DEFAULT_SET: 'Default spoon size updated',
+  ROOM_LIST: 'Rooms fetched',
+  ROOM_CREATED: 'Room created successfully',
+  ROOM_UPDATED: 'Room updated successfully',
+  ROOM_EXISTS: 'Room number already exists',
+  ROOM_NOT_FOUND: 'Room not found',
   NOT_FOUND: 'Record not found',
+};
+
+export const IPD_MESSAGES = {
+  LIST_FETCHED: 'IPD admissions fetched successfully',
+  STATS_FETCHED: 'IPD stats fetched successfully',
+  ROOMS_FETCHED: 'IPD rooms fetched successfully',
+  FETCHED: 'IPD admission fetched successfully',
+  CREATED: 'Patient admitted successfully',
+  CASE_NOTE_ADDED: 'Case note added successfully',
+  DISCHARGED: 'Patient discharged successfully',
+  NOT_FOUND: 'IPD admission not found',
+  STAFF_NOT_DOCTOR: 'Selected staff member is not a doctor',
+  PATIENT_ALREADY_ADMITTED: 'Patient is already admitted in IPD',
+  ALREADY_DISCHARGED: 'Patient has already been discharged',
+  ROOM_AT_CAPACITY: 'This room is at full capacity. Choose another room or discharge a patient.',
+  ROOM_NOT_FOUND: 'Room not found or inactive',
+  ROOM_TYPE_MISMATCH: 'Selected room is not an IPD room',
 };
 
 export const PHARMACY_MESSAGES = {
@@ -136,7 +163,7 @@ export const PANCHAKARMA_MESSAGES = {
   ROOMS_FETCHED: 'Treatment rooms fetched successfully',
   CREATED: 'Panchakarma program scheduled successfully',
   ROOM_UNAVAILABLE:
-    'This treatment room is already occupied by an active program. Please choose another room.',
+    'This treatment room is at full capacity. Please choose another room or wait for a slot.',
   STAFF_NOT_THERAPIST: 'Selected staff member is not a therapist',
   NOT_FOUND: 'Panchakarma program not found',
   PLAN_CREATED: 'Panchakarma treatment plan created successfully',
@@ -184,6 +211,8 @@ export const STAFF_MESSAGES = {
   FETCHED: 'Staff member fetched successfully',
   CREATED: 'Staff member added successfully',
   UPDATED: 'Staff member updated successfully',
+  COMPENSATION_LIST_FETCHED: 'Staff compensation fetched successfully',
+  COMPENSATION_UPDATED: 'Staff compensation saved successfully',
 };
 
 export const PATIENT_MESSAGES = {
@@ -199,6 +228,9 @@ export const PATIENT_MESSAGES = {
   PRESCRIPTION_DELETED: 'Prescription removed successfully',
   PRESCRIPTION_FILE_REQUIRED: 'Please upload a PDF file',
   PRESCRIPTION_NOT_FOUND: 'Prescription not found',
+  INSURANCE_LIST_FETCHED: 'Patient health insurance fetched successfully',
+  INSURANCE_STATS_FETCHED: 'Insurance stats fetched successfully',
+  INSURANCE_UPDATED: 'Patient health insurance saved successfully',
   VITALS_ADDED: 'Vitals recorded successfully',
   MOBILE_ALREADY_REGISTERED:
     'This mobile number is already registered. Please use a different number.',

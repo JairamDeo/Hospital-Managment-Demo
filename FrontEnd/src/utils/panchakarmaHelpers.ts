@@ -14,7 +14,7 @@ export const emptyScheduleProgramForm = (): ScheduleProgramFormValues => ({
   patientId: '',
   therapy: 'Vamana',
   totalDays: 7,
-  room: 'Room 1',
+  roomCode: '',
   therapistId: '',
   startDate: new Date().toISOString().slice(0, 10),
 });

@@ -2,6 +2,8 @@ import PrakritiMaster from '../../models/prakritiMaster.model.js';
 import TreatmentMaster from '../../models/treatmentMaster.model.js';
 import PharmacyCategoryMaster from '../../models/pharmacyCategoryMaster.model.js';
 import PharmacyUnitMaster from '../../models/pharmacyUnitMaster.model.js';
+import PharmacySpoonMaster from '../../models/pharmacySpoonMaster.model.js';
+import RoomMaster from '../../models/roomMaster.model.js';
 import { MASTER_MESSAGES } from '../../utils/constants.js';
 
 const nextPrakritiCode = async () => {
@@ -22,6 +24,16 @@ const nextPharmacyCategoryCode = async () => {
 const nextPharmacyUnitCode = async () => {
   const count = await PharmacyUnitMaster.countDocuments();
   return `PHU-${String(count + 1).padStart(3, '0')}`;
+};
+
+const nextPharmacySpoonCode = async () => {
+  const count = await PharmacySpoonMaster.countDocuments();
+  return `PHS-${String(count + 1).padStart(3, '0')}`;
+};
+
+const nextRoomCode = async () => {
+  const count = await RoomMaster.countDocuments();
+  return `ROM-${String(count + 1).padStart(3, '0')}`;
 };
 
 export const listPrakriti = async (activeOnly = false) => {
@@ -113,6 +125,113 @@ export const updatePharmacyUnit = async (id, payload) => {
   const item = await PharmacyUnitMaster.findById(id);
   if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
   if (payload.name !== undefined) item.name = payload.name.trim();
+  if (payload.active !== undefined) item.active = payload.active;
+  await item.save();
+  return item;
+};
+
+export const listPharmacySpoons = async (activeOnly = false) => {
+  const filter = activeOnly ? { active: true } : {};
+  return PharmacySpoonMaster.find(filter).sort({ grams: 1 }).lean();
+};
+
+export const createPharmacySpoon = async ({ name, grams }) => {
+  const trimmed = name.trim();
+  const exists = await PharmacySpoonMaster.findOne({
+    name: new RegExp(`^${trimmed}$`, 'i'),
+  });
+  if (exists) throw new Error(MASTER_MESSAGES.PHARMACY_SPOON_EXISTS);
+
+  const value = Number(grams);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error('Spoon grams must be greater than 0');
+  }
+
+  const isFirst = (await PharmacySpoonMaster.countDocuments()) === 0;
+  return PharmacySpoonMaster.create({
+    code: await nextPharmacySpoonCode(),
+    name: trimmed,
+    grams: value,
+    isDefault: isFirst,
+  });
+};
+
+export const updatePharmacySpoon = async (id, payload) => {
+  const item = await PharmacySpoonMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+  if (payload.name !== undefined) item.name = payload.name.trim();
+  if (payload.grams !== undefined) {
+    const value = Number(payload.grams);
+    if (!Number.isFinite(value) || value <= 0) {
+      throw new Error('Spoon grams must be greater than 0');
+    }
+    item.grams = value;
+  }
+  if (payload.active !== undefined) item.active = payload.active;
+  await item.save();
+  return item;
+};
+
+export const setDefaultPharmacySpoon = async (id) => {
+  const item = await PharmacySpoonMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+  await PharmacySpoonMaster.updateMany({}, { isDefault: false });
+  item.isDefault = true;
+  item.active = true;
+  await item.save();
+  return item;
+};
+
+export const listRooms = async (activeOnly = false, roomType) => {
+  const filter = {};
+  if (activeOnly) filter.active = true;
+  if (roomType) filter.roomType = roomType;
+  return RoomMaster.find(filter).sort({ roomNumber: 1 }).lean();
+};
+
+export const createRoom = async (payload) => {
+  const roomNumber = payload.roomNumber.trim();
+  const exists = await RoomMaster.findOne({
+    roomNumber: new RegExp(`^${roomNumber}$`, 'i'),
+  });
+  if (exists) throw new Error(MASTER_MESSAGES.ROOM_EXISTS);
+
+  const capacity = Number(payload.capacity);
+  if (!Number.isFinite(capacity) || capacity < 1) {
+    throw new Error('Room capacity must be at least 1');
+  }
+
+  return RoomMaster.create({
+    code: await nextRoomCode(),
+    roomNumber,
+    name: payload.name.trim(),
+    roomType: payload.roomType,
+    capacity,
+  });
+};
+
+export const updateRoom = async (id, payload) => {
+  const item = await RoomMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+
+  if (payload.roomNumber !== undefined) {
+    const roomNumber = payload.roomNumber.trim();
+    const exists = await RoomMaster.findOne({
+      roomNumber: new RegExp(`^${roomNumber}$`, 'i'),
+      _id: { $ne: id },
+    });
+    if (exists) throw new Error(MASTER_MESSAGES.ROOM_EXISTS);
+    item.roomNumber = roomNumber;
+  }
+  if (payload.name !== undefined) item.name = payload.name.trim();
+  if (payload.roomType !== undefined) item.roomType = payload.roomType;
+  if (payload.capacity !== undefined) {
+    const capacity = Number(payload.capacity);
+    if (!Number.isFinite(capacity) || capacity < 1) {
+      throw new Error('Room capacity must be at least 1');
+    }
+    item.capacity = capacity;
+  }
   if (payload.active !== undefined) item.active = payload.active;
   await item.save();
   return item;

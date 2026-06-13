@@ -14,15 +14,19 @@ import {
   pharmacyExportBaseName,
 } from '../../utils/pharmacyExport.util.js';
 import { getPharmacyStats } from './pharmacy.service.js';
+import { createPharmacyUnit } from './master.service.js';
 import { resolvePharmacyDates } from '../../utils/pharmacyDates.util.js';
+import { getDefaultPharmacySpoonGrams } from '../../utils/pharmacySpoon.util.js';
+import { resolveImportStock } from '../../utils/pharmacyStockUnits.util.js';
 
 const loadAllItems = async () => {
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
   const docs = await PharmacyItem.find({ active: true })
     .populate('category', 'name')
     .populate('unit', 'name')
     .sort({ createdAt: -1 })
     .lean();
-  return docs.map(formatPharmacyItem);
+  return docs.map((doc) => formatPharmacyItem(doc, { defaultSpoonGrams }));
 };
 
 const normalizeCompany = (value) => String(value ?? '').trim();
@@ -39,15 +43,27 @@ const resolveCategory = async (name, cache) => {
   return found._id;
 };
 
-const resolveUnit = async (name, cache) => {
-  const key = name.trim().toLowerCase();
+const resolveUnit = async (name, cache, { createIfMissing = false } = {}) => {
+  const trimmed = name.trim();
+  const key = trimmed.toLowerCase();
   if (cache.units.has(key)) return cache.units.get(key);
   let found = await PharmacyUnitMaster.findOne({
-    name: new RegExp(`^${escapeRegex(name.trim())}$`, 'i'),
+    name: new RegExp(`^${escapeRegex(trimmed)}$`, 'i'),
     active: true,
   });
   if (!found && key === 'gm') {
     found = await PharmacyUnitMaster.findOne({ name: /^g$/i, active: true });
+  }
+  if (!found && createIfMissing) {
+    try {
+      found = await createPharmacyUnit(trimmed);
+    } catch (err) {
+      found = await PharmacyUnitMaster.findOne({
+        name: new RegExp(`^${escapeRegex(trimmed)}$`, 'i'),
+        active: true,
+      });
+      if (!found) throw err;
+    }
   }
   if (!found) throw new Error(`Pack unit "${name}" not found in Master Data`);
   cache.units.set(key, found._id);
@@ -75,15 +91,15 @@ const findExistingItem = async ({ itemCode, name, company }) => {
 const validateImportRow = (row) => {
   if (!row.name?.trim()) throw new Error('Item Name is required');
   if (!row.category?.trim()) throw new Error('Category is required');
-  if (!row.packUnit?.trim()) throw new Error('Pack Unit is required');
-  const packQuantity = Number(row.packQuantity);
-  if (!row.packQuantity?.toString().trim() || Number.isNaN(packQuantity) || packQuantity <= 0) {
-    throw new Error('Pack Quantity must be a number greater than 0');
-  }
+
+  const packUnit = row.packUnit?.trim() || row.itemLabel?.trim();
+  if (!packUnit) throw new Error('Pack Unit (or Item Label for single items) is required');
+
   const stock = Number(row.stock);
   if (row.stock?.toString().trim() === '' || Number.isNaN(stock) || stock < 0) {
     throw new Error('Stock must be a valid number (0 or more)');
   }
+
   const usage = row.monthlyUsagePercent?.toString().trim();
   let monthlyUsagePercent = 0;
   if (usage) {
@@ -108,23 +124,30 @@ const validateImportRow = (row) => {
     bestBeforeMonths: row.bestBeforeMonths,
   });
 
-  return { packQuantity, stock, monthlyUsagePercent, salePrice, ...dates };
+  return { stock, monthlyUsagePercent, salePrice, packUnit, ...dates };
 };
 
-const upsertImportRow = async (row, cache) => {
-  const {
-    packQuantity,
-    stock,
-    monthlyUsagePercent,
-    salePrice,
-    manufacturingDate,
-    expiryDate,
-    bestBeforeMonths,
-  } = validateImportRow(row);
+const upsertImportRow = async (row, cache, defaultSpoonGrams) => {
+  const { stock, monthlyUsagePercent, salePrice, packUnit, manufacturingDate, expiryDate, bestBeforeMonths } =
+    validateImportRow(row);
   const name = row.name.trim();
   const company = normalizeCompany(row.company);
   const categoryId = await resolveCategory(row.category, cache);
-  const unitId = await resolveUnit(row.packUnit, cache);
+
+  const stockMeta = resolveImportStock(
+    {
+      itemType: row.itemType,
+      packQuantity: row.packQuantity,
+      packUnit,
+      itemLabel: row.itemLabel,
+      stock,
+    },
+    defaultSpoonGrams
+  );
+
+  const unitId = await resolveUnit(packUnit, cache, {
+    createIfMissing: stockMeta.itemType === 'unit',
+  });
 
   const existing = await findExistingItem({
     itemCode: row.itemCode,
@@ -132,36 +155,43 @@ const upsertImportRow = async (row, cache) => {
     company,
   });
 
-  if (!existing && salePrice === null) {
-    throw new Error('Sale Price is required for new items');
+  let effectiveSalePrice = salePrice;
+  let priceDefaulted = false;
+  if (!existing && effectiveSalePrice === null) {
+    effectiveSalePrice = 0;
+    priceDefaulted = true;
   }
 
   const payload = {
     name,
     company,
     category: categoryId,
-    packQuantity,
+    itemType: stockMeta.itemType,
+    unitsPerPack: stockMeta.unitsPerPack,
+    spoonSizeGrams: stockMeta.spoonSizeGrams,
+    stockInBaseUnits: stockMeta.stockInBaseUnits,
+    packQuantity: stockMeta.packQuantity,
     unit: unitId,
-    stock,
+    stock: stockMeta.stock,
     manufacturingDate,
     expiryDate,
     bestBeforeMonths,
     monthlyUsagePercent,
   };
 
-  if (salePrice !== null) {
-    payload.salePrice = salePrice;
+  if (effectiveSalePrice !== null) {
+    payload.salePrice = effectiveSalePrice;
   }
 
   if (existing) {
     Object.assign(existing, payload);
     await existing.save();
-    return { action: 'updated', itemCode: existing.itemCode };
+    return { action: 'updated', itemCode: existing.itemCode, priceDefaulted: false };
   }
 
   const itemCode = await generatePharmacyItemCode();
   await PharmacyItem.create({ itemCode, ...payload });
-  return { action: 'created', itemCode };
+  return { action: 'created', itemCode, priceDefaulted };
 };
 
 export const exportPharmacyCsv = async () => {
@@ -199,32 +229,31 @@ export const importPharmacyCsv = async (fileBuffer) => {
   if (!rows.length) throw new Error(PHARMACY_MESSAGES.IMPORT_EMPTY);
 
   const normalizedHeaders = headers.map(normalizeCsvHeader);
-  const requiredKeys = [
-    'name',
-    'category',
-    'packQuantity',
-    'packUnit',
-    'stock',
-    'manufacturingDate',
-  ];
+  const requiredKeys = ['name', 'category', 'packUnit', 'stock', 'manufacturingDate'];
   if (!requiredKeys.every((k) => normalizedHeaders.includes(k))) {
     throw new Error(PHARMACY_MESSAGES.IMPORT_INVALID_HEADERS);
   }
 
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
   const cache = { categories: new Map(), units: new Map() };
   const summary = {
     created: 0,
     updated: 0,
     failed: 0,
+    priceDefaulted: 0,
     errors: [],
+    warnings: [],
   };
 
   for (const row of rows) {
     if (row.name?.toLowerCase() === 'item name' || row.name?.toLowerCase() === 'summary') continue;
     try {
-      const result = await upsertImportRow(row, cache);
+      const result = await upsertImportRow(row, cache, defaultSpoonGrams);
       if (result.action === 'created') summary.created += 1;
       else summary.updated += 1;
+      if (result.priceDefaulted) {
+        summary.priceDefaulted += 1;
+      }
     } catch (error) {
       summary.failed += 1;
       summary.errors.push({
@@ -232,6 +261,12 @@ export const importPharmacyCsv = async (fileBuffer) => {
         message: error.message,
       });
     }
+  }
+
+  if (summary.priceDefaulted > 0) {
+    summary.warnings.push(
+      `${summary.priceDefaulted} item(s) imported with ₹0 sale price (add a Sale Price column or edit prices after import).`
+    );
   }
 
   return summary;

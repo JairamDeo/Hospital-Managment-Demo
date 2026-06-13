@@ -15,7 +15,19 @@ import {
   getPharmacyUnitList,
   postPharmacyUnit,
   patchPharmacyUnit,
+  getPharmacySpoonList,
+  postPharmacySpoon,
+  patchPharmacySpoon,
+  postPharmacySpoonDefault,
+  getRoomList,
+  postRoom,
+  patchRoom,
 } from '../controllers/master.controller.js';
+import {
+  createPharmacySpoonSchema,
+  updatePharmacySpoonSchema,
+} from '../validators/pharmacySpoon.validator.js';
+import { createRoomSchema, updateRoomSchema } from '../validators/room.validator.js';
 
 const router = Router();
 
@@ -40,5 +52,14 @@ router.patch(
 router.get('/pharmacy-units', getPharmacyUnitList);
 router.post('/pharmacy-units', validateRequest(masterNameSchema), postPharmacyUnit);
 router.patch('/pharmacy-units/:id', validateRequest(masterUpdateSchema), patchPharmacyUnit);
+
+router.get('/pharmacy-spoons', getPharmacySpoonList);
+router.post('/pharmacy-spoons', validateRequest(createPharmacySpoonSchema), postPharmacySpoon);
+router.patch('/pharmacy-spoons/:id', validateRequest(updatePharmacySpoonSchema), patchPharmacySpoon);
+router.post('/pharmacy-spoons/:id/default', postPharmacySpoonDefault);
+
+router.get('/rooms', getRoomList);
+router.post('/rooms', validateRequest(createRoomSchema), postRoom);
+router.patch('/rooms/:id', validateRequest(updateRoomSchema), patchRoom);
 
 export default router;

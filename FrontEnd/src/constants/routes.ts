@@ -17,14 +17,18 @@ export const ROUTES = {
   // Admin app
   ADMIN_DASHBOARD: `${ADMIN}/dashboard`,
   ADMIN_PATIENTS: `${ADMIN}/patients`,
+  ADMIN_PATIENT_INSURANCE: `${ADMIN}/health-insurance`,
   ADMIN_PATIENT_DETAIL: `${ADMIN}/patients/:patientId`,
   ADMIN_APPOINTMENTS: `${ADMIN}/appointments`,
   ADMIN_APPOINTMENT_DETAIL: `${ADMIN}/appointments/:appointmentId`,
   ADMIN_APPOINTMENT_FOLLOWUP: `${ADMIN}/appointments/:appointmentId/follow-up`,
   ADMIN_PANCHAKARMA: `${ADMIN}/panchakarma`,
+  ADMIN_IPD: `${ADMIN}/ipd`,
+  ADMIN_IPD_ADMISSION_DETAIL: `${ADMIN}/ipd/admissions/:admissionCode`,
   ADMIN_PANCHAKARMA_PROGRAM_ATTEND: `${ADMIN}/panchakarma/programs/:programCode/attend`,
   ADMIN_PHARMACY: `${ADMIN}/pharmacy`,
   ADMIN_STAFF: `${ADMIN}/staff`,
+  ADMIN_STAFF_COMPENSATION: `${ADMIN}/staff/compensation`,
   ADMIN_STAFF_DETAIL: `${ADMIN}/staff/:staffId`,
   ADMIN_ANALYTICS: `${ADMIN}/analytics`,
   ADMIN_BILLING: `${ADMIN}/billing`,
@@ -56,3 +60,5 @@ export const panchakarmaTreatmentPath = (appointmentId: string) =>
   `${ADMIN}/panchakarma/appointments/${encodeURIComponent(appointmentId)}/treatment`;
 export const programAttendPath = (programCode: string) =>
   `${ADMIN}/panchakarma/programs/${encodeURIComponent(programCode)}/attend`;
+export const ipdAdmissionDetailPath = (admissionCode: string) =>
+  `${ADMIN}/ipd/admissions/${encodeURIComponent(admissionCode)}`;

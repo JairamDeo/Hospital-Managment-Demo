@@ -26,6 +26,8 @@ const diseaseHistorySchema = section({
   menstrual: trimStr,
   bowel: trimStr,
   addiction: trimStr,
+  geneticDisorder: trimStr,
+  accidentalHistory: trimStr,
 });
 
 const diabetesHistorySchema = section({
@@ -56,6 +58,8 @@ const metabolicDisorderSchema = section({
   obesityMedicineDurations: trimStr,
   otherMedicine: trimStr,
   otherMedicineDurations: trimStr,
+  lifestyleMedicine: trimStr,
+  lifestyleMedicineDurations: trimStr,
 });
 
 const eatingHabitsSchema = section({

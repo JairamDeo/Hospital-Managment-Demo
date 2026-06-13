@@ -1,4 +1,5 @@
 import axiosInstance from '../http/axiosInstance';
+import type { SaleUnit } from '@/types/pharmacy.types';
 import type { ApiResponse } from '@/types/api.types';
 import type { BillingStats, Invoice, InvoiceDetail, PaymentMethodType } from '@/types/billing.types';
 
@@ -31,7 +32,12 @@ class BillingAdminService {
 
   createMedicineBill(payload: {
     patientCode: string;
-    items: { itemCode: string; quantity: number; unitPrice?: number }[];
+    items: {
+      itemCode: string;
+      quantity: number;
+      saleUnit?: SaleUnit;
+      unitPrice?: number;
+    }[];
     paymentMethod?: PaymentMethodType;
     markPaid?: boolean;
   }) {

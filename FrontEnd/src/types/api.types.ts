@@ -39,11 +39,26 @@ export interface VerifyOtpResponse {
   resetToken: string;
 }
 
+export interface PharmacySpoonItem {
+  _id: string;
+  code: string;
+  name: string;
+  grams: number;
+  isDefault?: boolean;
+  active?: boolean;
+}
+
 export interface MasterItem {
   _id: string;
   code: string;
   name: string;
   active?: boolean;
+}
+
+export interface RoomMasterItem extends MasterItem {
+  roomNumber: string;
+  roomType: 'IPD' | 'Panchakarma';
+  capacity: number;
 }
 
 export interface PatientUser {
@@ -130,6 +145,21 @@ export interface HmsStaff {
   email?: string;
   accountActive?: boolean;
   consultationFee?: number;
+  compensation?: {
+    basicSalary: number;
+    hra: number;
+    dearnessAllowance: number;
+    specialAllowance: number;
+    transportAllowance: number;
+    medicalAllowance: number;
+    otherAllowances: number;
+    pfDeduction: number;
+    professionalTax: number;
+    otherDeductions: number;
+  };
+  grossMonthly?: number;
+  totalDeductions?: number;
+  netMonthly?: number;
   qualifications?: { level: string; degree: string }[];
   registrationNumber?: string;
   aadharNumber?: string;

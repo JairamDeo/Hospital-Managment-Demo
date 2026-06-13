@@ -46,7 +46,6 @@ export interface StaffFormValues {
   role: StaffRole;
   title: string;
   shift: string;
-  consultationFee: string;
   registrationNumber: string;
   aadharNumber: string;
   panNumber: string;

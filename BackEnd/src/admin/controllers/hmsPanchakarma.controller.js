@@ -131,7 +131,7 @@ export const postProgram = async (req, res) => {
         staffCode,
         therapy: req.body.therapy,
         totalDays: req.body.totalDays,
-        room: req.body.room,
+        roomCode: req.body.roomCode,
         startDate: req.body.startDate,
         treatmentName: req.body.treatmentName,
         totalFees: req.body.totalFees,

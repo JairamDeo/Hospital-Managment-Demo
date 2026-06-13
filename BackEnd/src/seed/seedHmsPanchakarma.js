@@ -1,6 +1,7 @@
 import HmsPanchakarmaProgram from '../models/hmsPanchakarmaProgram.model.js';
 import HmsPatient from '../models/hmsPatient.model.js';
 import HmsStaff from '../models/hmsStaff.model.js';
+import RoomMaster from '../models/roomMaster.model.js';
 import { logger } from '../utils/logger.js';
 import { normalizeProgramStartDate } from '../utils/panchakarma.util.js';
 
@@ -12,7 +13,7 @@ const SEED_PROGRAMS = [
     therapy: 'Vamana',
     totalDays: 7,
     currentDay: 3,
-    room: 'Room 1',
+    roomName: 'Room 1',
     startDate: '2026-05-01',
     status: 'Ongoing',
   },
@@ -23,7 +24,7 @@ const SEED_PROGRAMS = [
     therapy: 'Virechana',
     totalDays: 10,
     currentDay: 5,
-    room: 'Room 2',
+    roomName: 'Room 2',
     startDate: '2026-04-28',
     status: 'Ongoing',
   },
@@ -34,7 +35,7 @@ const SEED_PROGRAMS = [
     therapy: 'Nasya',
     totalDays: 14,
     currentDay: 1,
-    room: 'Room 3',
+    roomName: 'Room 3',
     startDate: '2026-06-05',
     status: 'Starting',
   },
@@ -51,8 +52,13 @@ export const seedHmsPanchakarma = async () => {
     ]);
     if (!patient || !therapist) continue;
 
+    const room = await RoomMaster.findOne({ name: row.roomName, roomType: 'Panchakarma' });
+    if (!room) continue;
+
     const payload = {
       ...row,
+      roomCode: room.code,
+      room: room.name,
       patient: patient._id,
       patientName: patient.name,
       staff: therapist._id,
@@ -60,6 +66,7 @@ export const seedHmsPanchakarma = async () => {
       startDate: normalizeProgramStartDate(row.startDate),
       createdBy: { type: 'admin', name: 'System Seed' },
     };
+    delete payload.roomName;
 
     const existing = await HmsPanchakarmaProgram.findOne({ programCode: row.programCode });
     if (existing) {

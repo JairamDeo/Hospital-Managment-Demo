@@ -6,6 +6,7 @@ import {
   adminUpdatePatientSchema,
 } from '../validators/hmsPatient.validator.js';
 import { adminUpdatePatientClinicalSchema } from '../validators/hmsPatientClinical.validator.js';
+import { patientInsuranceUpdateSchema } from '../validators/hmsPatientInsurance.validator.js';
 import { customResponse } from '../../utils/response.js';
 import { prescriptionPdfUpload } from '../../middleware/prescriptionUpload.middleware.js';
 import {
@@ -17,6 +18,9 @@ import {
   postPatient,
   patchPatient,
   patchPatientClinical,
+  getPatientInsuranceList,
+  getPatientInsuranceStatsSummary,
+  patchPatientInsurance,
 } from '../controllers/hmsPatient.controller.js';
 import {
   getStructuredPrescriptions,
@@ -42,6 +46,8 @@ router.use(portalAuth);
 
 router.get('/', getPatients);
 router.get('/stats/summary', getPatientsStats);
+router.get('/insurance/list', getPatientInsuranceList);
+router.get('/insurance/stats/summary', getPatientInsuranceStatsSummary);
 router.get('/:patientCode/overview', getPatientOverviewHandler);
 router.get('/:patientCode/clinical', getPatientClinical);
 router.patch(
@@ -81,6 +87,11 @@ router.get(
 router.delete(
   '/:patientCode/prescriptions/:prescriptionId',
   deletePatientPrescriptionHandler
+);
+router.patch(
+  '/:patientCode/insurance',
+  validateRequest(patientInsuranceUpdateSchema),
+  patchPatientInsurance
 );
 router.get('/:patientCode', getPatient);
 router.post('/', validateRequest(adminCreatePatientSchema), postPatient);

@@ -1,6 +1,7 @@
 import HmsStaff from '../../models/hmsStaff.model.js';
 import { ErrorMessages } from '../../utils/constants.js';
-import { formatHmsStaff } from '../../utils/formatHmsStaff.js';
+import { formatHmsStaff, formatStaffCompensationRow } from '../../utils/formatHmsStaff.js';
+import { normalizeCompensation } from '../../utils/staffCompensation.util.js';
 import { generateHmsStaffCode } from '../../utils/generateHmsStaffCode.js';
 import {
   STAFF_DEFAULT_PASSWORD,
@@ -15,6 +16,11 @@ const statLabelForRole = (role) => {
 export const listStaff = async () => {
   const staff = await HmsStaff.find({ status: true }).sort({ staffCode: 1 });
   return staff.map(formatHmsStaff);
+};
+
+export const listStaffCompensation = async () => {
+  const staff = await HmsStaff.find({ status: true }).sort({ role: 1, name: 1 });
+  return staff.map(formatStaffCompensationRow);
 };
 
 export const getStaffByCode = async (staffCode) => {
@@ -64,7 +70,8 @@ export const createStaffByAdmin = async (payload) => {
     rating: 5,
     tags: payload.tags?.length ? payload.tags : [role],
     shift: payload.shift?.trim() || '9AM – 5PM',
-    consultationFee: Number(payload.consultationFee) || 0,
+    consultationFee: 0,
+    compensation: normalizeCompensation(),
     email,
     password: STAFF_DEFAULT_PASSWORD,
     status: true,
@@ -100,4 +107,24 @@ export const updateStaffByAdmin = async (staffCode, payload) => {
 
   await member.save();
   return formatHmsStaff(member);
+};
+
+export const updateStaffCompensation = async (staffCode, payload) => {
+  const member = await HmsStaff.findOne({ staffCode, status: true });
+  if (!member) throw new Error(ErrorMessages.STAFF_NOT_FOUND);
+
+  if (payload.compensation) {
+    member.compensation = normalizeCompensation(
+      payload.compensation,
+      Number(member.basicSalary) || 0
+    );
+    member.basicSalary = member.compensation.basicSalary;
+  }
+
+  if (payload.consultationFee !== undefined) {
+    member.consultationFee = Number(payload.consultationFee) || 0;
+  }
+
+  await member.save();
+  return formatStaffCompensationRow(member);
 };

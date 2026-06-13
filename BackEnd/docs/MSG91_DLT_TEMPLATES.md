@@ -2,6 +2,8 @@
 
 This project uses [MSG91 Flow API](https://docs.msg91.com/) for SMS. Each use case has its **own DLT template ID** in `.env`. Until keys are ready, SMS is **skipped** and the message payload is logged (same pattern as OTP).
 
+**WhatsApp (same 3 flows):** see [MSG91_WHATSAPP_INTEGRATION.md](./MSG91_WHATSAPP_INTEGRATION.md) — separate approved WhatsApp template name per flow + `body_1`… variable slots in `.env`.
+
 ## Quick setup
 
 1. Register templates on MSG91 / DLT portal (content below).

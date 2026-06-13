@@ -7,11 +7,14 @@ import { generatePharmacyItemCode } from '../../utils/generatePharmacyItemCode.j
 import { formatPharmacyItem } from '../../utils/formatPharmacyItem.js';
 import { buildStockAlertMessage } from '../../utils/pharmacyStock.util.js';
 import { resolvePharmacyDates } from '../../utils/pharmacyDates.util.js';
+import { resolveCreateStock } from '../../utils/pharmacyStockUnits.util.js';
+import { getDefaultPharmacySpoonGrams } from '../../utils/pharmacySpoon.util.js';
 import {
   categoryBrandMatch,
   escapeRegex,
   parsePharmacyListQuery,
   stockFilterForStatus,
+  stockPacksPipelineFields,
 } from '../../utils/pharmacyQuery.util.js';
 
 const loadActiveItemsForPanels = async () => {
@@ -27,7 +30,6 @@ const buildListPipeline = ({ search, categoryId, brand, stock }) => {
     {
       $match: {
         active: true,
-        ...stockFilterForStatus(stock),
         ...categoryBrandMatch({ categoryId, brand }),
       },
     },
@@ -49,7 +51,12 @@ const buildListPipeline = ({ search, categoryId, brand, stock }) => {
       },
     },
     { $unwind: { path: '$unit', preserveNullAndEmptyArrays: true } },
+    stockPacksPipelineFields(),
   ];
+
+  if (stock !== 'all') {
+    pipeline.push({ $match: stockFilterForStatus(stock) });
+  }
 
   if (search) {
     const regex = new RegExp(escapeRegex(search), 'i');
@@ -99,8 +106,9 @@ export const listPharmacyItems = async (queryInput = {}) => {
     { $limit: limit },
   ]);
 
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
   return {
-    items: docs.map(formatPharmacyItem),
+    items: docs.map((doc) => formatPharmacyItem(doc, { defaultSpoonGrams })),
     pagination: {
       page,
       limit,
@@ -111,10 +119,15 @@ export const listPharmacyItems = async (queryInput = {}) => {
 };
 
 export const getPharmacyStats = async () => {
+  const base = [{ $match: { active: true } }, stockPacksPipelineFields()];
   const [totalItems, critical, lowStock] = await Promise.all([
     PharmacyItem.countDocuments({ active: true }),
-    PharmacyItem.countDocuments({ active: true, stock: { $lte: 100 } }),
-    PharmacyItem.countDocuments({ active: true, stock: { $gt: 100, $lte: 250 } }),
+    PharmacyItem.aggregate([...base, { $match: stockFilterForStatus('critical') }, { $count: 'n' }]).then(
+      (r) => r[0]?.n ?? 0
+    ),
+    PharmacyItem.aggregate([...base, { $match: stockFilterForStatus('low') }, { $count: 'n' }]).then(
+      (r) => r[0]?.n ?? 0
+    ),
   ]);
   return { totalItems, lowStock, critical };
 };
@@ -135,7 +148,8 @@ export const listPharmacyItemsForBilling = async () => {
     .sort({ name: 1 })
     .lean();
 
-  return docs.map(formatPharmacyItem);
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
+  return docs.map((doc) => formatPharmacyItem(doc, { defaultSpoonGrams }));
 };
 
 export const getPharmacyOverview = async (queryInput = {}) => {
@@ -152,7 +166,7 @@ export const getPharmacyOverview = async (queryInput = {}) => {
       id: i._id,
       itemName: i.name,
       status: i.status,
-      message: buildStockAlertMessage(i.name, i.stock, i.status),
+      message: buildStockAlertMessage(i.name, i.stockPacks, i.status),
     }));
 
   const monthlyUsage = [...panelItems]
@@ -183,15 +197,22 @@ export const createPharmacyItem = async (payload) => {
     bestBeforeMonths: payload.bestBeforeMonths,
   });
 
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
+  const stockMeta = resolveCreateStock(payload, defaultSpoonGrams);
+
   const itemCode = await generatePharmacyItemCode();
   const doc = await PharmacyItem.create({
     itemCode,
     name: payload.name.trim(),
     company: (payload.company ?? '').trim(),
     category: category._id,
-    packQuantity: payload.packQuantity,
+    itemType: stockMeta.itemType,
+    unitsPerPack: stockMeta.unitsPerPack,
+    spoonSizeGrams: stockMeta.spoonSizeGrams,
+    stockInBaseUnits: stockMeta.stockInBaseUnits,
+    packQuantity: stockMeta.packQuantity,
     unit: unit._id,
-    stock: payload.stock,
+    stock: stockMeta.stock,
     salePrice: payload.salePrice,
     manufacturingDate: dates.manufacturingDate,
     expiryDate: dates.expiryDate,
@@ -204,5 +225,5 @@ export const createPharmacyItem = async (payload) => {
     .populate('unit', 'name')
     .lean();
 
-  return formatPharmacyItem(populated);
+  return formatPharmacyItem(populated, { defaultSpoonGrams });
 };

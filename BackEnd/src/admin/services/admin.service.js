@@ -8,7 +8,7 @@ import { ErrorMessages, ADMIN_MESSAGES } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { CLIENT } from '../../utils/constants.js';
 import { getOtpConfig, isStaticOtpMatch } from '../../config/otp.config.js';
-import { sendOtpSms, isMsg91Enabled } from '../../services/sms/msg91.service.js';
+import { sendOtpNotification, isOtpNotificationEnabled } from '../../services/sms/notify.service.js';
 
 const RESET_TOKEN_VALIDITY_MS = 15 * 60 * 1000;
 
@@ -139,7 +139,7 @@ export const sendForgotPasswordOtp = async (mobileNumber) => {
   await user.save();
 
   try {
-    await sendOtpSms(mobileNumber, otp);
+    await sendOtpNotification(mobileNumber, otp);
   } catch (error) {
     user.otp = undefined;
     user.otpExpiresAt = undefined;
@@ -147,7 +147,7 @@ export const sendForgotPasswordOtp = async (mobileNumber) => {
     throw new Error(ADMIN_MESSAGES.SMS_SEND_FAILED);
   }
 
-  if (!isMsg91Enabled()) {
+  if (!isOtpNotificationEnabled()) {
     logger.info(`Admin OTP (dev) for ${mobileNumber}: ${otp}`);
   }
 

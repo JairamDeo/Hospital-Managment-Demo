@@ -22,7 +22,7 @@ const mapWithId = (items, prefix) =>
 export const formatPatientCare = (care) => {
   if (!care) {
     return {
-      vitals: { temp: '—', bp: '—', pulse: '—', bmi: '—' },
+      vitals: { temp: '—', bp: '—', pulse: '—', spo2: '—', bmi: '—' },
       vitalsHistory: [],
       activeTreatment: null,
       treatmentHistory: [],
@@ -41,12 +41,15 @@ export const formatPatientCare = (care) => {
       temp: c.vitals?.temp || '—',
       bp: c.vitals?.bp || '—',
       pulse: c.vitals?.pulse || '—',
+      spo2: c.vitals?.spo2 || '—',
       bmi: c.vitals?.bmi || '—',
     },
     vitalsHistory: (c.vitalsHistory ?? []).map((v, index) => ({
       id: String(v._id ?? `vh-${index}`),
       date: v.date || '',
       bp: v.bp || '',
+      pulse: v.pulse || '',
+      spo2: v.spo2 || '',
       fasting: v.fasting || '',
       postMeal: v.postMeal || '',
       random: v.random || '',

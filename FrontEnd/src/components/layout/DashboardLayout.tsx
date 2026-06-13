@@ -8,10 +8,12 @@ import { getStaffById } from '@/pages/staff/data/mockStaffDetails';
 const titles: Record<string, string> = {
   [ROUTES.ADMIN_DASHBOARD]: 'Dashboard',
   [ROUTES.ADMIN_PATIENTS]: 'Patients',
+  [ROUTES.ADMIN_PATIENT_INSURANCE]: 'Health insurance',
   [ROUTES.ADMIN_APPOINTMENTS]: 'Appointments',
   [ROUTES.ADMIN_PANCHAKARMA]: 'Panchakarma',
   [ROUTES.ADMIN_PHARMACY]: 'Pharmacy',
   [ROUTES.ADMIN_STAFF]: 'Staff',
+  [ROUTES.ADMIN_STAFF_COMPENSATION]: 'Staff compensation',
   [ROUTES.ADMIN_ANALYTICS]: 'Analytics',
   [ROUTES.ADMIN_BILLING]: 'Billing',
   [ROUTES.ADMIN_BILLING_MEDICINE]: 'Medicine Bill',
@@ -30,8 +32,10 @@ const LayoutContent = () => {
   const patientBreadcrumbLabel = patientId ? decodeURIComponent(patientId) : null;
 
   const staffMatch = pathname.match(/^\/admin\/staff\/([^/]+)$/);
-  const staffId = staffMatch?.[1];
+  const staffId =
+    staffMatch?.[1] && staffMatch[1] !== 'compensation' ? staffMatch[1] : undefined;
   const staffMember = staffId ? getStaffById(staffId) : null;
+  const isStaffCompensation = pathname === ROUTES.ADMIN_STAFF_COMPENSATION;
 
   const invoiceMatch = pathname.match(/^\/admin\/billing\/([^/]+)$/);
   const invoiceId = invoiceMatch?.[1] ? decodeURIComponent(invoiceMatch[1]) : null;
@@ -94,14 +98,21 @@ const LayoutContent = () => {
                 },
               ],
             }
-    : staffMember
+    : isStaffCompensation
       ? {
           breadcrumbs: [
             { label: 'Staff', href: ROUTES.ADMIN_STAFF },
-            { label: staffMember.name },
+            { label: 'Compensation' },
           ],
         }
-      : invoiceId
+      : staffMember
+        ? {
+            breadcrumbs: [
+              { label: 'Staff', href: ROUTES.ADMIN_STAFF },
+              { label: staffMember.name },
+            ],
+          }
+        : invoiceId
         ? {
             breadcrumbs: [
               { label: 'Billing', href: ROUTES.ADMIN_BILLING },

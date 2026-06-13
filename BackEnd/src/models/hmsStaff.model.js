@@ -13,6 +13,22 @@ const qualificationSchema = new Schema(
   { _id: false }
 );
 
+const staffCompensationSchema = new Schema(
+  {
+    basicSalary: { type: Number, min: 0, default: 0 },
+    hra: { type: Number, min: 0, default: 0 },
+    dearnessAllowance: { type: Number, min: 0, default: 0 },
+    specialAllowance: { type: Number, min: 0, default: 0 },
+    transportAllowance: { type: Number, min: 0, default: 0 },
+    medicalAllowance: { type: Number, min: 0, default: 0 },
+    otherAllowances: { type: Number, min: 0, default: 0 },
+    pfDeduction: { type: Number, min: 0, default: 0 },
+    professionalTax: { type: Number, min: 0, default: 0 },
+    otherDeductions: { type: Number, min: 0, default: 0 },
+  },
+  { _id: false }
+);
+
 const hmsStaffSchema = new Schema({
   staffCode: { type: String, unique: true, required: true, trim: true },
   name: { type: String, required: true, trim: true },
@@ -31,6 +47,9 @@ const hmsStaffSchema = new Schema({
   tags: { type: [String], default: [] },
   shift: { type: String, trim: true, default: '9AM – 5PM' },
   consultationFee: { type: Number, min: 0, default: 0 },
+  compensation: { type: staffCompensationSchema, default: () => ({}) },
+  /** @deprecated use compensation.basicSalary */
+  basicSalary: { type: Number, min: 0, default: 0 },
   email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
   password: { type: String },
   status: { type: Boolean, default: true },

@@ -28,41 +28,37 @@ const diffMonths = (from, to) => {
   return Math.max(0, Math.round(end.diff(start, 'months', true)));
 };
 
-/**
- * Manufacturing date required.
- * Provide expiryDate OR bestBeforeMonths (shelf life from manufacturing).
- */
+/** Manufacturing + expiry required; shelf life months derived or used to fill expiry. */
 export const resolvePharmacyDates = ({ manufacturingDate, expiryDate, bestBeforeMonths }) => {
   const mfg = parseFlexibleDate(manufacturingDate);
   if (!mfg) {
     throw new Error('Manufacturing date is required (use YYYY-MM-DD or DD-MMM-YYYY)');
   }
 
-  const expiryParsed = parseFlexibleDate(expiryDate);
   const monthsRaw = bestBeforeMonths?.toString().trim();
-  const months =
+  const monthsInput =
     monthsRaw !== undefined && monthsRaw !== '' ? Number(monthsRaw) : null;
 
-  if (expiryParsed) {
-    if (expiryParsed < mfg) {
-      throw new Error('Expiry date must be on or after manufacturing date');
-    }
-    return {
-      manufacturingDate: mfg,
-      expiryDate: expiryParsed,
-      bestBeforeMonths:
-        months && !Number.isNaN(months) && months > 0 ? months : diffMonths(mfg, expiryParsed),
-    };
+  let expiryParsed = parseFlexibleDate(expiryDate);
+
+  if (!expiryParsed && monthsInput !== null && !Number.isNaN(monthsInput) && monthsInput > 0) {
+    expiryParsed = moment(mfg).add(monthsInput, 'months').startOf('day').toDate();
   }
 
-  if (months !== null && !Number.isNaN(months) && months > 0) {
-    const expiry = moment(mfg).add(months, 'months').startOf('day').toDate();
-    return {
-      manufacturingDate: mfg,
-      expiryDate: expiry,
-      bestBeforeMonths: months,
-    };
+  if (!expiryParsed) {
+    throw new Error('Expiry date is required');
   }
 
-  throw new Error('Provide either Expiry Date or Best Before (months from manufacturing)');
+  if (expiryParsed < mfg) {
+    throw new Error('Expiry date must be on or after manufacturing date');
+  }
+
+  return {
+    manufacturingDate: mfg,
+    expiryDate: expiryParsed,
+    bestBeforeMonths:
+      monthsInput && !Number.isNaN(monthsInput) && monthsInput > 0
+        ? monthsInput
+        : diffMonths(mfg, expiryParsed),
+  };
 };

@@ -115,6 +115,8 @@ const DISEASE_FIELDS: { key: keyof PatientClinicalProfile['diseaseHistory']; lab
   { key: 'menstrual', label: 'Menstrual' },
   { key: 'bowel', label: 'Bowel' },
   { key: 'addiction', label: 'Addiction' },
+  { key: 'geneticDisorder', label: 'Genetic disorder' },
+  { key: 'accidentalHistory', label: 'Accidental history' },
 ];
 
 const METABOLIC_PAIRS: {
@@ -146,6 +148,11 @@ const METABOLIC_PAIRS: {
     duration: 'neuropathyMedicineDurations',
   },
   { label: 'Obesity', medicine: 'obesityMedicine', duration: 'obesityMedicineDurations' },
+  {
+    label: 'Lifestyle disorder',
+    medicine: 'lifestyleMedicine',
+    duration: 'lifestyleMedicineDurations',
+  },
   { label: 'Other', medicine: 'otherMedicine', duration: 'otherMedicineDurations' },
 ];
 

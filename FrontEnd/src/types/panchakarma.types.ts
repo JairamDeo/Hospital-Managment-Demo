@@ -2,7 +2,7 @@ export type TherapyType = 'Vamana' | 'Virechana' | 'Basti' | 'Nasya';
 
 export type ProgramStatus = 'Ongoing' | 'Starting' | 'Complete' | 'Cancelled';
 
-export type RoomStatus = 'Occupied' | 'Available' | 'Cleaning';
+export type RoomStatus = 'Available' | 'Partial' | 'Full' | 'Occupied' | 'Cleaning';
 
 export interface ActiveProgram {
   id: string;
@@ -44,8 +44,13 @@ export interface TherapistOnDuty {
 
 export interface TreatmentRoom {
   id: string;
+  roomCode: string;
   name: string;
-  therapy: TherapyType;
+  roomNumber?: string;
+  capacity?: number;
+  occupied?: number;
+  available?: number;
+  therapy: string;
   status: RoomStatus;
 }
 
@@ -53,7 +58,7 @@ export interface ScheduleProgramFormValues {
   patientId: string;
   therapy: TherapyType;
   totalDays: number;
-  room: string;
+  roomCode: string;
   therapistId: string;
   startDate: string;
   treatmentName?: string;
@@ -87,8 +92,6 @@ export interface PanchakarmaStats {
 }
 
 export const THERAPY_OPTIONS: TherapyType[] = ['Vamana', 'Virechana', 'Basti', 'Nasya'];
-
-export const ROOM_OPTIONS = ['Room 1', 'Room 2', 'Room 3', 'Room 4'];
 
 export const PROGRAM_DAY_OPTIONS = [7, 8, 10, 14, 21];
 

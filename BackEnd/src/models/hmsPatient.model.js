@@ -1,6 +1,41 @@
 import { Schema, model } from 'mongoose';
 import { clinicalProfileSchema } from './hmsPatientClinical.schema.js';
 
+const insuranceDependentSchema = new Schema(
+  {
+    name: { type: String, trim: true, default: '' },
+    relation: { type: String, trim: true, default: '' },
+    age: { type: Number, min: 0, default: 0 },
+  },
+  { _id: false }
+);
+
+const patientHealthInsuranceSchema = new Schema(
+  {
+    providerName: { type: String, trim: true, default: '' },
+    policyNumber: { type: String, trim: true, default: '' },
+    policyType: {
+      type: String,
+      enum: ['Individual', 'Family', 'Group'],
+      default: 'Individual',
+    },
+    sumInsured: { type: Number, min: 0, default: 0 },
+    annualPremium: { type: Number, min: 0, default: 0 },
+    startDate: { type: Date, default: null },
+    endDate: { type: Date, default: null },
+    tpaName: { type: String, trim: true, default: '' },
+    cardNumber: { type: String, trim: true, default: '' },
+    dependents: { type: [insuranceDependentSchema], default: [] },
+    notes: { type: String, trim: true, default: '' },
+    status: {
+      type: String,
+      enum: ['Active', 'Expired', 'Pending', 'Cancelled'],
+      default: 'Pending',
+    },
+  },
+  { _id: false }
+);
+
 const hmsPatientSchema = new Schema({
   patientCode: { type: String, unique: true, required: true },
   name: { type: String, required: true, trim: true },
@@ -24,6 +59,7 @@ const hmsPatientSchema = new Schema({
   otpExpiresAt: { type: Date },
   lastOtpSentAt: { type: Date },
   clinicalProfile: { type: clinicalProfileSchema, default: () => ({}) },
+  healthInsurance: { type: patientHealthInsuranceSchema, default: () => ({}) },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

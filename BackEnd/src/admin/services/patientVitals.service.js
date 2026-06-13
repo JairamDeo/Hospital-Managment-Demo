@@ -23,6 +23,8 @@ export const addPatientVitals = async (patientCode, payload, req) => {
     recordedByName,
     date: moment().format('DD-MMM-YYYY'),
     bp: payload.bp?.trim() || '',
+    pulse: payload.pulse?.trim() || '',
+    spo2: payload.spo2?.trim() || '',
     fasting: payload.fasting?.trim() || '',
     postMeal: payload.postMeal?.trim() || '',
     random: payload.random?.trim() || '',
@@ -33,7 +35,8 @@ export const addPatientVitals = async (patientCode, payload, req) => {
   care.vitals = {
     temp: care.vitals?.temp || '—',
     bp: entry.bp || care.vitals?.bp || '—',
-    pulse: care.vitals?.pulse || '—',
+    pulse: entry.pulse || care.vitals?.pulse || '—',
+    spo2: entry.spo2 || care.vitals?.spo2 || '—',
     bmi: entry.weight || care.vitals?.bmi || '—',
   };
 
@@ -44,6 +47,8 @@ export const addPatientVitals = async (patientCode, payload, req) => {
       id: String(v._id ?? `vh-${index}`),
       date: v.date,
       bp: v.bp,
+      pulse: v.pulse,
+      spo2: v.spo2,
       fasting: v.fasting,
       postMeal: v.postMeal,
       random: v.random,
@@ -59,6 +64,8 @@ export const listPatientVitalsHistory = async (patientCode) => {
     id: String(v._id ?? `vh-${index}`),
     date: v.date,
     bp: v.bp,
+    pulse: v.pulse,
+    spo2: v.spo2,
     fasting: v.fasting,
     postMeal: v.postMeal,
     random: v.random,

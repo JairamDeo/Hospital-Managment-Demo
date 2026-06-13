@@ -58,6 +58,7 @@ export const PharmacyPage = () => {
   const [categories, setCategories] = useState<MasterItem[]>([]);
   const [brands, setBrands] = useState<string[]>([]);
   const [units, setUnits] = useState<MasterItem[]>([]);
+  const [defaultSpoonGrams, setDefaultSpoonGrams] = useState(1.5);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -105,7 +106,7 @@ export const PharmacyPage = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [overviewRes, categoriesRes, unitsRes] = await Promise.all([
+      const [overviewRes, categoriesRes, unitsRes, spoonsRes] = await Promise.all([
         pharmacyService.getOverview({
           page,
           limit: PHARMACY_PAGE_SIZE,
@@ -116,10 +117,14 @@ export const PharmacyPage = () => {
         }),
         masterService.listPharmacyCategories(true),
         masterService.listPharmacyUnits(true),
+        masterService.listPharmacySpoons(true),
       ]);
       applyOverview(overviewRes.data.res ?? {});
       setCategories(categoriesRes.data.res?.items ?? []);
       setUnits(unitsRes.data.res?.items ?? []);
+      const spoons = spoonsRes.data.res?.items ?? [];
+      const defaultSpoon = spoons.find((s) => s.isDefault) ?? spoons[0];
+      setDefaultSpoonGrams(defaultSpoon?.grams ?? 1.5);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -198,6 +203,10 @@ export const PharmacyPage = () => {
     try {
       const { data } = await pharmacyService.createItem(values);
       applyOverview(data.res ?? {});
+      if (values.itemType === 'unit' && values.itemLabel.trim()) {
+        const unitsRes = await masterService.listPharmacyUnits(true);
+        setUnits(unitsRes.data.res?.items ?? []);
+      }
       setPage(1);
       setSearch('');
       setDebouncedSearch('');
@@ -349,6 +358,7 @@ export const PharmacyPage = () => {
         initial={formInitial}
         categories={categories}
         units={units}
+        defaultSpoonGrams={defaultSpoonGrams}
         saving={saving}
         onClose={() => setModalOpen(false)}
         onSubmit={handleAdd}

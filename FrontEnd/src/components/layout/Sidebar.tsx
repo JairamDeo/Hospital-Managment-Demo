@@ -4,6 +4,7 @@ import {
   Users,
   CalendarDays,
   Leaf,
+  BedDouble,
   Pill,
   UserCog,
   BarChart3,
@@ -14,6 +15,7 @@ import {
   LogOut,
   X,
   UserRound,
+  ShieldCheck,
 } from 'lucide-react';
 import { ROUTES, staffDetailPath } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,6 +38,7 @@ type NavItemDef = {
 const mainNavBase: NavItemDef[] = [
   { to: ROUTES.ADMIN_DASHBOARD, label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
   { to: ROUTES.ADMIN_PATIENTS, label: 'Patients', icon: Users, module: 'patients' },
+  { to: ROUTES.ADMIN_PATIENT_INSURANCE, label: 'Health Insurance', icon: ShieldCheck, module: 'patientInsurance' },
   {
     to: ROUTES.ADMIN_APPOINTMENTS,
     label: 'Appointments',
@@ -43,6 +46,7 @@ const mainNavBase: NavItemDef[] = [
     module: 'appointments',
   },
   { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf, module: 'panchakarma' },
+  { to: ROUTES.ADMIN_IPD, label: 'IPD', icon: BedDouble, module: 'ipd' },
 ];
 
 const manageNav: NavItemDef[] = [

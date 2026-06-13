@@ -5,6 +5,7 @@ import { staffDocumentUpload } from '../../middleware/staffDocumentUpload.middle
 import {
   adminCreateStaffSchema,
   adminUpdateStaffSchema,
+  staffCompensationUpdateSchema,
 } from '../validators/hmsStaff.validator.js';
 import {
   applyLeaveSchema,
@@ -16,6 +17,8 @@ import {
   getStaff,
   postStaff,
   patchStaff,
+  getStaffCompensationList,
+  patchStaffCompensation,
 } from '../controllers/hmsStaff.controller.js';
 import {
   getActivity,
@@ -38,6 +41,7 @@ router.use(portalAuth);
 
 router.get('/', getStaffList);
 router.get('/stats/summary', getStaffStatsSummary);
+router.get('/compensation/list', getStaffCompensationList);
 
 router.get('/leave/pending', getPendingLeave);
 router.get('/leave/preview-days', validateRequest(leaveDaysQuerySchema, 'query'), previewLeaveDays);
@@ -59,6 +63,11 @@ router.get('/:staffCode/documents/:docId/download', downloadDocument);
 router.get('/:staffCode/leave', getLeave);
 router.post('/:staffCode/leave', validateRequest(applyLeaveSchema), postLeave);
 
+router.patch(
+  '/:staffCode/compensation',
+  validateRequest(staffCompensationUpdateSchema),
+  patchStaffCompensation
+);
 router.get('/:staffCode', getStaff);
 router.post('/', validateRequest(adminCreateStaffSchema), postStaff);
 router.patch('/:staffCode', validateRequest(adminUpdateStaffSchema), patchStaff);

@@ -40,6 +40,7 @@ export const formatHmsPanchakarmaProgram = (doc) => {
     dailySessions,
     totalDays: p.totalDays,
     currentDay: p.currentDay,
+    roomCode: p.roomCode || '',
     room: p.room,
     startDate: formatProgramStartDateIso(p.startDate),
     startDateDisplay: formatProgramStartDateDisplay(p.startDate),

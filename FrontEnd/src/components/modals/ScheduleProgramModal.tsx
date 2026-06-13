@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { NumericInput } from '@/components/ui/NumericInput';
@@ -9,7 +9,7 @@ import type {
   TherapistOnDuty,
   TreatmentRoom,
 } from '@/types/panchakarma.types';
-import { ROOM_OPTIONS, THERAPY_OPTIONS } from '@/types/panchakarma.types';
+import { THERAPY_OPTIONS } from '@/types/panchakarma.types';
 
 interface Props {
   open: boolean;
@@ -41,25 +41,21 @@ export const ScheduleProgramModal = ({
     if (open) setForm(initial);
   }, [open, initial]);
 
-  const occupiedRooms = new Set(
-    rooms.filter((r) => r.status === 'Occupied').map((r) => r.name)
+  const availableRooms = useMemo(
+    () => rooms.filter((r) => r.status !== 'Full' && (r.available ?? 1) > 0),
+    [rooms]
   );
 
-  const availableRooms = ROOM_OPTIONS.filter((r) => !occupiedRooms.has(r));
-
   useEffect(() => {
-    if (!form.room || availableRooms.includes(form.room)) return;
-    setForm((f) => ({ ...f, room: availableRooms[0] ?? '' }));
-  }, [availableRooms, form.room]);
+    if (!form.roomCode || availableRooms.some((r) => r.roomCode === form.roomCode)) return;
+    setForm((f) => ({ ...f, roomCode: availableRooms[0]?.roomCode ?? '' }));
+  }, [availableRooms, form.roomCode]);
 
   const validate = () => {
     const next: typeof errors = {};
     if (!form.patientId) next.patientId = 'Select a patient';
     if (!form.therapistId) next.therapistId = 'Select a therapist';
-    if (!form.room) next.room = 'Select a room';
-    if (form.room && occupiedRooms.has(form.room)) {
-      next.room = 'This room is currently occupied';
-    }
+    if (!form.roomCode) next.roomCode = 'Select a room';
     if (!form.startDate) next.startDate = 'Start date is required';
     if (!form.totalDays || form.totalDays < 1) {
       next.totalDays = 'Enter at least 1 day';
@@ -160,21 +156,21 @@ export const ScheduleProgramModal = ({
         <div>
           <label className={formLabelClass}>Room *</label>
           <select
-            value={form.room}
-            onChange={(e) => set('room', e.target.value)}
-            className={`${formSelectClass} ${errors.room ? 'border-danger' : ''}`}
+            value={form.roomCode}
+            onChange={(e) => set('roomCode', e.target.value)}
+            className={`${formSelectClass} ${errors.roomCode ? 'border-danger' : ''}`}
           >
             {availableRooms.length === 0 ? (
-              <option value="">No rooms available</option>
+              <option value="">No Panchakarma rooms available</option>
             ) : (
               availableRooms.map((r) => (
-                <option key={r} value={r}>
-                  {r}
+                <option key={r.roomCode} value={r.roomCode}>
+                  {r.name} ({r.occupied ?? 0}/{r.capacity ?? 1} occupied)
                 </option>
               ))
             )}
           </select>
-          {errors.room ? <p className="mt-1 text-xs text-danger">{errors.room}</p> : null}
+          {errors.roomCode ? <p className="mt-1 text-xs text-danger">{errors.roomCode}</p> : null}
         </div>
 
         <div>

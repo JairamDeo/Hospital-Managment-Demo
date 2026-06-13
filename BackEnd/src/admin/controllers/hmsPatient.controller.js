@@ -15,6 +15,11 @@ import {
   getPatientStats,
   getPatientOverview,
 } from '../services/hmsPatientOverview.service.js';
+import {
+  listPatientInsurance,
+  getPatientInsuranceStats,
+  updatePatientInsurance,
+} from '../services/hmsPatientInsurance.service.js';
 
 const isConflictError = (error) =>
   error.message === PATIENT_MESSAGES.MOBILE_ALREADY_REGISTERED ||
@@ -133,6 +138,39 @@ export const patchPatientClinical = async (req, res) => {
       resolveApiErrorMessage(error, 'Could not save patient info. Please try again.'),
       500
     );
+  }
+};
+
+export const getPatientInsuranceList = async (_req, res) => {
+  try {
+    const rows = await listPatientInsurance();
+    return customResponse(res, PATIENT_MESSAGES.INSURANCE_LIST_FETCHED, 200, { rows });
+  } catch (error) {
+    logger.error('List patient insurance error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getPatientInsuranceStatsSummary = async (_req, res) => {
+  try {
+    const stats = await getPatientInsuranceStats();
+    return customResponse(res, PATIENT_MESSAGES.INSURANCE_STATS_FETCHED, 200, { stats });
+  } catch (error) {
+    logger.error('Patient insurance stats error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const patchPatientInsurance = async (req, res) => {
+  try {
+    const row = await updatePatientInsurance(decodePatientCode(req.params.patientCode), req.body);
+    return customResponse(res, PATIENT_MESSAGES.INSURANCE_UPDATED, 200, { row });
+  } catch (error) {
+    if (error.message === ErrorMessages.PATIENT_NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    logger.error('Update patient insurance error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };
 

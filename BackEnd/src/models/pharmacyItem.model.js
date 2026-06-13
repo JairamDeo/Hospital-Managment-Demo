@@ -10,6 +10,14 @@ const pharmacyItemSchema = new Schema(
       ref: 'PharmacyCategoryMaster',
       required: true,
     },
+    itemType: {
+      type: String,
+      enum: ['unit', 'strip', 'weight'],
+      default: 'unit',
+    },
+    unitsPerPack: { type: Number, min: 0.01, default: 1 },
+    spoonSizeGrams: { type: Number, min: 0.01 },
+    stockInBaseUnits: { type: Boolean, default: false },
     packQuantity: { type: Number, required: true, min: 0 },
     unit: {
       type: Schema.Types.ObjectId,

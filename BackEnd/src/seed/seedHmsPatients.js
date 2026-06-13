@@ -70,7 +70,7 @@ const jairamClinical = () =>
   });
 
 const jairamCare = () => ({
-  vitals: { temp: '98.2 °F', bp: '120/80', pulse: '74 bpm', bmi: '23' },
+  vitals: { temp: '98.2 °F', bp: '120/80', pulse: '74 bpm', spo2: '98%', bmi: '23' },
   activeTreatment: null,
   treatmentHistory: [
     {
@@ -283,7 +283,7 @@ const defaultCareFor = (row) => {
   const lastVisit = moment(row.lastVisit).format('MMM D, YYYY');
   const base = jairamCare();
   return {
-    vitals: { temp: '98.2 °F', bp: '120/80', pulse: '72 bpm', bmi: '22' },
+    vitals: { temp: '98.2 °F', bp: '120/80', pulse: '72 bpm', spo2: '97%', bmi: '22' },
     activeTreatment: row.careExtra?.activeTreatment ?? null,
     treatmentHistory: [
       {

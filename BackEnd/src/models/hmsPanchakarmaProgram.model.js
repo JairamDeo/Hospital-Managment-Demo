@@ -25,11 +25,8 @@ const hmsPanchakarmaProgramSchema = new Schema({
   },
   totalDays: { type: Number, required: true, min: 1 },
   currentDay: { type: Number, default: 1, min: 1 },
-  room: {
-    type: String,
-    enum: ['Room 1', 'Room 2', 'Room 3', 'Room 4'],
-    required: true,
-  },
+  roomCode: { type: String, required: true, index: true },
+  room: { type: String, required: true, trim: true },
   startDate: { type: Date, required: true },
   status: {
     type: String,
@@ -60,14 +57,6 @@ const hmsPanchakarmaProgramSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
-
-hmsPanchakarmaProgramSchema.index(
-  { room: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { status: { $in: ['Starting', 'Ongoing'] } },
-  }
-);
 
 hmsPanchakarmaProgramSchema.pre('save', function setUpdated(next) {
   this.updatedAt = new Date();

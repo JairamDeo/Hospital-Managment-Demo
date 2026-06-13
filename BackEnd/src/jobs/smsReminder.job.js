@@ -7,11 +7,11 @@ import {
   minutesUntilAppointment,
 } from '../utils/appointment.util.js';
 import {
-  isAppointmentReminderSmsEnabled,
-  isFollowUpReminderSmsEnabled,
-  sendAppointmentReminderSms,
-  sendFollowUpReminderSms,
-} from '../services/sms/msg91.service.js';
+  isAppointmentReminderEnabled,
+  isFollowUpReminderEnabled,
+  sendAppointmentReminder,
+  sendFollowUpReminder,
+} from '../services/sms/notify.service.js';
 
 const reminderMinutesBefore = () =>
   Number.parseInt(process.env.SMS_REMINDER_MINUTES_BEFORE || '60', 10);
@@ -36,7 +36,7 @@ const loadPatientMobiles = async (patientCodes) => {
   return new Map(rows.map((p) => [p.patientCode, p.mobileNumber]));
 };
 
-const smsPayload = (appointment, date, timeDisplay) => ({
+const reminderPayload = (appointment, date, timeDisplay) => ({
   patientName: appointment.patientName,
   doctorName: appointment.doctorName,
   date: formatAppointmentDateDisplay(date),
@@ -51,14 +51,14 @@ export const runSmsReminders = async () => {
   const rangeEnd = now.clone().add(2, 'days').endOf('day').toDate();
 
   const [upcomingRows, followUpRows] = await Promise.all([
-    isAppointmentReminderSmsEnabled()
+    isAppointmentReminderEnabled()
       ? HmsAppointment.find({
           status: 'Upcoming',
           appointmentReminderSentAt: null,
           appointmentDate: { $gte: rangeStart, $lte: rangeEnd },
         }).lean()
       : [],
-    isFollowUpReminderSmsEnabled()
+    isFollowUpReminderEnabled()
       ? HmsAppointment.find({
           status: 'Completed',
           followUpDate: { $ne: null, $gte: rangeStart, $lte: rangeEnd },
@@ -81,19 +81,24 @@ export const runSmsReminders = async () => {
 
     const mobile = mobileByPatient.get(row.patientCode);
     if (!mobile) {
-      logger.warn(`SMS reminder skipped — no mobile for patient ${row.patientCode}`);
+      logger.warn(`Reminder skipped — no mobile for patient ${row.patientCode}`);
       continue;
     }
 
     try {
-      await sendAppointmentReminderSms(
+      const result = await sendAppointmentReminder(
         mobile,
-        smsPayload(row, row.appointmentDate, row.timeDisplay)
+        reminderPayload(row, row.appointmentDate, row.timeDisplay)
       );
-      await HmsAppointment.updateOne(
-        { _id: row._id },
-        { $set: { appointmentReminderSentAt: new Date() } }
-      );
+      if (result?.success) {
+        await HmsAppointment.updateOne(
+          { _id: row._id },
+          { $set: { appointmentReminderSentAt: new Date() } }
+        );
+        logger.info(
+          `Appointment reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)})`
+        );
+      }
     } catch (err) {
       logger.error(`Appointment reminder failed for ${row.appointmentCode}:`, err.message);
     }
@@ -104,19 +109,24 @@ export const runSmsReminders = async () => {
 
     const mobile = mobileByPatient.get(row.patientCode);
     if (!mobile) {
-      logger.warn(`Follow-up SMS skipped — no mobile for patient ${row.patientCode}`);
+      logger.warn(`Follow-up reminder skipped — no mobile for patient ${row.patientCode}`);
       continue;
     }
 
     try {
-      await sendFollowUpReminderSms(
+      const result = await sendFollowUpReminder(
         mobile,
-        smsPayload(row, row.followUpDate, row.followUpTimeDisplay)
+        reminderPayload(row, row.followUpDate, row.followUpTimeDisplay)
       );
-      await HmsAppointment.updateOne(
-        { _id: row._id },
-        { $set: { followUpReminderSentAt: new Date() } }
-      );
+      if (result?.success) {
+        await HmsAppointment.updateOne(
+          { _id: row._id },
+          { $set: { followUpReminderSentAt: new Date() } }
+        );
+        logger.info(
+          `Follow-up reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)})`
+        );
+      }
     } catch (err) {
       logger.error(`Follow-up reminder failed for ${row.appointmentCode}:`, err.message);
     }
@@ -127,13 +137,13 @@ let intervalHandle = null;
 
 export const startSmsReminderJob = () => {
   if (!isReminderEnabled()) {
-    logger.info('SMS reminder job disabled (SMS_REMINDER_ENABLED=false)');
+    logger.info('Reminder job disabled (SMS_REMINDER_ENABLED=false)');
     return;
   }
 
   const pollMs = Number.parseInt(process.env.SMS_REMINDER_POLL_INTERVAL_MS || '60000', 10);
   logger.info(
-    `SMS reminder job started — ${reminderMinutesBefore()} min before visit, poll every ${pollMs}ms`
+    `Reminder job started (SMS + WhatsApp) — ${reminderMinutesBefore()} min before visit, poll every ${pollMs}ms`
   );
 
   void runSmsReminders();

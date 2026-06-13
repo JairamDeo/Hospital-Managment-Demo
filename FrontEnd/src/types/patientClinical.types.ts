@@ -25,6 +25,8 @@ export interface DiseaseHistory {
   menstrual: string;
   bowel: string;
   addiction: string;
+  geneticDisorder: string;
+  accidentalHistory: string;
 }
 
 export interface DiabetesHistory {
@@ -55,6 +57,8 @@ export interface MetabolicDisorder {
   obesityMedicineDurations: string;
   otherMedicine: string;
   otherMedicineDurations: string;
+  lifestyleMedicine: string;
+  lifestyleMedicineDurations: string;
 }
 
 export interface EatingHabits {

@@ -1,8 +1,18 @@
 import { getStockStatus } from './pharmacyStock.util.js';
 import { formatPackSize, parseUnitSizeString } from './formatPackSize.js';
 import { formatDisplayDate } from './pharmacyDates.util.js';
+import {
+  formatStockDisplay,
+  getDefaultSaleUnit,
+  getEffectiveItemType,
+  getSaleUnitsForType,
+  getStockBaseUnits,
+  getStockPacks,
+  getUnitsPerPack,
+} from './pharmacyStockUnits.util.js';
+import { attachPharmacyPricing } from './pharmacyPricing.util.js';
 
-export const formatPharmacyItem = (doc) => {
+export const formatPharmacyItem = (doc, options = {}) => {
   const categoryName =
     typeof doc.category === 'object' && doc.category?.name
       ? doc.category.name
@@ -11,8 +21,11 @@ export const formatPharmacyItem = (doc) => {
   const unitName =
     typeof doc.unit === 'object' && doc.unit?.name ? doc.unit.name : doc.unitName ?? '';
 
-  const stock = Number(doc.stock);
-  const safeStock = Number.isFinite(stock) ? stock : 0;
+  const itemType = getEffectiveItemType(doc, unitName);
+  const unitsPerPack = getUnitsPerPack(doc, unitName);
+  const stockBaseUnits = getStockBaseUnits(doc, unitName);
+  const stockPacks = getStockPacks(doc, unitName);
+  const safeStock = stockBaseUnits;
 
   let unitSize = '—';
   const packQty = Number(doc.packQuantity);
@@ -27,7 +40,7 @@ export const formatPharmacyItem = (doc) => {
     if (parsed) unitSize = formatPackSize(parsed.qty, parsed.unit);
   }
 
-  return {
+  const base = {
     _id: String(doc._id),
     itemCode: doc.itemCode,
     name: doc.name,
@@ -41,8 +54,16 @@ export const formatPharmacyItem = (doc) => {
       typeof doc.unit === 'object' && doc.unit?._id
         ? String(doc.unit._id)
         : String(doc.unit ?? ''),
-    packQuantity: Number.isFinite(packQty) ? packQty : 0,
+    itemType,
+    unitsPerPack,
+    spoonSizeGrams: doc.spoonSizeGrams ?? null,
+    packQuantity: Number.isFinite(packQty) ? packQty : unitsPerPack,
     unitSize,
+    stockPacks: Math.round(stockPacks * 100) / 100,
+    stockBaseUnits: safeStock,
+    stockDisplay: formatStockDisplay({ ...doc, itemType, unitsPerPack }, unitName),
+    saleUnits: getSaleUnitsForType(itemType),
+    defaultSaleUnit: getDefaultSaleUnit(itemType),
     manufacturingDate: formatDisplayDate(doc.manufacturingDate),
     expiryDate: formatDisplayDate(doc.expiryDate),
     bestBeforeMonths: doc.bestBeforeMonths ?? null,
@@ -54,8 +75,10 @@ export const formatPharmacyItem = (doc) => {
       return doc.company ? `${base} · ${doc.company}` : base;
     })(),
     stock: safeStock,
-    status: getStockStatus(safeStock),
+    status: getStockStatus(stockPacks),
     monthlyUsagePercent: doc.monthlyUsagePercent ?? 0,
     salePrice: Number(doc.salePrice) || 0,
   };
+
+  return attachPharmacyPricing(base, options.defaultSpoonGrams ?? 1);
 };

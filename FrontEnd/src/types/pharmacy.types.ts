@@ -2,6 +2,10 @@ import type { LucideIcon } from 'lucide-react';
 
 export type StockStatus = 'Critical' | 'Low' | 'OK';
 
+export type PharmacyItemType = 'unit' | 'strip' | 'weight';
+
+export type SaleUnit = 'pack' | 'unit' | 'gram' | 'spoon';
+
 export type PharmacyStockFilter = 'all' | 'critical' | 'low';
 
 export interface PharmacyFilterOptions {
@@ -16,8 +20,16 @@ export interface PharmacyItemApi {
   category: string;
   categoryId: string;
   unitId: string;
+  itemType?: PharmacyItemType;
+  unitsPerPack?: number;
+  spoonSizeGrams?: number | null;
   packQuantity: number;
   unitSize: string;
+  stockPacks?: number;
+  stockBaseUnits?: number;
+  stockDisplay?: string;
+  saleUnits?: SaleUnit[];
+  defaultSaleUnit?: SaleUnit;
   manufacturingDate: string;
   expiryDate: string;
   bestBeforeMonths: number | null;
@@ -26,6 +38,9 @@ export interface PharmacyItemApi {
   status: StockStatus;
   monthlyUsagePercent: number;
   salePrice?: number;
+  pricePerGram?: number | null;
+  pricePerSpoon?: number | null;
+  pricePerTablet?: number | null;
 }
 
 export interface PharmacyItemView extends PharmacyItemApi {
@@ -65,13 +80,17 @@ export interface PharmacyImportSummary {
   created: number;
   updated: number;
   failed: number;
+  priceDefaulted?: number;
   errors: { line: number; message: string }[];
+  warnings?: string[];
 }
 
 export interface PharmacyItemFormValues {
   name: string;
   company: string;
   categoryId: string;
+  itemType: PharmacyItemType;
+  itemLabel: string;
   packQuantity: string;
   unitId: string;
   stock: string;
@@ -79,12 +98,16 @@ export interface PharmacyItemFormValues {
   expiryDate: string;
   bestBeforeMonths: string;
   salePrice: string;
+  pricePerGram: string;
+  pricePerTablet: string;
 }
 
 export const emptyPharmacyItemForm = (): PharmacyItemFormValues => ({
   name: '',
   company: '',
   categoryId: '',
+  itemType: 'unit',
+  itemLabel: '',
   packQuantity: '',
   unitId: '',
   stock: '',
@@ -92,5 +115,7 @@ export const emptyPharmacyItemForm = (): PharmacyItemFormValues => ({
   expiryDate: '',
   bestBeforeMonths: '',
   salePrice: '',
+  pricePerGram: '',
+  pricePerTablet: '',
 });
 

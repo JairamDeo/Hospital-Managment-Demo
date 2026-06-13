@@ -1,5 +1,6 @@
 import PharmacyCategoryMaster from '../models/pharmacyCategoryMaster.model.js';
 import PharmacyUnitMaster from '../models/pharmacyUnitMaster.model.js';
+import PharmacySpoonMaster from '../models/pharmacySpoonMaster.model.js';
 import PharmacyItem from '../models/pharmacyItem.model.js';
 import moment from 'moment';
 import { generatePharmacyItemCode } from '../utils/generatePharmacyItemCode.js';
@@ -45,7 +46,23 @@ const nextUnitCode = async () => {
   return `PHU-${String(count + 1).padStart(3, '0')}`;
 };
 
+const DEFAULT_SPOONS = [
+  { name: '1 gram spoon', grams: 1, isDefault: false },
+  { name: '1.5 gram spoon', grams: 1.5, isDefault: true },
+];
+
 export const seedPharmacyIfEmpty = async () => {
+  const spoonCount = await PharmacySpoonMaster.countDocuments();
+  if (spoonCount === 0) {
+    for (let i = 0; i < DEFAULT_SPOONS.length; i += 1) {
+      await PharmacySpoonMaster.create({
+        code: `PHS-${String(i + 1).padStart(3, '0')}`,
+        ...DEFAULT_SPOONS[i],
+      });
+    }
+    logger.info('Seeded default pharmacy spoon sizes');
+  }
+
   const unitCount = await PharmacyUnitMaster.countDocuments();
   if (unitCount === 0) {
     for (const name of DEFAULT_UNITS) {

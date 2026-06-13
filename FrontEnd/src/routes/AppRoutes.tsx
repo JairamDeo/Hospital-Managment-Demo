@@ -32,6 +32,8 @@ const AppointmentFollowUpPage = lazy(() => import('@/pages/appointments/Appointm
 const PanchakarmaPage = lazy(() => import('@/pages/panchakarma/PanchakarmaPage'));
 const PharmacyPage = lazy(() => import('@/pages/pharmacy/PharmacyPage'));
 const StaffPage = lazy(() => import('@/pages/staff/StaffPage'));
+const StaffCompensationPage = lazy(() => import('@/pages/staff/StaffCompensationPage'));
+const PatientInsurancePage = lazy(() => import('@/pages/patients/PatientInsurancePage'));
 const StaffDetailPage = lazy(() => import('@/pages/staff/StaffDetailPage'));
 const AnalyticsPage = lazy(() => import('@/pages/analytics/AnalyticsPage'));
 const BillingPage = lazy(() => import('@/pages/billing/BillingPage'));
@@ -43,6 +45,8 @@ const PrescriptionPage = lazy(() => import('@/pages/prescriptions/PrescriptionPa
 const PanchakarmaTreatmentPage = lazy(() => import('@/pages/panchakarma/PanchakarmaTreatmentPage'));
 const ProgramAttendPage = lazy(() => import('@/pages/panchakarma/ProgramAttendPage'));
 const MasterDataPage = lazy(() => import('@/pages/master-data/MasterDataPage'));
+const IpdPage = lazy(() => import('@/pages/ipd/IpdPage'));
+const IpdAdmissionDetailPage = lazy(() => import('@/pages/ipd/IpdAdmissionDetailPage'));
 
 const withSuspense = (el: React.ReactNode) => (
   <Suspense fallback={<PageLoader />}>{el}</Suspense>
@@ -128,14 +132,21 @@ export const AppRoutes = () => (
     >
       <Route path={ROUTES.ADMIN_DASHBOARD} element={withSuspense(<DashboardPage />)} />
       <Route path={ROUTES.ADMIN_PATIENTS} element={withSuspense(<PatientsPage />)} />
+      <Route path={ROUTES.ADMIN_PATIENT_INSURANCE} element={withSuspense(<PatientInsurancePage />)} />
       <Route path={ROUTES.ADMIN_PATIENT_DETAIL} element={withSuspense(<PatientDetailPage />)} />
       <Route path={ROUTES.ADMIN_APPOINTMENTS} element={withSuspense(<AppointmentsPage />)} />
       <Route path={ROUTES.ADMIN_APPOINTMENT_FOLLOWUP} element={withSuspense(<AppointmentFollowUpPage />)} />
       <Route path={ROUTES.ADMIN_APPOINTMENT_DETAIL} element={withSuspense(<AppointmentDetailPage />)} />
       <Route path={ROUTES.ADMIN_PANCHAKARMA} element={withSuspense(<PanchakarmaPage />)} />
+      <Route path={ROUTES.ADMIN_IPD} element={withSuspense(<IpdPage />)} />
+      <Route
+        path={ROUTES.ADMIN_IPD_ADMISSION_DETAIL}
+        element={withSuspense(<IpdAdmissionDetailPage />)}
+      />
       <Route path={ROUTES.ADMIN_PANCHAKARMA_PROGRAM_ATTEND} element={withSuspense(<ProgramAttendPage />)} />
       <Route path={ROUTES.ADMIN_PHARMACY} element={withSuspense(<PharmacyPage />)} />
       <Route path={ROUTES.ADMIN_STAFF} element={withSuspense(<StaffPage />)} />
+      <Route path={ROUTES.ADMIN_STAFF_COMPENSATION} element={withSuspense(<StaffCompensationPage />)} />
       <Route path={ROUTES.ADMIN_STAFF_DETAIL} element={withSuspense(<StaffDetailPage />)} />
       <Route path={ROUTES.ADMIN_ANALYTICS} element={withSuspense(<AnalyticsPage />)} />
       <Route path={ROUTES.ADMIN_BILLING} element={withSuspense(<BillingPage />)} />

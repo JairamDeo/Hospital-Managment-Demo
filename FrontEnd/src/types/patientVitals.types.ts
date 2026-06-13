@@ -2,6 +2,8 @@ export interface PatientVitalsEntry {
   id: string;
   date: string;
   bp: string;
+  pulse: string;
+  spo2: string;
   fasting: string;
   postMeal: string;
   random: string;
@@ -11,6 +13,8 @@ export interface PatientVitalsEntry {
 
 export interface PatientVitalsPayload {
   bp?: string;
+  pulse?: string;
+  spo2?: string;
   fasting?: string;
   postMeal?: string;
   random?: string;

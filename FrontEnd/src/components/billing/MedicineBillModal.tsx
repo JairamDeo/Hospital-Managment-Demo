@@ -18,7 +18,17 @@ import {
 } from '@/utils/pharmacySearch.util';
 import { formatRupee, PAYMENT_METHOD_OPTIONS, type PaymentMethodType } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
-import type { PharmacyItemApi } from '@/types/pharmacy.types';
+import type { PharmacyItemApi, SaleUnit } from '@/types/pharmacy.types';
+import {
+  allowsDecimalQty,
+  convertSaleToBase,
+  getDefaultSaleUnit,
+  getSaleUnits,
+  getStockBaseUnits,
+  getUnitPrice,
+  maxSaleQuantity,
+  saleUnitLabel,
+} from '@/utils/pharmacyStockUnits.util';
 
 interface Props {
   open: boolean;
@@ -31,8 +41,9 @@ interface LineRow {
   name: string;
   packLabel: string;
   quantity: number;
+  saleUnit: SaleUnit;
   unitPrice: number;
-  stock: number;
+  stockBase: number;
 }
 
 interface MedicineBillModalDraft {
@@ -52,6 +63,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
   const [qty, setQty] = useState(1);
+  const [saleUnit, setSaleUnit] = useState<SaleUnit>('unit');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,7 +100,13 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const applyDraft = (draft: MedicineBillModalDraft) => {
     setPatientCode(draft.patientCode);
     setSearch(draft.search);
-    setLines(draft.lines);
+    setLines(
+      draft.lines.map((l) => ({
+        ...l,
+        saleUnit: l.saleUnit ?? 'unit',
+        stockBase: l.stockBase ?? 0,
+      }))
+    );
     setPaymentMethod(draft.paymentMethod ?? 'Cash');
   };
 
@@ -118,6 +136,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
     setSearch('');
     setSelectedItem('');
     setQty(1);
+    setSaleUnit('unit');
     setLoading(true);
     Promise.all([patientAdminService.list(), pharmacyService.getBillingItems()])
       .then(([patRes, pharmRes]) => {
@@ -139,43 +158,61 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const hasMoreResults = searchResults.length >= PHARMACY_SEARCH_MAX_RESULTS;
 
   const selected = items.find((i) => i.itemCode === selectedItem) ?? null;
-  const unitPrice = selected?.salePrice ?? 0;
+
+  useEffect(() => {
+    if (selected) setSaleUnit(getDefaultSaleUnit(selected));
+  }, [selectedItem, selected]);
+
+  const unitPrice = selected ? getUnitPrice(selected, saleUnit) : 0;
   const previewTotal = unitPrice > 0 && qty > 0 ? unitPrice * qty : 0;
+  const maxQty = selected ? maxSaleQuantity(selected, saleUnit) : undefined;
 
   const total = lines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
 
-  const lineQtyInBill = (itemCode: string) =>
-    lines.find((l) => l.itemCode === itemCode)?.quantity ?? 0;
+  const lineBaseInBill = (itemCode: string) => {
+    const line = lines.find((l) => l.itemCode === itemCode);
+    if (!line) return 0;
+    const item = items.find((i) => i.itemCode === itemCode);
+    if (!item) return 0;
+    return convertSaleToBase(line.quantity, line.saleUnit, item);
+  };
 
   const addLine = () => {
     if (!selected) {
       showToast('Select a medicine from the list', 'error');
       return;
     }
-    const price = selected.salePrice ?? 0;
-    if (price <= 0) {
+    const price = getUnitPrice(selected, saleUnit);
+    if ((selected.salePrice ?? 0) <= 0 || price <= 0) {
       showToast(`Set sale price for ${selected.name} in pharmacy first`, 'error');
       return;
     }
-    if (qty < 1) {
-      showToast('Quantity must be at least 1', 'error');
+    const minQty = allowsDecimalQty(saleUnit) ? 0.01 : 1;
+    if (qty < minQty) {
+      showToast(`Quantity must be at least ${minQty}`, 'error');
       return;
     }
-    const alreadyAdded = lineQtyInBill(selected.itemCode);
-    if (alreadyAdded + qty > selected.stock) {
-      showToast(`Insufficient stock (available: ${selected.stock})`, 'error');
+    const stockBase = getStockBaseUnits(selected);
+    const needed = convertSaleToBase(qty, saleUnit, selected);
+    const alreadyUsed = lineBaseInBill(selected.itemCode);
+    if (alreadyUsed + needed > stockBase) {
+      showToast(`Insufficient stock (available: ${selected.stockDisplay ?? stockBase})`, 'error');
       return;
     }
-    if (selected.stock < 1) {
+    if (stockBase < minQty) {
       showToast(`${selected.name} is out of stock`, 'error');
       return;
     }
 
     setLines((prev) => {
-      const existing = prev.find((l) => l.itemCode === selected.itemCode);
+      const existing = prev.find(
+        (l) => l.itemCode === selected.itemCode && l.saleUnit === saleUnit
+      );
       if (existing) {
         return prev.map((l) =>
-          l.itemCode === selected.itemCode ? { ...l, quantity: l.quantity + qty } : l
+          l.itemCode === selected.itemCode && l.saleUnit === saleUnit
+            ? { ...l, quantity: l.quantity + qty, unitPrice: price }
+            : l
         );
       }
       return [
@@ -185,8 +222,9 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
           name: selected.name,
           packLabel: selected.unitSize || '',
           quantity: qty,
+          saleUnit,
           unitPrice: price,
-          stock: selected.stock,
+          stockBase,
         },
       ];
     });
@@ -194,8 +232,8 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
     setSelectedItem('');
   };
 
-  const removeLine = (itemCode: string) => {
-    setLines((prev) => prev.filter((l) => l.itemCode !== itemCode));
+  const removeLine = (index: number) => {
+    setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -214,6 +252,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
         items: lines.map((l) => ({
           itemCode: l.itemCode,
           quantity: l.quantity,
+          saleUnit: l.saleUnit,
           unitPrice: l.unitPrice,
         })),
         markPaid: true,
@@ -337,7 +376,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                   <ul className="divide-y divide-border-sage/60">
                     {searchResults.map((item) => {
                       const isSelected = selectedItem === item.itemCode;
-                      const outOfStock = item.stock < 1;
+                      const outOfStock = getStockBaseUnits(item) < 0.01;
                       const noPrice = (item.salePrice ?? 0) <= 0;
                       const disabled = outOfStock || noPrice;
                       return (
@@ -360,19 +399,29 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                                 {item.itemCode}
                                 {item.unitSize ? ` · ${item.unitSize}` : ''}
                                 {item.company ? ` · ${item.company}` : ''}
-                                {' · '}stock: {item.stock}
+                                {' · '}stock: {item.stockDisplay ?? item.stock}
                                 {item.expiryDate ? ` · exp: ${item.expiryDate}` : ''}
                               </span>
                             </span>
                             <span className="shrink-0 text-right">
                               {(item.salePrice ?? 0) > 0 ? (
                                 <span className="font-semibold text-sage-deep">
-                                  {formatRupee(item.salePrice!)}
+                                  {item.itemType === 'weight' && item.pricePerGram
+                                    ? formatRupee(item.pricePerGram)
+                                    : item.itemType === 'strip' && item.pricePerTablet
+                                      ? formatRupee(item.pricePerTablet)
+                                      : formatRupee(item.salePrice!)}
                                 </span>
                               ) : (
                                 <span className="text-[11px] text-danger">No price</span>
                               )}
-                              <span className="block text-[10px] text-ink-ghost">per pack</span>
+                              <span className="block text-[10px] text-ink-ghost">
+                                {item.itemType === 'weight'
+                                  ? 'per g'
+                                  : item.itemType === 'strip'
+                                    ? 'per tablet'
+                                    : 'per pack'}
+                              </span>
                             </span>
                           </button>
                         </li>
@@ -383,12 +432,35 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
               </div>
 
               <div className="mt-3 flex flex-wrap items-end gap-2">
+                {selected ? (
+                  <div className="w-28">
+                    <label className="mb-1 block text-[11px] font-semibold text-ink-ghost">
+                      Bill by
+                    </label>
+                    <select
+                      value={saleUnit}
+                      onChange={(e) => {
+                        setSaleUnit(e.target.value as SaleUnit);
+                        setQty(1);
+                      }}
+                      className="w-full rounded-lg border border-border-sage px-2 py-1.5 text-sm"
+                    >
+                      {getSaleUnits(selected).map((u) => (
+                        <option key={u} value={u}>
+                          {saleUnitLabel(u, selected)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
                 <div className="w-24">
                   <label className="mb-1 block text-[11px] font-semibold text-ink-ghost">Qty</label>
                   <NumericInput
                     value={qty}
                     onChange={setQty}
-                    min={1}
+                    min={allowsDecimalQty(saleUnit) ? 0.01 : 1}
+                    max={maxQty}
+                    allowDecimal={allowsDecimalQty(saleUnit)}
                     className="px-2 py-1.5"
                   />
                 </div>
@@ -402,7 +474,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                 </Button>
                 {selected && unitPrice > 0 && qty > 0 ? (
                   <p className="ml-auto text-sm text-ink-soft">
-                    {formatRupee(unitPrice)} × {qty} ={' '}
+                    {formatRupee(unitPrice)}/{saleUnitLabel(saleUnit, selected)} × {qty} ={' '}
                     <span className="font-semibold text-ink">{formatRupee(previewTotal)}</span>
                   </p>
                 ) : null}
@@ -413,16 +485,16 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
               <div className="rounded-xl border border-border-sage bg-white p-3">
                 <p className="mb-2 text-xs font-semibold text-ink-ghost">Bill summary</p>
                 <ul className="space-y-2 text-sm">
-                  {lines.map((line) => (
+                  {lines.map((line, index) => (
                     <li
-                      key={line.itemCode}
+                      key={`${line.itemCode}-${line.saleUnit}-${index}`}
                       className="flex items-start justify-between gap-2 rounded-lg bg-sage-mist/40 px-3 py-2"
                     >
                       <div className="min-w-0">
                         <p className="font-medium text-ink">{line.name}</p>
                         <p className="text-[11px] text-ink-ghost">
                           {line.packLabel ? `${line.packLabel} · ` : ''}
-                          {formatRupee(line.unitPrice)}/pack × {line.quantity}
+                          {formatRupee(line.unitPrice)}/{line.saleUnit} × {line.quantity}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
@@ -431,7 +503,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
                         </span>
                         <button
                           type="button"
-                          onClick={() => removeLine(line.itemCode)}
+                          onClick={() => removeLine(index)}
                           className="rounded p-1 text-ink-ghost hover:bg-white hover:text-danger"
                           aria-label={`Remove ${line.name}`}
                         >

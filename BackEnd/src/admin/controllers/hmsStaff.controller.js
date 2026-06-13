@@ -8,6 +8,8 @@ import {
   getStaffStats,
   createStaffByAdmin,
   updateStaffByAdmin,
+  listStaffCompensation,
+  updateStaffCompensation,
 } from '../services/hmsStaff.service.js';
 
 const decodeStaffCode = (param) => decodeURIComponent(param ?? '');
@@ -55,6 +57,29 @@ export const postStaff = async (req, res) => {
     return customResponse(res, STAFF_MESSAGES.CREATED, 201, { staff });
   } catch (error) {
     logger.error('Create staff error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getStaffCompensationList = async (_req, res) => {
+  try {
+    const rows = await listStaffCompensation();
+    return customResponse(res, STAFF_MESSAGES.COMPENSATION_LIST_FETCHED, 200, { rows });
+  } catch (error) {
+    logger.error('List staff compensation error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const patchStaffCompensation = async (req, res) => {
+  try {
+    const row = await updateStaffCompensation(decodeStaffCode(req.params.staffCode), req.body);
+    return customResponse(res, STAFF_MESSAGES.COMPENSATION_UPDATED, 200, { row });
+  } catch (error) {
+    if (error.message === ErrorMessages.STAFF_NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    logger.error('Update staff compensation error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

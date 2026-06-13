@@ -19,6 +19,26 @@ const qualificationSchema = Joi.object({
   degree: Joi.string().trim().min(2).max(80).required(),
 });
 
+const money = Joi.number().min(0);
+
+const staffCompensationSchema = Joi.object({
+  basicSalary: money,
+  hra: money,
+  dearnessAllowance: money,
+  specialAllowance: money,
+  transportAllowance: money,
+  medicalAllowance: money,
+  otherAllowances: money,
+  pfDeduction: money,
+  professionalTax: money,
+  otherDeductions: money,
+}).optional();
+
+export const staffCompensationUpdateSchema = Joi.object({
+  compensation: staffCompensationSchema.required(),
+  consultationFee: money.optional(),
+}).min(1);
+
 const staffProfessionalFields = {
   qualifications: Joi.array().items(qualificationSchema).min(1).required(),
   registrationNumber: Joi.string().trim().max(40).allow('', null),

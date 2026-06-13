@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   Briefcase,
   Mail,
@@ -7,6 +8,8 @@ import {
   UserCog,
   Headphones,
 } from 'lucide-react';
+import { ROUTES } from '@/constants/routes';
+import { formatPay } from '@/utils/staffCompensation.util';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { StaffProfileCardData } from '@/types/staffProfile.types';
@@ -74,11 +77,11 @@ export const StaffProfileCard = ({ staff, onEdit }: Props) => {
           <DetailCell label="Experience" value={staff.experience} />
           <DetailCell label="Joined" value={staff.joinedDate} />
           <DetailCell label="Shift" value={staff.shift} />
+          {(staff.netMonthly ?? 0) > 0 ? (
+            <DetailCell label="Net pay / mo" value={formatPay(staff.netMonthly!)} />
+          ) : null}
           {staff.role === 'Doctor' && (staff.consultationFee ?? 0) > 0 ? (
-            <DetailCell
-              label="Consultation fee"
-              value={`₹${staff.consultationFee}`}
-            />
+            <DetailCell label="Consultation fee" value={formatPay(staff.consultationFee!)} />
           ) : null}
           {staff.registrationNumber ? (
             <DetailCell label="Reg. number" value={staff.registrationNumber} />
@@ -136,16 +139,24 @@ export const StaffProfileCard = ({ staff, onEdit }: Props) => {
           ))}
         </div>
 
-        {onEdit ? (
-          <Button
-            variant="secondary"
-            className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm"
-            onClick={onEdit}
+        <div className="flex flex-col gap-2">
+          {onEdit ? (
+            <Button
+              variant="secondary"
+              className="w-full gap-1.5 whitespace-nowrap rounded-xl py-2.5 text-sm"
+              onClick={onEdit}
+            >
+              <SquarePen className="h-4 w-4 shrink-0" strokeWidth={2} />
+              Edit profile
+            </Button>
+          ) : null}
+          <Link
+            to={ROUTES.ADMIN_STAFF_COMPENSATION}
+            className="block text-center text-xs font-semibold text-sage-deep hover:underline"
           >
-            <SquarePen className="h-4 w-4 shrink-0" strokeWidth={2} />
-            Edit
-          </Button>
-        ) : null}
+            Manage compensation
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -274,22 +274,6 @@ export const AddStaffModal = ({
           )}
         </div>
 
-        {form.role === 'Doctor' ? (
-          <div className="sm:col-span-2">
-            <label className={formLabelClass}>Consultation fee (₹)</label>
-            <input
-              type="number"
-              min={0}
-              value={form.consultationFee}
-              onChange={(e) => set('consultationFee', e.target.value)}
-              className={formInputClass}
-              placeholder="e.g. 500"
-            />
-            <p className="mt-1 text-[11px] text-ink-ghost">
-              Same fee for new consultation and follow-up visits
-            </p>
-          </div>
-        ) : null}
       </div>
     </Modal>
   );

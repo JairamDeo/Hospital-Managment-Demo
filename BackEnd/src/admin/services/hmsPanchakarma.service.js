@@ -13,6 +13,10 @@ import {
   normalizeProgramStartDate,
   PANCHAKARMA_THERAPIES,
 } from '../../utils/panchakarma.util.js';
+import {
+  assertRoomHasCapacity,
+  listRoomsWithOccupancy,
+} from '../../utils/roomCapacity.util.js';
 
 const syncProgramToPatientCare = async (program) => {
   const care =
@@ -44,15 +48,6 @@ const resolvePatient = async (patientCode) => {
   const patient = await HmsPatient.findOne({ patientCode, status: true });
   if (!patient) throw new Error(ErrorMessages.PATIENT_NOT_FOUND);
   return patient;
-};
-
-const findActiveRoomConflict = async (room, excludeId) => {
-  const query = {
-    room,
-    status: { $in: ['Starting', 'Ongoing'] },
-  };
-  if (excludeId) query._id = { $ne: excludeId };
-  return HmsPanchakarmaProgram.findOne(query).lean();
 };
 
 export const listPrograms = async (staffCode) => {
@@ -92,8 +87,8 @@ export const getPanchakarmaStats = async (staffCode) => {
     staffCode
       ? Promise.resolve(1)
       : HmsStaff.countDocuments({ role: 'Therapist', status: true, dutyStatus: 'On Duty' }),
-    HmsPanchakarmaProgram.countDocuments({ status: { $in: activeStatuses } }).then(
-      async (occupied) => 4 - occupied
+    listRoomsWithOccupancy({ roomType: 'Panchakarma', activeOnly: true }).then((rooms) =>
+      rooms.reduce((sum, r) => sum + r.available, 0)
     ),
   ]);
 
@@ -143,21 +138,26 @@ export const listTherapistsForPanchakarma = async (staffCode) => {
 };
 
 export const listRoomsStatus = async () => {
-  const active = await HmsPanchakarmaProgram.find({
-    status: { $in: ['Starting', 'Ongoing'] },
-  }).select('room therapy');
+  const [rooms, activePrograms] = await Promise.all([
+    listRoomsWithOccupancy({ roomType: 'Panchakarma', activeOnly: true }),
+    HmsPanchakarmaProgram.find({
+      status: { $in: ['Starting', 'Ongoing'] },
+    }).select('roomCode therapy'),
+  ]);
 
-  const occupiedRooms = new Map(active.map((p) => [p.room, p.therapy]));
+  const therapyByRoom = new Map(activePrograms.map((p) => [p.roomCode, p.therapy]));
 
-  return ['Room 1', 'Room 2', 'Room 3', 'Room 4'].map((name, index) => {
-    const therapy = occupiedRooms.get(name);
-    return {
-      id: `R${index + 1}`,
-      name,
-      therapy: therapy ?? 'Vamana',
-      status: therapy ? 'Occupied' : 'Available',
-    };
-  });
+  return rooms.map((r) => ({
+    id: r.code,
+    roomCode: r.code,
+    name: r.name,
+    roomNumber: r.roomNumber,
+    capacity: r.capacity,
+    occupied: r.occupied,
+    available: r.available,
+    therapy: therapyByRoom.get(r.code) ?? '—',
+    status: r.isFull ? 'Full' : r.occupied > 0 ? 'Partial' : 'Available',
+  }));
 };
 
 export const createProgram = async (payload, createdBy) => {
@@ -166,10 +166,7 @@ export const createProgram = async (payload, createdBy) => {
     resolveTherapist(payload.staffCode),
   ]);
 
-  const roomConflict = await findActiveRoomConflict(payload.room);
-  if (roomConflict) {
-    throw new Error(PANCHAKARMA_MESSAGES.ROOM_UNAVAILABLE);
-  }
+  const room = await assertRoomHasCapacity(payload.roomCode, 'Panchakarma');
 
   const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
     dayNumber: Number(row.dayNumber) || index + 1,
@@ -193,7 +190,8 @@ export const createProgram = async (payload, createdBy) => {
     totalFees: Number(payload.totalFees) || 0,
     totalDays: payload.totalDays,
     currentDay: 1,
-    room: payload.room,
+    roomCode: room.code,
+    room: room.name,
     startDate: normalizeProgramStartDate(payload.startDate),
     dailySessions,
     status: dailySessions.length > 0 ? 'Ongoing' : 'Starting',
@@ -317,6 +315,18 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
     medicineContent: row.medicineContent?.trim() || '',
   }));
 
+  let room;
+  if (payload.roomCode) {
+    room = await assertRoomHasCapacity(payload.roomCode, 'Panchakarma');
+  } else {
+    const availableRooms = await listRoomsWithOccupancy({
+      roomType: 'Panchakarma',
+      activeOnly: true,
+    });
+    room = availableRooms.find((r) => r.available > 0);
+    if (!room) throw new Error(PANCHAKARMA_MESSAGES.ROOM_UNAVAILABLE);
+  }
+
   let program = await HmsPanchakarmaProgram.findOne({ appointmentCode });
   if (program) {
     program.treatmentName = payload.treatmentName?.trim() || program.treatmentName;
@@ -340,7 +350,8 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
       amountPaid: 0,
       totalDays,
       currentDay: 1,
-      room: payload.room || 'Room 1',
+      roomCode: room.code,
+      room: room.name,
       startDate: normalizeProgramStartDate(payload.startDate || new Date()),
       appointmentCode,
       dailySessions,

@@ -13,6 +13,13 @@ import {
   updateTreatment,
   updatePharmacyCategory,
   updatePharmacyUnit,
+  listPharmacySpoons,
+  createPharmacySpoon,
+  updatePharmacySpoon,
+  setDefaultPharmacySpoon,
+  listRooms,
+  createRoom,
+  updateRoom,
 } from '../services/master.service.js';
 
 export const getPrakritiList = async (_req, res) => {
@@ -146,5 +153,89 @@ export const patchPharmacyUnit = async (req, res) => {
       return customResponse(res, error.message, 404);
     }
     return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const getPharmacySpoonList = async (req, res) => {
+  try {
+    const activeOnly = req.query.active === 'true';
+    const items = await listPharmacySpoons(activeOnly);
+    return customResponse(res, MASTER_MESSAGES.PHARMACY_SPOON_LIST, 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postPharmacySpoon = async (req, res) => {
+  try {
+    const item = await createPharmacySpoon(req.body);
+    return customResponse(res, MASTER_MESSAGES.PHARMACY_SPOON_CREATED, 201, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.PHARMACY_SPOON_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
+  }
+};
+
+export const patchPharmacySpoon = async (req, res) => {
+  try {
+    const item = await updatePharmacySpoon(req.params.id, req.body);
+    return customResponse(res, MASTER_MESSAGES.PHARMACY_SPOON_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
+  }
+};
+
+export const postPharmacySpoonDefault = async (req, res) => {
+  try {
+    const item = await setDefaultPharmacySpoon(req.params.id);
+    return customResponse(res, MASTER_MESSAGES.PHARMACY_SPOON_DEFAULT_SET, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const getRoomList = async (req, res) => {
+  try {
+    const activeOnly = req.query.active === 'true';
+    const roomType = req.query.roomType || undefined;
+    const items = await listRooms(activeOnly, roomType);
+    return customResponse(res, MASTER_MESSAGES.ROOM_LIST, 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postRoom = async (req, res) => {
+  try {
+    const item = await createRoom(req.body);
+    return customResponse(res, MASTER_MESSAGES.ROOM_CREATED, 201, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.ROOM_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
+  }
+};
+
+export const patchRoom = async (req, res) => {
+  try {
+    const item = await updateRoom(req.params.id, req.body);
+    return customResponse(res, MASTER_MESSAGES.ROOM_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    if (error.message === MASTER_MESSAGES.ROOM_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
   }
 };

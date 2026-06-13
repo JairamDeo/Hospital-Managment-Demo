@@ -6,7 +6,13 @@ import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
 import type { StructuredPrescription, StructuredPrescriptionPayload } from '@/types/structuredPrescription.types';
 import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
+import type {
+  PatientInsuranceFormValues,
+  PatientInsuranceRow,
+  PatientInsuranceStats,
+} from '@/types/patientInsurance.types';
 import { clinicalPayloadForApi } from '@/utils/patientClinicalHelpers';
+import { formToInsurancePayload } from '@/utils/patientInsurance.util';
 
 class PatientAdminService {
   list() {
@@ -15,6 +21,18 @@ class PatientAdminService {
 
   getStats() {
     return axiosInstance.get<ApiResponse<{ stats: PatientStats }>>('/admin/patients/stats/summary');
+  }
+
+  listInsurance() {
+    return axiosInstance.get<ApiResponse<{ rows: PatientInsuranceRow[] }>>(
+      '/admin/patients/insurance/list'
+    );
+  }
+
+  getInsuranceStats() {
+    return axiosInstance.get<ApiResponse<{ stats: PatientInsuranceStats }>>(
+      '/admin/patients/insurance/stats/summary'
+    );
   }
 
   getOverview(patientCode: string) {
@@ -189,6 +207,13 @@ class PatientAdminService {
       }
     }
     return res.data;
+  }
+
+  updateInsurance(patientCode: string, values: PatientInsuranceFormValues) {
+    return axiosInstance.patch<ApiResponse<{ row: PatientInsuranceRow }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/insurance`,
+      formToInsurancePayload(values)
+    );
   }
 }
 

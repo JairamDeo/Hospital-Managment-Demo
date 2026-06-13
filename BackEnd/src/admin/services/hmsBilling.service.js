@@ -7,6 +7,15 @@ import { ErrorMessages, BILLING_MESSAGES } from '../../utils/constants.js';
 import { visitTypeForAppointment } from '../../utils/consultationFees.util.js';
 import { generateInvoiceCode } from '../../utils/generateInvoiceCode.js';
 import { formatHmsInvoice, mapInvoiceToPatientCare } from '../../utils/formatHmsInvoice.js';
+import {
+  convertSaleToBase,
+  getDefaultSaleUnit,
+  getEffectiveItemType,
+  getStockBaseUnits,
+  getUnitPrice,
+  saleUnitLabel,
+} from '../../utils/pharmacyStockUnits.util.js';
+import { getDefaultPharmacySpoonGrams, resolveSpoonGrams } from '../../utils/pharmacySpoon.util.js';
 
 const resolvePatient = async (patientCode) => {
   const patient = await HmsPatient.findOne({ patientCode, status: true });
@@ -225,14 +234,32 @@ export const createMedicineInvoice = async (payload, req) => {
 
   const lineItems = [];
   let total = 0;
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
 
   for (const row of payload.items) {
-    const item = await PharmacyItem.findOne({ itemCode: row.itemCode, active: true });
+    const item = await PharmacyItem.findOne({ itemCode: row.itemCode, active: true }).populate(
+      'unit',
+      'name'
+    );
     if (!item) throw new Error(BILLING_MESSAGES.ITEM_NOT_FOUND);
 
+    const unitName =
+      typeof item.unit === 'object' && item.unit?.name ? item.unit.name : '';
+
     const qty = Number(row.quantity);
-    if (!qty || qty < 1) throw new Error(BILLING_MESSAGES.INVALID_QUANTITY);
-    if (item.stock < qty) throw new Error(`${BILLING_MESSAGES.INSUFFICIENT_STOCK}: ${item.name}`);
+    if (!Number.isFinite(qty) || qty <= 0) throw new Error(BILLING_MESSAGES.INVALID_QUANTITY);
+
+    const calcItem =
+      typeof item.toObject === 'function' ? item.toObject() : { ...item };
+    calcItem.spoonSizeGrams = resolveSpoonGrams(calcItem, defaultSpoonGrams);
+
+    const saleUnit =
+      row.saleUnit || getDefaultSaleUnit(getEffectiveItemType(calcItem, unitName));
+    const baseNeeded = convertSaleToBase(qty, saleUnit, calcItem, unitName);
+    const stockBase = getStockBaseUnits(calcItem, unitName);
+    if (baseNeeded > stockBase) {
+      throw new Error(`${BILLING_MESSAGES.INSUFFICIENT_STOCK}: ${item.name}`);
+    }
 
     if (
       item.expiryDate &&
@@ -241,20 +268,33 @@ export const createMedicineInvoice = async (payload, req) => {
       throw new Error(`${BILLING_MESSAGES.ITEM_EXPIRED}: ${item.name}`);
     }
 
-    const unitPrice = Number(row.unitPrice ?? item.salePrice ?? 0);
+    const unitPrice = Number(row.unitPrice ?? getUnitPrice(calcItem, saleUnit, unitName) ?? 0);
     if (unitPrice <= 0) throw new Error(`${BILLING_MESSAGES.PRICE_REQUIRED}: ${item.name}`);
 
-    const amount = unitPrice * qty;
+    const amount = Math.round(unitPrice * qty * 100) / 100;
+    const unitLabel = saleUnitLabel(saleUnit, calcItem, unitName);
     lineItems.push({
       itemCode: item.itemCode,
-      description: item.name,
+      description: `${item.name} (${qty} ${unitLabel})`,
       quantity: qty,
       unitPrice,
       amount,
+      saleUnit,
     });
     total += amount;
 
-    item.stock -= qty;
+    const newBase = Math.max(0, Math.round((stockBase - baseNeeded) * 1000) / 1000);
+    const effectiveType = getEffectiveItemType(item, unitName);
+    const upp = Number(item.unitsPerPack) || Number(item.packQuantity) || 1;
+
+    if (item.stockInBaseUnits || effectiveType !== 'unit') {
+      item.stock = newBase;
+      item.stockInBaseUnits = true;
+      if (!item.itemType || item.itemType === 'unit') item.itemType = effectiveType;
+      if (!item.unitsPerPack || item.unitsPerPack <= 1) item.unitsPerPack = upp;
+    } else {
+      item.stock = Math.max(0, Math.ceil(newBase));
+    }
     await item.save();
   }
 

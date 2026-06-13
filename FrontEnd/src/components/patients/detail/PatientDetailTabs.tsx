@@ -179,8 +179,17 @@ export const PatientDetailTabs = ({
                     <table className="w-full min-w-[520px] text-left text-sm">
                       <thead>
                         <tr className="border-b border-border-sage bg-cream/50 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                          {['Date', 'BP', 'Fasting', 'Post-meal', 'Random', 'Weight', 'By'].map(
-                            (col) => (
+                          {[
+                            'Date',
+                            'BP',
+                            'Pulse',
+                            'SpO₂',
+                            'Fasting',
+                            'Post-meal',
+                            'Random',
+                            'Weight',
+                            'By',
+                          ].map((col) => (
                               <th key={col} className="px-3 py-2">
                                 {col}
                               </th>
@@ -193,6 +202,8 @@ export const PatientDetailTabs = ({
                           <tr key={row.id} className="border-b border-border-sage/60 last:border-0">
                             <td className="px-3 py-2 text-ink-soft">{row.date}</td>
                             <td className="px-3 py-2">{row.bp || '—'}</td>
+                            <td className="px-3 py-2">{row.pulse || '—'}</td>
+                            <td className="px-3 py-2">{row.spo2 || '—'}</td>
                             <td className="px-3 py-2">{row.fasting || '—'}</td>
                             <td className="px-3 py-2">{row.postMeal || '—'}</td>
                             <td className="px-3 py-2">{row.random || '—'}</td>

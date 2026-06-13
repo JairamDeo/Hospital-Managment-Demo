@@ -25,14 +25,39 @@ import {
   type PaymentMethodType,
 } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
-import type { PharmacyItemApi } from '@/types/pharmacy.types';
+import type { PharmacyItemApi, SaleUnit } from '@/types/pharmacy.types';
+import {
+  allowsDecimalQty,
+  convertSaleToBase,
+  getDefaultSaleUnit,
+  getSaleUnits,
+  getStockBaseUnits,
+  getUnitPrice,
+  maxSaleQuantity,
+  saleUnitLabel,
+} from '@/utils/pharmacyStockUnits.util';
+
+interface BillLineSelection {
+  quantity: number;
+  saleUnit: SaleUnit;
+}
 
 interface MedicineBillDraft {
   patientCode: string;
   search: string;
-  selected: Record<string, number>;
+  selected: Record<string, BillLineSelection | number>;
   paymentMethod: PaymentMethodType;
 }
+
+const normalizeSelected = (
+  raw: Record<string, BillLineSelection | number>
+): Record<string, BillLineSelection> =>
+  Object.fromEntries(
+    Object.entries(raw).map(([code, value]) => [
+      code,
+      typeof value === 'number' ? { quantity: value, saleUnit: 'unit' } : value,
+    ])
+  );
 
 export const MedicineBillPage = () => {
   const { showToast } = useToast();
@@ -41,7 +66,7 @@ export const MedicineBillPage = () => {
   const [patientCode, setPatientCode] = useState('');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [selected, setSelected] = useState<Record<string, number>>({});
+  const [selected, setSelected] = useState<Record<string, BillLineSelection>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -78,7 +103,7 @@ export const MedicineBillPage = () => {
   const applyDraft = (draft: MedicineBillDraft) => {
     setPatientCode(draft.patientCode);
     setSearch(draft.search);
-    setSelected(draft.selected);
+    setSelected(normalizeSelected(draft.selected));
     setPaymentMethod(draft.paymentMethod ?? 'Cash');
   };
 
@@ -123,28 +148,44 @@ export const MedicineBillPage = () => {
   const selectedLines = useMemo(
     () =>
       Object.entries(selected)
-        .map(([itemCode, quantity]) => {
+        .map(([itemCode, line]) => {
           const item = items.find((i) => i.itemCode === itemCode);
-          if (!item || quantity < 1) return null;
-          return { item, quantity, unitPrice: item.salePrice ?? 0 };
+          if (!item || line.quantity <= 0) return null;
+          const unitPrice = getUnitPrice(item, line.saleUnit);
+          return { item, quantity: line.quantity, saleUnit: line.saleUnit, unitPrice };
         })
-        .filter(Boolean) as Array<{ item: PharmacyItemApi; quantity: number; unitPrice: number }>,
+        .filter(Boolean) as Array<{
+        item: PharmacyItemApi;
+        quantity: number;
+        saleUnit: SaleUnit;
+        unitPrice: number;
+      }>,
     [selected, items]
   );
 
   const total = selectedLines.reduce((sum, line) => sum + line.unitPrice * line.quantity, 0);
 
-  const toggleItem = (itemCode: string, checked: boolean) => {
+  const toggleItem = (item: PharmacyItemApi, checked: boolean) => {
     setSelected((prev) => {
       const next = { ...prev };
-      if (checked) next[itemCode] = next[itemCode] ?? 1;
-      else delete next[itemCode];
+      if (checked) {
+        next[item.itemCode] = next[item.itemCode] ?? {
+          quantity: 1,
+          saleUnit: getDefaultSaleUnit(item),
+        };
+      } else {
+        delete next[item.itemCode];
+      }
       return next;
     });
   };
 
-  const setQty = (itemCode: string, qty: number) => {
-    setSelected((prev) => ({ ...prev, [itemCode]: Math.max(0, qty) }));
+  const setLine = (itemCode: string, patch: Partial<BillLineSelection>) => {
+    setSelected((prev) => {
+      const current = prev[itemCode];
+      if (!current) return prev;
+      return { ...prev, [itemCode]: { ...current, ...patch } };
+    });
   };
 
   const handleSubmit = async () => {
@@ -161,7 +202,8 @@ export const MedicineBillPage = () => {
         showToast(`Set sale price for ${line.item.name} in pharmacy first`, 'error');
         return;
       }
-      if (line.quantity > line.item.stock) {
+      const baseNeeded = convertSaleToBase(line.quantity, line.saleUnit, line.item);
+      if (baseNeeded > getStockBaseUnits(line.item)) {
         showToast(`Insufficient stock for ${line.item.name}`, 'error');
         return;
       }
@@ -174,6 +216,7 @@ export const MedicineBillPage = () => {
         items: selectedLines.map((l) => ({
           itemCode: l.item.itemCode,
           quantity: l.quantity,
+          saleUnit: l.saleUnit,
           unitPrice: l.unitPrice,
         })),
         markPaid: true,
@@ -282,7 +325,10 @@ export const MedicineBillPage = () => {
                 <ul className="divide-y divide-border-sage/60 bg-white">
                   {searchResults.map((item) => {
                     const checked = item.itemCode in selected;
-                    const disabled = item.stock < 1 || (item.salePrice ?? 0) <= 0;
+                    const line = selected[item.itemCode];
+                    const saleUnit = line?.saleUnit ?? getDefaultSaleUnit(item);
+                    const disabled = getStockBaseUnits(item) < 0.01 || (item.salePrice ?? 0) <= 0;
+                    const maxQty = maxSaleQuantity(item, saleUnit);
                     return (
                       <li key={item.itemCode} className="px-3 py-3">
                         <div className="flex items-start gap-3">
@@ -290,7 +336,7 @@ export const MedicineBillPage = () => {
                             type="checkbox"
                             checked={checked}
                             disabled={disabled}
-                            onChange={(e) => toggleItem(item.itemCode, e.target.checked)}
+                            onChange={(e) => toggleItem(item, e.target.checked)}
                             className="mt-1"
                           />
                           <div className="min-w-0 flex-1">
@@ -299,22 +345,44 @@ export const MedicineBillPage = () => {
                               {item.itemCode}
                               {item.unitSize ? ` · ${item.unitSize}` : ''}
                               {item.company ? ` · ${item.company}` : ''}
-                              {' · '}stock: {item.stock}
+                              {' · '}stock: {item.stockDisplay ?? item.stock}
                               {' · '}
                               {(item.salePrice ?? 0) > 0
-                                ? formatRupee(item.salePrice!)
+                                ? item.itemType === 'weight' && item.pricePerGram
+                                  ? `${formatRupee(item.pricePerGram)}/g · ${formatRupee(item.pricePerSpoon ?? 0)}/spoon`
+                                  : item.itemType === 'strip' && item.pricePerTablet
+                                    ? `${formatRupee(item.pricePerTablet)}/tablet · ${formatRupee(item.salePrice!)}/box`
+                                    : `${formatRupee(item.salePrice!)}/pack`
                                 : 'No price'}
                             </p>
                           </div>
-                          {checked ? (
-                            <div className="w-20 shrink-0">
+                          {checked && line ? (
+                            <div className="flex shrink-0 flex-col gap-1">
+                              <label className="text-[11px] font-semibold text-ink-ghost">Bill by</label>
+                              <select
+                                value={line.saleUnit}
+                                onChange={(e) =>
+                                  setLine(item.itemCode, {
+                                    saleUnit: e.target.value as SaleUnit,
+                                    quantity: 1,
+                                  })
+                                }
+                                className="rounded border border-border-sage px-1.5 py-1 text-xs"
+                              >
+                                {getSaleUnits(item).map((u) => (
+                                  <option key={u} value={u}>
+                                    {saleUnitLabel(u, item)}
+                                  </option>
+                                ))}
+                              </select>
                               <label className="text-[11px] font-semibold text-ink-ghost">Qty</label>
                               <NumericInput
-                                value={selected[item.itemCode] ?? 1}
-                                onChange={(qty) => setQty(item.itemCode, qty)}
-                                min={1}
-                                max={item.stock}
-                                className="mt-0.5 px-2 py-1"
+                                value={line.quantity}
+                                onChange={(qty) => setLine(item.itemCode, { quantity: qty })}
+                                min={allowsDecimalQty(saleUnit) ? 0.01 : 1}
+                                max={maxQty}
+                                allowDecimal={allowsDecimalQty(saleUnit)}
+                                className="w-20 px-2 py-1"
                               />
                             </div>
                           ) : null}
@@ -331,10 +399,10 @@ export const MedicineBillPage = () => {
             <div className="rounded-xl border border-border-sage bg-cream/30 p-4">
               <p className="text-xs font-semibold text-ink-ghost">Bill summary</p>
               <ul className="mt-2 space-y-1 text-sm">
-                {selectedLines.map(({ item, quantity, unitPrice }) => (
+                {selectedLines.map(({ item, quantity, saleUnit, unitPrice }) => (
                   <li key={item.itemCode} className="flex justify-between gap-2">
                     <span>
-                      {item.name} × {quantity}
+                      {item.name} × {quantity} {saleUnitLabel(saleUnit, item)}
                     </span>
                     <span className="font-semibold">{formatRupee(unitPrice * quantity)}</span>
                   </li>

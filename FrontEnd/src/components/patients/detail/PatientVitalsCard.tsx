@@ -1,4 +1,4 @@
-import { Activity, Heart, Scale, Thermometer } from 'lucide-react';
+import { Activity, Droplets, Heart, Scale, Thermometer } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { PatientVitals } from '@/types/patientDetail.types';
 
@@ -17,7 +17,8 @@ const VITAL_CONFIG: {
   { key: 'temp', label: 'Temp', icon: Thermometer, tone: 'text-orange-600 bg-orange-50' },
   { key: 'bp', label: 'BP', icon: Activity, tone: 'text-blue-600 bg-blue-50' },
   { key: 'pulse', label: 'Pulse', icon: Heart, tone: 'text-emerald-600 bg-emerald-50' },
-  { key: 'bmi', label: 'BMI', icon: Scale, tone: 'text-violet-600 bg-violet-50' },
+  { key: 'spo2', label: 'SpO₂', icon: Droplets, tone: 'text-cyan-600 bg-cyan-50' },
+  { key: 'bmi', label: 'Weight', icon: Scale, tone: 'text-violet-600 bg-violet-50' },
 ];
 
 export const PatientVitalsRow = ({ vitals, layout = 'row' }: Props) => {
@@ -28,7 +29,7 @@ export const PatientVitalsRow = ({ vitals, layout = 'row' }: Props) => {
       className={
         isSidebar
           ? 'grid grid-cols-2 gap-2'
-          : 'grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3'
+          : 'grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 sm:gap-3'
       }
     >
       {VITAL_CONFIG.map(({ key, label, icon: Icon, tone }) => (

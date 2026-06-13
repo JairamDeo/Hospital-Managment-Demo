@@ -5,6 +5,7 @@ const vitalsSchema = new Schema(
     temp: { type: String, default: '' },
     bp: { type: String, default: '' },
     pulse: { type: String, default: '' },
+    spo2: { type: String, default: '' },
     bmi: { type: String, default: '' },
   },
   { _id: false }
@@ -26,6 +27,8 @@ const vitalsHistorySchema = new Schema({
   recordedByName: { type: String, default: '' },
   date: { type: String, default: '' },
   bp: { type: String, default: '' },
+  pulse: { type: String, default: '' },
+  spo2: { type: String, default: '' },
   fasting: { type: String, default: '' },
   postMeal: { type: String, default: '' },
   random: { type: String, default: '' },

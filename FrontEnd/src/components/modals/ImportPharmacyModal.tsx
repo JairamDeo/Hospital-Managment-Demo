@@ -81,9 +81,20 @@ export const ImportPharmacyModal = ({
           <p className="font-semibold text-ink">How bulk import works</p>
           <ul className="mt-2 list-inside list-disc space-y-1.5">
             <li>
-              <strong>CSV only.</strong> Columns include Item Code, Item Name, Company, Category,
-              Pack Quantity, Pack Unit, Stock, Manufacturing Date, Expiry Date (or Best Before
-              Months), Monthly Usage %, and <strong>Sale Price</strong> (₹ per pack for billing).
+              <strong>CSV only.</strong> Columns: Item Code, Item Name, Company, Category,{' '}
+              <strong>Item Type</strong> (Single item / Box / Powder / Churan),{' '}
+              <strong>Units Per Pack</strong>, Pack Unit, Stock, dates, Monthly Usage %, and{' '}
+              <strong>Sale Price</strong>.
+            </li>
+            <li>
+              <strong>Item types:</strong> Single item = price per piece, stock in pieces. Box =
+              tablets per box, stock in <strong>boxes</strong>, price per box. Powder / Churan
+              = grams per box, stock in <strong>boxes</strong>, price per box.
+            </li>
+            <li>
+              <strong>Units Per Pack:</strong> tablets in 1 box (e.g. 30), grams in 1 box (e.g.
+              100), or 1 for single items. <strong>Pack Unit</strong> must match Master Data (e.g.
+              tablet, g, bottle) — new labels are created for single items.
             </li>
             <li>
               <strong>Shelf life:</strong> enter <strong>Expiry Date</strong> or{' '}
@@ -91,21 +102,17 @@ export const ImportPharmacyModal = ({
             </li>
             <li>
               <strong>Same medicine, different brands:</strong> use the <strong>Company</strong>{' '}
-              column (e.g. Dabur vs Patanjali). Matching is by{' '}
-              <strong>Item Name + Company</strong>, not name alone.
+              column. Matching is by <strong>Item Name + Company</strong>, or by Item Code.
             </li>
             <li>
               <strong>Update existing stock:</strong> include the existing <strong>Item Code</strong>{' '}
-              or the same Name + Company. Pack quantity, unit, stock, and category will be updated.
+              or the same Name + Company. Type, pack size, stock, price, and category will be
+              updated.
             </li>
             <li>
               <strong>New products:</strong> leave Item Code blank. A new code is generated
-              automatically (e.g. item-001/mm-yy). <strong>Sale Price is required</strong> for new
+              automatically (e.g. item-001/06-26). <strong>Sale Price is required</strong> for new
               items.
-            </li>
-            <li>
-              Category and Pack Unit must match names in <strong>Master Data</strong> (e.g.
-              Medicated Oil, ml, g, L).
             </li>
           </ul>
         </div>
@@ -126,6 +133,13 @@ export const ImportPharmacyModal = ({
                 {lastSummary.failed}
               </strong>
             </p>
+            {lastSummary.warnings && lastSummary.warnings.length > 0 ? (
+              <ul className="mt-2 text-xs text-amber-700">
+                {lastSummary.warnings.map((msg) => (
+                  <li key={msg}>{msg}</li>
+                ))}
+              </ul>
+            ) : null}
             {lastSummary.errors.length > 0 ? (
               <ul className="mt-2 max-h-32 overflow-y-auto text-xs text-danger">
                 {lastSummary.errors.slice(0, 8).map((err) => (

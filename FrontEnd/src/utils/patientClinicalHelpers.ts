@@ -24,6 +24,8 @@ export const emptyClinicalProfile = (): PatientClinicalProfile => ({
     menstrual: '',
     bowel: '',
     addiction: '',
+    geneticDisorder: '',
+    accidentalHistory: '',
   },
   diabetesHistory: {
     diabetesType: '',
@@ -52,6 +54,8 @@ export const emptyClinicalProfile = (): PatientClinicalProfile => ({
     obesityMedicineDurations: '',
     otherMedicine: '',
     otherMedicineDurations: '',
+    lifestyleMedicine: '',
+    lifestyleMedicineDurations: '',
   },
   eatingHabits: {
     preference: '',

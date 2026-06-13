@@ -4,6 +4,7 @@ export interface PatientVitals {
   temp: string;
   bp: string;
   pulse: string;
+  spo2: string;
   bmi: string;
 }
 

@@ -1,6 +1,8 @@
 import axiosInstance from '../http/axiosInstance';
 import type { ApiResponse, HmsStaff } from '@/types/api.types';
 import type { StaffFormValues, StaffStats } from '@/types/staff.types';
+import type { StaffCompensationFormValues, StaffCompensationRow } from '@/types/staffCompensation.types';
+import { formToCompensationPayload } from '@/utils/staffCompensation.util';
 
 class StaffAdminService {
   list() {
@@ -11,6 +13,12 @@ class StaffAdminService {
     return axiosInstance.get<ApiResponse<{ stats: StaffStats }>>('/admin/staff/stats/summary');
   }
 
+  listCompensation() {
+    return axiosInstance.get<ApiResponse<{ rows: StaffCompensationRow[] }>>(
+      '/admin/staff/compensation/list'
+    );
+  }
+
   get(staffCode: string) {
     return axiosInstance.get<ApiResponse<{ staff: HmsStaff }>>(
       `/admin/staff/${encodeURIComponent(staffCode)}`
@@ -18,7 +26,7 @@ class StaffAdminService {
   }
 
   private buildPayload(values: StaffFormValues) {
-    const payload: Record<string, unknown> = {
+    return {
       name: values.name.trim(),
       role: values.role,
       title: values.title.trim(),
@@ -28,13 +36,6 @@ class StaffAdminService {
       panNumber: values.panNumber.trim().toUpperCase(),
       registrationNumber: values.registrationNumber.trim(),
     };
-    if (values.role === 'Doctor') {
-      const consultationFee = Number(values.consultationFee);
-      if (values.consultationFee.trim() && Number.isFinite(consultationFee)) {
-        payload.consultationFee = consultationFee;
-      }
-    }
-    return payload;
   }
 
   create(values: StaffFormValues) {
@@ -54,12 +55,16 @@ class StaffAdminService {
     if (values.aadharNumber != null) payload.aadharNumber = values.aadharNumber.replace(/\s/g, '');
     if (values.panNumber != null) payload.panNumber = values.panNumber.trim().toUpperCase();
     if (values.registrationNumber != null) payload.registrationNumber = values.registrationNumber.trim();
-    if (values.consultationFee != null && values.consultationFee.trim()) {
-      payload.consultationFee = Number(values.consultationFee);
-    }
     return axiosInstance.patch<ApiResponse<{ staff: HmsStaff }>>(
       `/admin/staff/${encodeURIComponent(staffCode)}`,
       payload
+    );
+  }
+
+  updateCompensation(staffCode: string, values: StaffCompensationFormValues) {
+    return axiosInstance.patch<ApiResponse<{ row: StaffCompensationRow }>>(
+      `/admin/staff/${encodeURIComponent(staffCode)}/compensation`,
+      formToCompensationPayload(values)
     );
   }
 }
