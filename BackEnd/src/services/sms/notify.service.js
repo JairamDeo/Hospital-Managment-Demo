@@ -14,7 +14,7 @@ import {
   sendOtpWhatsApp,
   sendAppointmentReminderWhatsApp,
   sendFollowUpReminderWhatsApp,
-} from './msg91WhatsApp.service.js';
+} from './foxgloveWhatsApp.service.js';
 
 const wasDelivered = (result) => result?.success === true;
 
@@ -26,7 +26,7 @@ export const sendOtpNotification = async (mobileNumber, otp) => {
   const waOn = isWhatsAppOtpEnabled();
 
   if (!smsOn && !waOn) {
-    logger.info(`OTP (dev — no MSG91 SMS/WA) for ${mobileNumber}: ${otp}`);
+    logger.info(`OTP (dev — no SMS/WA configured) for ${mobileNumber}: ${otp}`);
     return { skipped: true };
   }
 

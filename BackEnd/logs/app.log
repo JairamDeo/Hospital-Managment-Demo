@@ -4645,3 +4645,16 @@ Error: read ECONNRESET
 2026-06-13 17:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-06-13 17:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-06-13 17:21:47 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:37 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-06-13 22:03:41 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp) — 60 min before visit, poll every 60000ms
+2026-06-13 22:03:57 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:03:58 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:04:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:04:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:04:00 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-06-13 22:04:01 [info] [_stream_transform.js:166 - Transform._read] Token Provied
