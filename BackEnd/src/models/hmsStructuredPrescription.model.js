@@ -28,10 +28,20 @@ const prescriptionMedicineSchema = new Schema(
   { _id: true }
 );
 
+const churanPowderSchema = new Schema(
+  {
+    itemCode: { type: String, default: '' },
+    name: { type: String, required: true, trim: true },
+    quantityGrams: { type: Number, required: true, min: 0.01 },
+  },
+  { _id: false }
+);
+
 const prescriptionChuranSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
     combination: { type: String, default: '' },
+    powders: { type: [churanPowderSchema], default: [] },
     howToIntake: { type: String, default: '' },
   },
   { _id: true }

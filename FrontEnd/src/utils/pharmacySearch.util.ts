@@ -27,12 +27,22 @@ const scorePharmacyItem = (item: PharmacyItemApi, query: string): number => {
 export const searchPharmacyItems = (
   items: PharmacyItemApi[],
   query: string,
-  limit = PHARMACY_SEARCH_MAX_RESULTS
+  limit = PHARMACY_SEARCH_MAX_RESULTS,
+  options?: { itemType?: PharmacyItemApi['itemType'] | 'non-weight' }
 ): PharmacyItemApi[] => {
   const q = query.trim().toLowerCase();
   if (q.length < PHARMACY_SEARCH_MIN_CHARS) return [];
 
-  return items
+  const typeFilter = options?.itemType;
+  const filtered = items.filter((item) => {
+    const type = item.itemType ?? 'unit';
+    if (typeFilter === 'weight') return type === 'weight';
+    if (typeFilter === 'non-weight') return type !== 'weight';
+    if (typeFilter) return type === typeFilter;
+    return true;
+  });
+
+  return filtered
     .map((item) => ({ item, score: scorePharmacyItem(item, q) }))
     .filter((row) => row.score > 0)
     .sort((a, b) => b.score - a.score || a.item.name.localeCompare(b.item.name))

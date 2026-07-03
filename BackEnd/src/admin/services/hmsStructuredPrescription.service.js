@@ -9,6 +9,7 @@ import {
   generatePrescriptionCode,
   computeMedicineTotalQty,
   buildIntakeInstructions,
+  buildChuranCombination,
 } from '../../utils/prescription.util.js';
 import { buildPrescriptionPdf } from '../../utils/prescriptionPdf.util.js';
 import { formatAppointmentDateDisplay } from '../../utils/appointment.util.js';
@@ -56,6 +57,11 @@ const formatPrescription = (doc) => {
       id: String(c._id),
       name: c.name,
       combination: c.combination || '',
+      powders: (c.powders ?? []).map((p) => ({
+        itemCode: p.itemCode || '',
+        name: p.name,
+        quantityGrams: p.quantityGrams,
+      })),
       howToIntake: c.howToIntake || '',
     })),
     createdAt: row.createdAt,
@@ -166,11 +172,23 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
     throw new Error('Add at least one medicine or churan');
   }
 
-  const churans = (payload.churans ?? []).map((c) => ({
-    name: c.name.trim(),
-    combination: c.combination?.trim() || '',
-    howToIntake: c.howToIntake?.trim() || '',
-  }));
+  const churans = (payload.churans ?? []).map((c) => {
+    const powders = (c.powders ?? [])
+      .filter((p) => p?.name?.trim() && Number(p.quantityGrams) > 0)
+      .map((p) => ({
+        itemCode: p.itemCode?.trim() || '',
+        name: p.name.trim(),
+        quantityGrams: Number(p.quantityGrams),
+      }));
+    const combination =
+      c.combination?.trim() || buildChuranCombination(powders);
+    return {
+      name: c.name.trim(),
+      combination,
+      powders,
+      howToIntake: c.howToIntake?.trim() || '',
+    };
+  });
 
   const row = await HmsStructuredPrescription.create({
     prescriptionCode: await generatePrescriptionCode(),

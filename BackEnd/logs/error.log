@@ -156,3 +156,5 @@ SyntaxError: Identifier 'formatStaffCompensationRow' has already been declared
     at #getJobFromResolveResult (node:internal/modules/esm/loader:353:34)
     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:318:41)
     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-06-30 22:11:59 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-06-30 22:11:59 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token

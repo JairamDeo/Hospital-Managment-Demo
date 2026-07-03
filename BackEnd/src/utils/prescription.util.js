@@ -44,3 +44,9 @@ export const computeMedicineTotalQty = (packQuantity, timing = {}) => {
   const packs = Number(packQuantity) || 1;
   return Math.max(1, perDay * packs);
 };
+
+export const buildChuranCombination = (powders = []) =>
+  powders
+    .filter((p) => p?.name?.trim() && Number(p.quantityGrams) > 0)
+    .map((p) => `${p.name.trim()} ${Number(p.quantityGrams)}g`)
+    .join(', ');

@@ -210,8 +210,14 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
         doc.font('Helvetica-Bold').text(`${index + 1}. ${row.name}`, margin + 14, y);
         y = doc.y + 2;
         doc.font('Helvetica');
-        if (includeCombination && row.combination?.trim()) {
-          doc.text(`Combination: ${row.combination.trim()}`, margin + 28, y);
+        const powderRows = row.powders?.filter((p) => p?.name?.trim()) ?? [];
+        if (powderRows.length) {
+          powderRows.forEach((p) => {
+            doc.text(`  • ${p.name} — ${p.quantityGrams}g`, margin + 28, y);
+            y = doc.y + 2;
+          });
+        } else if (row.combination?.trim()) {
+          doc.text(`Mix: ${row.combination.trim()}`, margin + 28, y);
           y = doc.y + 2;
         }
         if (row.howToIntake?.trim()) {

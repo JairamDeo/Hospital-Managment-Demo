@@ -21,12 +21,25 @@ export interface PrescriptionMedicine {
   intakeInstructions?: string;
 }
 
+export interface ChuranPowderComponent {
+  itemCode: string;
+  name: string;
+  quantityGrams: number;
+}
+
 export interface PrescriptionChuran {
   id?: string;
   name: string;
   combination: string;
+  powders?: ChuranPowderComponent[];
   howToIntake: string;
 }
+
+export const buildChuranCombination = (powders: ChuranPowderComponent[] = []) =>
+  powders
+    .filter((p) => p.name.trim() && p.quantityGrams > 0)
+    .map((p) => `${p.name.trim()} ${p.quantityGrams}g`)
+    .join(', ');
 
 export interface StructuredPrescription {
   _id: string;
