@@ -16,7 +16,6 @@ import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { StructuredPrescription } from '@/types/structuredPrescription.types';
 import type { PatientVitalsEntry } from '@/types/patientVitals.types';
 import { PatientClinicalInfoPanel } from './PatientClinicalInfoPanel';
-import { TreatmentHistoryItem } from './TreatmentHistoryItem';
 import {
   PatientLabReportsTab,
   PatientBillingTab,
@@ -25,7 +24,9 @@ import {
 import { PatientAppointmentsTab } from './tabs/PatientAppointmentsTab';
 import { PatientPrescriptionsTab } from './tabs/PatientPrescriptionsTab';
 import { PatientPanchakarmaTab } from './tabs/PatientPanchakarmaTab';
+import { PatientTreatmentHistoryTab } from './tabs/PatientTreatmentHistoryTab';
 import type { HmsPanchakarmaProgram } from '@/types/api.types';
+import type { PatientTreatmentHistory } from '@/types/patientDetail.types';
 
 const MAIN_TABS: { id: PatientDetailTab; label: string; icon: LucideIcon }[] = [
   { id: 'patient-info', label: 'Patient Info', icon: ClipboardList },
@@ -63,6 +64,11 @@ interface PanchakarmaProps {
   loading: boolean;
 }
 
+interface TreatmentHistoryProps {
+  history: PatientTreatmentHistory | null;
+  loading: boolean;
+}
+
 interface Props {
   patient: PatientDetail;
   activeTab?: PatientDetailTab;
@@ -72,6 +78,7 @@ interface Props {
   prakritiMasters?: MasterItem[];
   prescriptions?: PrescriptionProps;
   panchakarma?: PanchakarmaProps;
+  treatmentHistory?: TreatmentHistoryProps;
   vitalsHistory?: PatientVitalsEntry[];
   canRecordVitals?: boolean;
   onAddVitals?: () => void;
@@ -86,6 +93,7 @@ export const PatientDetailTabs = ({
   prakritiMasters = [],
   prescriptions,
   panchakarma,
+  treatmentHistory,
   vitalsHistory = [],
   canRecordVitals = false,
   onAddVitals,
@@ -225,15 +233,10 @@ export const PatientDetailTabs = ({
         ) : null}
 
         {activeTab === 'history' ? (
-          <div className="space-y-0">
-            {patient.treatmentHistory.map((record, i) => (
-              <TreatmentHistoryItem
-                key={record.id}
-                record={record}
-                isLast={i === patient.treatmentHistory.length - 1}
-              />
-            ))}
-          </div>
+          <PatientTreatmentHistoryTab
+            history={treatmentHistory?.history ?? null}
+            loading={treatmentHistory?.loading ?? false}
+          />
         ) : null}
 
         {activeTab === 'appointments' ? (

@@ -3,6 +3,7 @@ import HmsPatient from '../../models/hmsPatient.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
 import HmsAppointment from '../../models/hmsAppointment.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
+import PharmacyItem from '../../models/pharmacyItem.model.js';
 import { ErrorMessages, PATIENT_MESSAGES } from '../../utils/constants.js';
 import { getPermissionsForStaffRole, hasPermission } from '../../utils/rbac.service.js';
 import {
@@ -10,9 +11,14 @@ import {
   computeMedicineTotalQty,
   buildIntakeInstructions,
   buildChuranCombination,
+  buildChuranIntakeText,
+  powderGramsFromSpoons,
 } from '../../utils/prescription.util.js';
 import { buildPrescriptionPdf } from '../../utils/prescriptionPdf.util.js';
 import { formatAppointmentDateDisplay } from '../../utils/appointment.util.js';
+import { getDefaultPharmacySpoonGrams } from '../../utils/pharmacySpoon.util.js';
+import { applyStockBaseDeduction } from '../../utils/pharmacyStockDeduction.util.js';
+import { getStockBaseUnits } from '../../utils/pharmacyStockUnits.util.js';
 
 const performerFromReq = (req) => {
   if (req.accountType === 'admin') {
@@ -60,8 +66,12 @@ const formatPrescription = (doc) => {
       powders: (c.powders ?? []).map((p) => ({
         itemCode: p.itemCode || '',
         name: p.name,
+        quantitySpoons: p.quantitySpoons ?? null,
+        spoonGrams: p.spoonGrams ?? null,
         quantityGrams: p.quantityGrams,
       })),
+      intakeSpoons: c.intakeSpoons ?? null,
+      intakeSpoonGrams: c.intakeSpoonGrams ?? null,
       howToIntake: c.howToIntake || '',
     })),
     createdAt: row.createdAt,
@@ -104,6 +114,60 @@ const syncPrescriptionToTreatmentHistory = async (prescription) => {
   }
 
   await care.save();
+};
+
+const normalizeChuranPowder = (powder, defaultSpoonGrams) => {
+  const spoonGrams = Number(powder.spoonGrams) || defaultSpoonGrams;
+  let quantitySpoons = Number(powder.quantitySpoons);
+  let quantityGrams = Number(powder.quantityGrams);
+
+  if (!Number.isFinite(quantitySpoons) || quantitySpoons <= 0) {
+    if (Number.isFinite(quantityGrams) && quantityGrams > 0 && spoonGrams > 0) {
+      quantitySpoons = Math.round((quantityGrams / spoonGrams) * 1000) / 1000;
+    } else {
+      quantitySpoons = 1;
+    }
+  }
+
+  quantityGrams = powderGramsFromSpoons(quantitySpoons, spoonGrams);
+  if (quantityGrams <= 0) return null;
+
+  return {
+    itemCode: powder.itemCode?.trim() || '',
+    name: powder.name.trim(),
+    quantitySpoons,
+    spoonGrams,
+    quantityGrams,
+  };
+};
+
+const deductChuranPowderStock = async (powders, defaultSpoonGrams) => {
+  const deductions = new Map();
+
+  for (const powder of powders) {
+    if (!powder.itemCode) continue;
+    const key = powder.itemCode;
+    const existing = deductions.get(key) ?? { name: powder.name, grams: 0 };
+    existing.grams += powder.quantityGrams;
+    deductions.set(key, existing);
+  }
+
+  for (const [itemCode, { name, grams }] of deductions) {
+    const item = await PharmacyItem.findOne({ itemCode, active: true }).populate('unit', 'name');
+    if (!item) throw new Error(`Powder not found: ${name}`);
+
+    const unitName = typeof item.unit === 'object' && item.unit?.name ? item.unit.name : '';
+    const stockBase = getStockBaseUnits(item, unitName);
+    if (grams > stockBase) {
+      throw new Error(`Insufficient stock for ${name} (need ${grams}g, have ${stockBase}g)`);
+    }
+
+    const result = applyStockBaseDeduction(item, unitName, grams);
+    if (!result.ok) {
+      throw new Error(`Insufficient stock for ${name}`);
+    }
+    await item.save();
+  }
 };
 
 const assertCanCreatePrescription = async (req) => {
@@ -172,23 +236,36 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
     throw new Error('Add at least one medicine or churan');
   }
 
+  const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
+
   const churans = (payload.churans ?? []).map((c) => {
     const powders = (c.powders ?? [])
-      .filter((p) => p?.name?.trim() && Number(p.quantityGrams) > 0)
-      .map((p) => ({
-        itemCode: p.itemCode?.trim() || '',
-        name: p.name.trim(),
-        quantityGrams: Number(p.quantityGrams),
-      }));
-    const combination =
-      c.combination?.trim() || buildChuranCombination(powders);
+      .map((p) => normalizeChuranPowder(p, defaultSpoonGrams))
+      .filter(Boolean);
+
+    const intakeSpoons = Number(c.intakeSpoons) || 0;
+    const intakeSpoonGrams =
+      Number(c.intakeSpoonGrams) || defaultSpoonGrams;
+    const howToIntake =
+      c.howToIntake?.trim() ||
+      buildChuranIntakeText(intakeSpoons, intakeSpoonGrams, c.intakeNote);
+
+    const combination = c.combination?.trim() || buildChuranCombination(powders);
+
     return {
       name: c.name.trim(),
       combination,
       powders,
-      howToIntake: c.howToIntake?.trim() || '',
+      intakeSpoons: intakeSpoons > 0 ? intakeSpoons : undefined,
+      intakeSpoonGrams: intakeSpoons > 0 ? intakeSpoonGrams : undefined,
+      howToIntake,
     };
   });
+
+  const allPowders = churans.flatMap((c) => c.powders ?? []);
+  if (allPowders.length) {
+    await deductChuranPowderStock(allPowders, defaultSpoonGrams);
+  }
 
   const row = await HmsStructuredPrescription.create({
     prescriptionCode: await generatePrescriptionCode(),

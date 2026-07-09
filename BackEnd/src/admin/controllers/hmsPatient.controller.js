@@ -15,6 +15,7 @@ import {
   getPatientStats,
   getPatientOverview,
 } from '../services/hmsPatientOverview.service.js';
+import { getPatientTreatmentHistory } from '../services/hmsPatientTreatmentHistory.service.js';
 import {
   listPatientInsurance,
   getPatientInsuranceStats,
@@ -50,6 +51,22 @@ export const getPatientOverviewHandler = async (req, res) => {
       return customResponse(res, error.message, 403);
     }
     logger.error('Patient overview error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getPatientTreatmentHistoryHandler = async (req, res) => {
+  try {
+    const history = await getPatientTreatmentHistory(decodePatientCode(req.params.patientCode), req);
+    return customResponse(res, PATIENT_MESSAGES.TREATMENT_HISTORY_FETCHED, 200, history);
+  } catch (error) {
+    if (error.message === ErrorMessages.PATIENT_NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    if (error.message === ErrorMessages.ACCESS_DENIED) {
+      return customResponse(res, error.message, 403);
+    }
+    logger.error('Patient treatment history error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

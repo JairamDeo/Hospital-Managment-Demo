@@ -3,6 +3,7 @@ import type { ApiResponse, HmsPatient } from '@/types/api.types';
 import type { PatientFormValues, PatientProfileFormValues, PatientStats } from '@/types/patient.types';
 import type { PatientCareApi } from '@/utils/buildPatientDetail';
 import type { PatientClinicalProfile } from '@/types/patientClinical.types';
+import type { PatientTreatmentHistory } from '@/types/patientDetail.types';
 import type { PatientPrescriptionPdf } from '@/types/patientPrescription.types';
 import type { StructuredPrescription, StructuredPrescriptionPayload } from '@/types/structuredPrescription.types';
 import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
@@ -48,6 +49,12 @@ class PatientAdminService {
         clinical: PatientClinicalProfile;
       }>
     >(`/admin/patients/${encodeURIComponent(patientCode)}/overview`);
+  }
+
+  getTreatmentHistory(patientCode: string) {
+    return axiosInstance.get<ApiResponse<PatientTreatmentHistory>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/treatment-history`
+    );
   }
 
   get(patientCode: string) {

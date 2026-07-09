@@ -213,7 +213,16 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
         const powderRows = row.powders?.filter((p) => p?.name?.trim()) ?? [];
         if (powderRows.length) {
           powderRows.forEach((p) => {
-            doc.text(`  • ${p.name} — ${p.quantityGrams}g`, margin + 28, y);
+            const spoons = Number(p.quantitySpoons);
+            const spoonGrams = Number(p.spoonGrams);
+            const grams = Number(p.quantityGrams);
+            let line = `  • ${p.name}`;
+            if (Number.isFinite(spoons) && spoons > 0 && Number.isFinite(spoonGrams) && spoonGrams > 0) {
+              line += ` — ${spoons} spoon${spoons === 1 ? '' : 's'} (${grams}g)`;
+            } else if (Number.isFinite(grams) && grams > 0) {
+              line += ` — ${grams}g`;
+            }
+            doc.text(line, margin + 28, y);
             y = doc.y + 2;
           });
         } else if (row.combination?.trim()) {

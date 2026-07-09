@@ -218,6 +218,7 @@ export const STAFF_MESSAGES = {
 export const PATIENT_MESSAGES = {
   LIST_FETCHED: 'Patients fetched successfully',
   OVERVIEW_FETCHED: 'Patient overview fetched successfully',
+  TREATMENT_HISTORY_FETCHED: 'Treatment history fetched successfully',
   FETCHED: 'Patient fetched successfully',
   CREATED: 'Patient created successfully',
   UPDATED: 'Patient updated successfully',

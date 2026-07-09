@@ -12,6 +12,7 @@ import { prescriptionPdfUpload } from '../../middleware/prescriptionUpload.middl
 import {
   getPatientsStats,
   getPatientOverviewHandler,
+  getPatientTreatmentHistoryHandler,
   getPatients,
   getPatient,
   getPatientClinical,
@@ -49,6 +50,7 @@ router.get('/stats/summary', getPatientsStats);
 router.get('/insurance/list', getPatientInsuranceList);
 router.get('/insurance/stats/summary', getPatientInsuranceStatsSummary);
 router.get('/:patientCode/overview', getPatientOverviewHandler);
+router.get('/:patientCode/treatment-history', getPatientTreatmentHistoryHandler);
 router.get('/:patientCode/clinical', getPatientClinical);
 router.patch(
   '/:patientCode/clinical',

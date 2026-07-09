@@ -28,6 +28,46 @@ export interface TreatmentRecord {
   medicines: string[];
 }
 
+export interface OpdTreatmentHistoryItem {
+  appointmentCode: string;
+  date: string;
+  dateIso: string;
+  title: string;
+  doctor: string;
+  diagnosis: string;
+  remarks: string;
+}
+
+export interface IpdDailyTreatmentRecord {
+  id: string;
+  dayLabel: string;
+  date: string;
+  treatmentGiven: string;
+  medicines: string;
+  observations: string;
+  recordedByName: string;
+}
+
+export interface IpdTreatmentHistoryItem {
+  admissionCode: string;
+  admittedAt: string;
+  admittedAtLabel: string;
+  dischargedAt?: string | null;
+  dischargedAtLabel: string;
+  status: string;
+  doctorName: string;
+  roomName: string;
+  roomNumber: string;
+  diagnosis: string;
+  chiefComplaint: string;
+  dailyRecords: IpdDailyTreatmentRecord[];
+}
+
+export interface PatientTreatmentHistory {
+  opd: OpdTreatmentHistoryItem[];
+  ipd: IpdTreatmentHistoryItem[];
+}
+
 export interface PatientAppointment {
   id: string;
   appointmentCode?: string;

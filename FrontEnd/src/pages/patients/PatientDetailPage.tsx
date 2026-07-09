@@ -19,7 +19,7 @@ import type { PatientClinicalProfile } from '@/types/patientClinical.types';
 import type { StructuredPrescription } from '@/types/structuredPrescription.types';
 import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
 import type { PatientProfileFormValues } from '@/types/patient.types';
-import type { PatientDetail, PatientDetailTab } from '@/types/patientDetail.types';
+import type { PatientDetail, PatientDetailTab, PatientTreatmentHistory } from '@/types/patientDetail.types';
 import { usePermissions } from '@/hooks/usePermissions';
 
 export const PatientDetailPage = () => {
@@ -51,6 +51,8 @@ export const PatientDetailPage = () => {
   const [vitalsHistory, setVitalsHistory] = useState<PatientVitalsEntry[]>([]);
   const [vitalsOpen, setVitalsOpen] = useState(false);
   const [vitalsSubmitting, setVitalsSubmitting] = useState(false);
+  const [treatmentHistory, setTreatmentHistory] = useState<PatientTreatmentHistory | null>(null);
+  const [treatmentHistoryLoading, setTreatmentHistoryLoading] = useState(false);
 
   const loadPrescriptions = useCallback(async () => {
     if (!patientId) return;
@@ -88,6 +90,24 @@ export const PatientDetailPage = () => {
       setVitalsHistory([]);
     }
   }, [patientId]);
+
+  const loadTreatmentHistory = useCallback(async () => {
+    if (!patientId) return;
+    setTreatmentHistoryLoading(true);
+    try {
+      const { data } = await patientAdminService.getTreatmentHistory(patientId);
+      if (data.status_code === 200 && data.res) {
+        setTreatmentHistory(data.res);
+      } else {
+        setTreatmentHistory(null);
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+      setTreatmentHistory(null);
+    } finally {
+      setTreatmentHistoryLoading(false);
+    }
+  }, [patientId, showToast]);
 
   const applyPatient = useCallback((detail: PatientDetail, clinicalData: PatientClinicalProfile) => {
     setPatient(detail);
@@ -135,6 +155,11 @@ export const PatientDetailPage = () => {
     const tab = (location.state as { activeTab?: PatientDetailTab } | null)?.activeTab;
     if (tab) setActiveTab(tab);
   }, [location.state]);
+
+  useEffect(() => {
+    if (activeTab !== 'history' || !patientId) return;
+    void loadTreatmentHistory();
+  }, [activeTab, patientId, loadTreatmentHistory]);
 
   useEffect(() => {
     if (location.hash !== '#patient-info') return;
@@ -318,6 +343,10 @@ export const PatientDetailPage = () => {
               patientCode: patient.id,
               programs: panchakarmaPrograms,
               loading: pkLoading,
+            }}
+            treatmentHistory={{
+              history: treatmentHistory,
+              loading: treatmentHistoryLoading,
             }}
             vitalsHistory={vitalsHistory}
             canRecordVitals={canRecordVitals}

@@ -48,5 +48,36 @@ export const computeMedicineTotalQty = (packQuantity, timing = {}) => {
 export const buildChuranCombination = (powders = []) =>
   powders
     .filter((p) => p?.name?.trim() && Number(p.quantityGrams) > 0)
-    .map((p) => `${p.name.trim()} ${Number(p.quantityGrams)}g`)
+    .map((p) => {
+      const spoons = Number(p.quantitySpoons);
+      const spoonGrams = Number(p.spoonGrams);
+      const grams = Number(p.quantityGrams);
+      if (Number.isFinite(spoons) && spoons > 0 && Number.isFinite(spoonGrams) && spoonGrams > 0) {
+        const spoonLabel = spoons === 1 ? 'spoon' : 'spoons';
+        return `${p.name.trim()} ${spoons} ${spoonLabel} (${grams}g)`;
+      }
+      return `${p.name.trim()} ${grams}g`;
+    })
     .join(', ');
+
+export const buildChuranIntakeText = (intakeSpoons, intakeSpoonGrams, note = '') => {
+  const spoons = Number(intakeSpoons);
+  const grams = Number(intakeSpoonGrams);
+  if (!Number.isFinite(spoons) || spoons <= 0) return String(note || '').trim();
+
+  const spoonLabel = spoons === 1 ? 'spoon' : 'spoons';
+  const base = Number.isFinite(grams) && grams > 0
+    ? `Take ${spoons} ${spoonLabel} (${grams}g each)`
+    : `Take ${spoons} ${spoonLabel}`;
+  const extra = String(note || '').trim();
+  return extra ? `${base}. ${extra}` : base;
+};
+
+export const powderGramsFromSpoons = (quantitySpoons, spoonGrams) => {
+  const spoons = Number(quantitySpoons);
+  const perSpoon = Number(spoonGrams);
+  if (!Number.isFinite(spoons) || spoons <= 0 || !Number.isFinite(perSpoon) || perSpoon <= 0) {
+    return 0;
+  }
+  return Math.round(spoons * perSpoon * 1000) / 1000;
+};

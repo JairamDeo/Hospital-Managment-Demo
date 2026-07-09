@@ -32,6 +32,8 @@ const churanPowderSchema = new Schema(
   {
     itemCode: { type: String, default: '' },
     name: { type: String, required: true, trim: true },
+    quantitySpoons: { type: Number, min: 0.01 },
+    spoonGrams: { type: Number, min: 0.01 },
     quantityGrams: { type: Number, required: true, min: 0.01 },
   },
   { _id: false }
@@ -42,6 +44,8 @@ const prescriptionChuranSchema = new Schema(
     name: { type: String, required: true, trim: true },
     combination: { type: String, default: '' },
     powders: { type: [churanPowderSchema], default: [] },
+    intakeSpoons: { type: Number, min: 0 },
+    intakeSpoonGrams: { type: Number, min: 0 },
     howToIntake: { type: String, default: '' },
   },
   { _id: true }
