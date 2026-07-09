@@ -20,7 +20,6 @@ import {
 import { getStockBaseUnits, getUnitsPerPack, saleUnitLabel } from '@/utils/pharmacyStockUnits.util';
 import {
   buildChuranCombination,
-  buildChuranIntakeText,
   computeMedicineTotalQty,
   maxSpoonsForPowderStock,
   powderGramsFromSpoons,
@@ -54,6 +53,35 @@ const formatStockLabel = (item: PharmacyItemApi) => {
   const unit = saleUnitLabel('pack', item);
   return packs === 1 ? `1 ${unit}` : `${packs} ${unit}s`;
 };
+
+const spoonNameForGrams = (grams: number, options: PharmacySpoonItem[]) => {
+  const match = options.find((s) => s.grams === grams);
+  return match?.name?.trim() || 'spoon';
+};
+
+const formatPowderPackStock = (item: PharmacyItemApi) => {
+  const packs = getMaxPackStock(item);
+  const unit = saleUnitLabel('pack', item);
+  return packs === 1 ? `1 ${unit}` : `${packs} ${unit}s`;
+};
+
+const formatPowderSpoonUsage = (
+  usedSpoons: number,
+  maxSpoons: number,
+  item: PharmacyItemApi,
+  atLimit: boolean
+) => {
+  const remaining = Math.max(0, maxSpoons - usedSpoons);
+  const packStock = formatPowderPackStock(item);
+  const spoonUsed = `${usedSpoons} spoon${usedSpoons === 1 ? '' : 's'} used`;
+  const spoonLeft = `${remaining.toLocaleString('en-IN')} spoon${remaining === 1 ? '' : 's'} left`;
+
+  if (atLimit) return `${spoonUsed} · max reached · ${packStock} in stock`;
+  return `${spoonUsed} · ${spoonLeft} · ${packStock} in stock`;
+};
+
+const compactSpoonSelectClass =
+  'w-auto max-w-[9rem] shrink-0 rounded-lg border border-border-sage bg-white px-2 py-1 pr-7 text-xs text-ink outline-none focus:border-sage focus:ring-2 focus:ring-sage-pale';
 
 const getPowderGramsUsed = (
   churans: PrescriptionChuran[],
@@ -96,12 +124,10 @@ const pharmacyMedicine = (item: PharmacyItemApi): PrescriptionMedicine => ({
   totalQuantity: 0,
 });
 
-const emptyChuran = (defaultSpoonGrams = 1.5): PrescriptionChuran => ({
+const emptyChuran = (): PrescriptionChuran => ({
   name: '',
   combination: '',
   powders: [],
-  intakeSpoons: 1,
-  intakeSpoonGrams: defaultSpoonGrams,
   intakeNote: '',
   howToIntake: '',
 });
@@ -233,7 +259,7 @@ export const PrescriptionEditor = ({
     () =>
       spoonSizes.length
         ? spoonSizes
-        : [{ _id: 'default', code: 'SPOON-DEFAULT', name: `${defaultSpoonGrams}g spoon`, grams: defaultSpoonGrams }],
+        : [{ _id: 'default', code: 'SPOON-DEFAULT', name: 'spoon', grams: defaultSpoonGrams }],
     [spoonSizes, defaultSpoonGrams]
   );
 
@@ -268,7 +294,7 @@ export const PrescriptionEditor = ({
 
   const applyDraft = (draft: PrescriptionDraft) => {
     setMedicines(draft.medicines);
-    setChurans(draft.churans.length ? draft.churans : [emptyChuran(defaultSpoonGrams)]);
+    setChurans(draft.churans.length ? draft.churans : [emptyChuran()]);
     setDiagnosis(draft.diagnosis);
     setRemarks(draft.remarks);
     setItemSearch(draft.itemSearch);
@@ -278,9 +304,9 @@ export const PrescriptionEditor = ({
     if (loading) return;
     setChurans((prev) => {
       if (prev.length > 0) return prev;
-      return [emptyChuran(defaultSpoonGrams)];
+      return [emptyChuran()];
     });
-  }, [loading, defaultSpoonGrams]);
+  }, [loading]);
 
   useEffect(() => {
     Promise.all([
@@ -428,9 +454,7 @@ export const PrescriptionEditor = ({
 
   const updateChuranField = (
     churanIndex: number,
-    patch: Partial<
-      Pick<PrescriptionChuran, 'name' | 'intakeSpoons' | 'intakeSpoonGrams' | 'intakeNote'>
-    >
+    patch: Partial<Pick<PrescriptionChuran, 'name' | 'intakeNote'>>
   ) => {
     setChurans((prev) =>
       prev.map((ch, i) => (i === churanIndex ? { ...ch, ...patch } : ch))
@@ -441,18 +465,12 @@ export const PrescriptionEditor = ({
     const validMeds = medicines.filter((m) => m.name.trim());
     const validChurans = churans
       .filter((c) => c.name.trim() && (c.powders?.length || c.combination.trim()))
-      .map((c) => {
-        const intakeSpoonGrams = c.intakeSpoonGrams ?? defaultSpoonGrams;
-        const intakeSpoons = c.intakeSpoons ?? 1;
-        return {
-          ...c,
-          intakeSpoons,
-          intakeSpoonGrams,
-          combination: c.combination?.trim() || buildChuranCombination(c.powders ?? []),
-          howToIntake: buildChuranIntakeText(intakeSpoons, intakeSpoonGrams, c.intakeNote),
-          powders: c.powders ?? [],
-        };
-      });
+      .map((c) => ({
+        ...c,
+        combination: c.combination?.trim() || buildChuranCombination(c.powders ?? []),
+        howToIntake: c.intakeNote?.trim() || c.howToIntake?.trim() || '',
+        powders: c.powders ?? [],
+      }));
 
     if (!validMeds.length && !validChurans.length) {
       showToast('Add at least one medicine or churan', 'error');
@@ -693,7 +711,7 @@ export const PrescriptionEditor = ({
                   key={churanIndex}
                   className="space-y-2 rounded-lg border border-border-sage/60 bg-cream/20 p-3"
                 >
-                  <div className="grid gap-2 lg:grid-cols-[minmax(110px,1fr)_minmax(160px,1.4fr)_minmax(150px,1fr)_minmax(120px,1fr)_auto] lg:items-end">
+                  <div className="grid gap-2 lg:grid-cols-[minmax(110px,1fr)_minmax(180px,1.6fr)_minmax(140px,1fr)_auto] lg:items-end">
                     <label className="block min-w-0">
                       <span className={fieldLabelClass}>Churan name</span>
                       <input
@@ -724,32 +742,6 @@ export const PrescriptionEditor = ({
                       </div>
                     </label>
                     <label className="block min-w-0">
-                      <span className={fieldLabelClass}>Intake</span>
-                      <div className="flex items-center gap-1">
-                        <QtyStepper
-                          value={ch.intakeSpoons ?? 1}
-                          onChange={(v) => updateChuranField(churanIndex, { intakeSpoons: v })}
-                          min={1}
-                          compact
-                        />
-                        <select
-                          value={ch.intakeSpoonGrams ?? defaultSpoonGrams}
-                          onChange={(e) =>
-                            updateChuranField(churanIndex, {
-                              intakeSpoonGrams: Number(e.target.value),
-                            })
-                          }
-                          className={`${formInputClass} w-full min-w-0 py-1.5 text-xs`}
-                        >
-                          {spoonOptions.map((s) => (
-                            <option key={s._id} value={s.grams}>
-                              {s.grams}g
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </label>
-                    <label className="block min-w-0">
                       <span className={fieldLabelClass}>How to intake</span>
                       <input
                         type="text"
@@ -766,7 +758,7 @@ export const PrescriptionEditor = ({
                       onClick={() =>
                         setChurans((prev) =>
                           prev.length <= 1
-                            ? [emptyChuran(defaultSpoonGrams)]
+                            ? [emptyChuran()]
                             : prev.filter((_, i) => i !== churanIndex)
                         )
                       }
@@ -804,7 +796,7 @@ export const PrescriptionEditor = ({
                               <span className="shrink-0 text-ink-ghost">
                                 {outOfStock
                                   ? 'Out of stock'
-                                  : `Available: ${availSpoons} spoon(s) · ${formatStockLabel(item)}`}
+                                  : `${availSpoons.toLocaleString('en-IN')} spoons available · ${formatPowderPackStock(item)}`}
                                 {added ? ' · added' : ''}
                               </span>
                             </button>
@@ -829,59 +821,64 @@ export const PrescriptionEditor = ({
                               powderIndex
                             )
                           : powder.quantitySpoons;
-                        const remainingSpoons = Math.max(0, maxSpoons - powder.quantitySpoons);
                         const atLimit = powder.quantitySpoons >= maxSpoons;
                         return (
                           <div
                             key={`${powder.itemCode}-${powderIndex}`}
                             className="rounded-lg border border-border-sage/50 bg-white px-2 py-2"
                           >
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-2">
                               <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
                                 {powder.name}
                               </span>
-                              <QtyStepper
-                                value={powder.quantitySpoons}
-                                onChange={(v) =>
-                                  updateChuranPowder(churanIndex, powderIndex, {
-                                    quantitySpoons: v,
-                                  })
-                                }
-                                min={1}
-                                max={maxSpoons}
-                                compact
-                              />
-                              <select
-                                value={spoonGrams}
-                                onChange={(e) =>
-                                  updateChuranPowder(churanIndex, powderIndex, {
-                                    spoonGrams: Number(e.target.value),
-                                  })
-                                }
-                                className={`${formInputClass} w-16 py-1 text-xs`}
-                              >
-                                {spoonOptions.map((s) => (
-                                  <option key={s._id} value={s.grams}>
-                                    {s.grams}g
-                                  </option>
-                                ))}
-                              </select>
-                              <span className="text-xs text-ink-ghost">= {powder.quantityGrams}g</span>
-                              <button
-                                type="button"
-                                onClick={() => removeChuranPowder(churanIndex, powderIndex)}
-                                className="rounded p-0.5 text-ink-ghost hover:text-danger"
-                                aria-label="Remove powder"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                              <div className="flex shrink-0 items-center gap-1.5">
+                                <QtyStepper
+                                  value={powder.quantitySpoons}
+                                  onChange={(v) =>
+                                    updateChuranPowder(churanIndex, powderIndex, {
+                                      quantitySpoons: v,
+                                    })
+                                  }
+                                  min={1}
+                                  max={maxSpoons}
+                                  compact
+                                />
+                                <select
+                                  value={spoonGrams}
+                                  onChange={(e) =>
+                                    updateChuranPowder(churanIndex, powderIndex, {
+                                      spoonGrams: Number(e.target.value),
+                                    })
+                                  }
+                                  className={compactSpoonSelectClass}
+                                  title={spoonNameForGrams(spoonGrams, spoonOptions)}
+                                >
+                                  {spoonOptions.map((s) => (
+                                    <option key={s._id} value={s.grams}>
+                                      {s.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  type="button"
+                                  onClick={() => removeChuranPowder(churanIndex, powderIndex)}
+                                  className="rounded p-0.5 text-ink-ghost hover:text-danger"
+                                  aria-label="Remove powder"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
                             {item ? (
                               <p
-                                className={`mt-1.5 text-xs font-semibold ${atLimit ? 'text-danger' : 'text-sage-deep'}`}
+                                className={`mt-1.5 text-[11px] leading-relaxed ${atLimit ? 'font-medium text-danger' : 'text-ink-ghost'}`}
                               >
-                                Using {powder.quantitySpoons} of {maxSpoons} spoon(s) · Available:{' '}
-                                {remainingSpoons} spoon(s) · In stock: {formatStockLabel(item)}
+                                {formatPowderSpoonUsage(
+                                  powder.quantitySpoons,
+                                  maxSpoons,
+                                  item,
+                                  atLimit
+                                )}
                               </p>
                             ) : null}
                           </div>
@@ -899,7 +896,7 @@ export const PrescriptionEditor = ({
             type="button"
             variant="secondary"
             className="gap-1 text-xs"
-            onClick={() => setChurans((prev) => [...prev, emptyChuran(defaultSpoonGrams)])}
+            onClick={() => setChurans((prev) => [...prev, emptyChuran()])}
           >
             <Plus className="h-3.5 w-3.5" />
             Add another churan
