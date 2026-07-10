@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prescription</title>
+  <style>
+    body { margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#f4f7f4; }
+    .wrap { max-width:600px; margin:24px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .head { background:#3d6b4f; color:#fff; padding:24px 28px; font-size:22px; font-weight:700; }
+    .body { padding:28px; color:#334155; line-height:1.65; font-size:15px; }
+    .badge { display:inline-block; background:#eef5ef; color:#2d5a3d; padding:8px 14px; border-radius:8px; font-weight:600; }
+    .foot { padding:0 28px 28px; font-size:13px; color:#94a3b8; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">Your prescription</div>
+    <div class="body">
+      <p>Dear <strong>{{patientName}}</strong>,</p>
+      <p>Please find your prescription <span class="badge">{{prescriptionLabel}}</span> attached to this email from <strong>{{hospitalName}}</strong>.</p>
+      <p>Follow the dosage instructions carefully. Contact us if you have any questions.</p>
+    </div>
+    <div class="foot">&copy; {{year}} {{hospitalName}}</div>
+  </div>
+</body>
+</html>

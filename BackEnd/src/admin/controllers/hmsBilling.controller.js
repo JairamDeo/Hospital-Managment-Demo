@@ -13,7 +13,10 @@ import {
 import {
   createRazorpayOrderForInvoice,
   createRazorpayQrForInvoice,
+  createRazorpayPaymentLinkForInvoice,
+  retryRazorpayPaymentLinkForInvoice,
   getRazorpayCollectionStatus,
+  getRazorpayPaymentLinkStatus,
   getRazorpayPublicConfig,
   handleRazorpayWebhook,
   verifyRazorpayPaymentForInvoice,
@@ -48,7 +51,10 @@ const billingErrorStatus = (message) => {
     message === BILLING_MESSAGES.RAZORPAY_INVALID_WEBHOOK ||
     message === BILLING_MESSAGES.RAZORPAY_ORDER_NOT_FOUND ||
     message === BILLING_MESSAGES.INVALID_PAYMENT_AMOUNT ||
-    message === BILLING_MESSAGES.PAYMENT_EXCEEDS_BALANCE
+    message === BILLING_MESSAGES.PAYMENT_EXCEEDS_BALANCE ||
+    message === BILLING_MESSAGES.PATIENT_MOBILE_REQUIRED ||
+    message === BILLING_MESSAGES.PAYMENT_LINK_SMS_NOT_CONFIGURED ||
+    message === BILLING_MESSAGES.PAYMENT_LINK_NOTIFICATION_NOT_CONFIGURED
   ) {
     return 400;
   }
@@ -182,6 +188,50 @@ export const getRazorpayStatus = async (req, res) => {
     const status = billingErrorStatus(error.message);
     if (status !== 500) return customResponse(res, error.message, status);
     logger.error('Razorpay status error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayPaymentLink = async (req, res) => {
+  try {
+    const paymentLink = await createRazorpayPaymentLinkForInvoice(
+      decodeParam(req.params.invoiceCode),
+      req.body,
+      req
+    );
+    return customResponse(res, BILLING_MESSAGES.RAZORPAY_PAYMENT_LINK_CREATED, 200, { paymentLink });
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Create Razorpay payment link error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayPaymentLinkRetry = async (req, res) => {
+  try {
+    const paymentLink = await retryRazorpayPaymentLinkForInvoice(
+      decodeParam(req.params.invoiceCode),
+      req.body,
+      req
+    );
+    return customResponse(res, BILLING_MESSAGES.RAZORPAY_PAYMENT_LINK_RETRY, 200, { paymentLink });
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Retry Razorpay payment link error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getRazorpayPaymentLinkStatusHandler = async (req, res) => {
+  try {
+    const status = await getRazorpayPaymentLinkStatus(decodeParam(req.params.paymentLinkId));
+    return customResponse(res, BILLING_MESSAGES.FETCHED, 200, status);
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Razorpay payment link status error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

@@ -2,6 +2,7 @@ import moment from 'moment';
 import HmsAppointment from '../models/hmsAppointment.model.js';
 import HmsPatient from '../models/hmsPatient.model.js';
 import { logger } from '../utils/logger.js';
+import { resolvePatientEmail } from '../utils/patientEmail.util.js';
 import {
   formatAppointmentDateDisplay,
   minutesUntilAppointment,
@@ -28,12 +29,17 @@ const isInReminderWindow = (date, timeSlot) => {
   return minutesUntil >= target - halfWindow && minutesUntil <= target + halfWindow;
 };
 
-const loadPatientMobiles = async (patientCodes) => {
+const loadPatientContacts = async (patientCodes) => {
   if (!patientCodes.length) return new Map();
   const rows = await HmsPatient.find({ patientCode: { $in: patientCodes } }).select(
-    'patientCode mobileNumber name'
+    'patientCode mobileNumber email name'
   );
-  return new Map(rows.map((p) => [p.patientCode, p.mobileNumber]));
+  return new Map(
+    rows.map((p) => [
+      p.patientCode,
+      { mobile: p.mobileNumber, email: resolvePatientEmail(p), name: p.name },
+    ])
+  );
 };
 
 const reminderPayload = (appointment, date, timeDisplay) => ({
@@ -74,21 +80,22 @@ export const runSmsReminders = async () => {
       ...followUpRows.map((a) => a.patientCode),
     ]),
   ];
-  const mobileByPatient = await loadPatientMobiles(patientCodes);
+  const contactsByPatient = await loadPatientContacts(patientCodes);
 
   for (const row of upcomingRows) {
     if (!isInReminderWindow(row.appointmentDate, row.timeSlot)) continue;
 
-    const mobile = mobileByPatient.get(row.patientCode);
-    if (!mobile) {
-      logger.warn(`Reminder skipped — no mobile for patient ${row.patientCode}`);
+    const contact = contactsByPatient.get(row.patientCode);
+    if (!contact?.mobile && !contact?.email) {
+      logger.warn(`Reminder skipped — no contact for patient ${row.patientCode}`);
       continue;
     }
 
     try {
       const result = await sendAppointmentReminder(
-        mobile,
-        reminderPayload(row, row.appointmentDate, row.timeDisplay)
+        contact?.mobile,
+        reminderPayload(row, row.appointmentDate, row.timeDisplay),
+        contact?.email
       );
       if (result?.success) {
         await HmsAppointment.updateOne(
@@ -96,7 +103,7 @@ export const runSmsReminders = async () => {
           { $set: { appointmentReminderSentAt: new Date() } }
         );
         logger.info(
-          `Appointment reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)})`
+          `Appointment reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)}, Email: ${Boolean(result.email)})`
         );
       }
     } catch (err) {
@@ -107,16 +114,17 @@ export const runSmsReminders = async () => {
   for (const row of followUpRows) {
     if (!isInReminderWindow(row.followUpDate, row.followUpTimeSlot)) continue;
 
-    const mobile = mobileByPatient.get(row.patientCode);
-    if (!mobile) {
-      logger.warn(`Follow-up reminder skipped — no mobile for patient ${row.patientCode}`);
+    const contact = contactsByPatient.get(row.patientCode);
+    if (!contact?.mobile && !contact?.email) {
+      logger.warn(`Follow-up reminder skipped — no contact for patient ${row.patientCode}`);
       continue;
     }
 
     try {
       const result = await sendFollowUpReminder(
-        mobile,
-        reminderPayload(row, row.followUpDate, row.followUpTimeDisplay)
+        contact?.mobile,
+        reminderPayload(row, row.followUpDate, row.followUpTimeDisplay),
+        contact?.email
       );
       if (result?.success) {
         await HmsAppointment.updateOne(
@@ -124,7 +132,7 @@ export const runSmsReminders = async () => {
           { $set: { followUpReminderSentAt: new Date() } }
         );
         logger.info(
-          `Follow-up reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)})`
+          `Follow-up reminder sent for ${row.appointmentCode} (SMS: ${Boolean(result.sms)}, WA: ${Boolean(result.whatsapp)}, Email: ${Boolean(result.email)})`
         );
       }
     } catch (err) {
@@ -143,7 +151,7 @@ export const startSmsReminderJob = () => {
 
   const pollMs = Number.parseInt(process.env.SMS_REMINDER_POLL_INTERVAL_MS || '60000', 10);
   logger.info(
-    `Reminder job started (SMS + WhatsApp) — ${reminderMinutesBefore()} min before visit, poll every ${pollMs}ms`
+    `Reminder job started (SMS + WhatsApp + Email) — ${reminderMinutesBefore()} min before visit, poll every ${pollMs}ms`
   );
 
   void runSmsReminders();

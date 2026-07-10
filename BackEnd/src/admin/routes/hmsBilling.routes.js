@@ -19,9 +19,15 @@ import {
   getRazorpayConfig,
   postRazorpayOrder,
   postRazorpayQr,
+  postRazorpayPaymentLink,
+  postRazorpayPaymentLinkRetry,
   getRazorpayStatus,
+  getRazorpayPaymentLinkStatusHandler,
   postRazorpayVerify,
 } from '../controllers/hmsBilling.controller.js';
+import { postInvoiceWhatsApp } from '../controllers/patientWhatsApp.controller.js';
+import { whatsappDocumentUpload } from '../../middleware/whatsappDocumentUpload.middleware.js';
+import { customResponse } from '../../utils/response.js';
 
 const router = Router();
 
@@ -31,6 +37,7 @@ router.get('/', validateRequest(listBillingQuerySchema, 'query'), getInvoices);
 router.get('/stats/summary', getBillingStatsSummary);
 router.get('/razorpay/config', getRazorpayConfig);
 router.get('/razorpay/status/:qrCodeId', getRazorpayStatus);
+router.get('/razorpay/payment-link/status/:paymentLinkId', getRazorpayPaymentLinkStatusHandler);
 router.post('/razorpay/verify', validateRequest(verifyRazorpayPaymentSchema), postRazorpayVerify);
 router.post('/medicine', validateRequest(createMedicineInvoiceSchema), postMedicineInvoice);
 router.post('/panchakarma', validateRequest(createPanchakarmaPaymentSchema), postPanchakarmaPayment);
@@ -45,10 +52,28 @@ router.post(
   postRazorpayQr
 );
 router.post(
+  '/:invoiceCode/razorpay/payment-link',
+  validateRequest(createRazorpayOrderSchema),
+  postRazorpayPaymentLink
+);
+router.post(
+  '/:invoiceCode/razorpay/payment-link/retry',
+  validateRequest(createRazorpayOrderSchema),
+  postRazorpayPaymentLinkRetry
+);
+router.post(
   '/:invoiceCode/razorpay/order',
   validateRequest(createRazorpayOrderSchema),
   postRazorpayOrder
 );
+router.post('/:invoiceCode/whatsapp', (req, res, next) => {
+  whatsappDocumentUpload(req, res, (err) => {
+    if (err) {
+      return customResponse(res, err.message || 'Invalid document file', 400);
+    }
+    next();
+  });
+}, postInvoiceWhatsApp);
 router.get('/:invoiceCode', getInvoice);
 
 export default router;

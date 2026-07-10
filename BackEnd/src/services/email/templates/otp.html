@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OTP</title>
+  <style>
+    body { margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#f4f7f4; }
+    .wrap { max-width:600px; margin:24px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .head { background:#3d6b4f; color:#fff; padding:24px 28px; font-size:22px; font-weight:700; }
+    .body { padding:28px; color:#334155; line-height:1.65; font-size:15px; }
+    .otp { text-align:center; background:#eef5ef; border:2px dashed #3d6b4f; border-radius:10px; padding:20px; margin:24px 0; font-size:36px; font-weight:700; letter-spacing:10px; color:#2d5a3d; }
+    .foot { padding:0 28px 28px; font-size:13px; color:#94a3b8; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">{{hospitalName}}</div>
+    <div class="body">
+      <p>Hi <strong>{{name}}</strong>,</p>
+      <p>Use the OTP below to {{purpose}}. This code is valid for <strong>{{expiryMinutes}} minutes</strong>.</p>
+      <div class="otp">{{otp}}</div>
+      <p>If you did not request this, you can safely ignore this email.</p>
+    </div>
+    <div class="foot">&copy; {{year}} {{hospitalName}}{{#if supportEmail}} · {{supportEmail}}{{/if}}</div>
+  </div>
+</body>
+</html>

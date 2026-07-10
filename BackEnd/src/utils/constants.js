@@ -210,7 +210,13 @@ export const BILLING_MESSAGES = {
   RAZORPAY_ORDER_NOT_FOUND: 'Payment order not found',
   RAZORPAY_ORDER_CREATED: 'Payment order created successfully',
   RAZORPAY_QR_CREATED: 'Payment QR generated successfully',
+  RAZORPAY_PAYMENT_LINK_CREATED: 'Payment link sent to patient mobile',
+  RAZORPAY_PAYMENT_LINK_RETRY: 'New payment link sent to patient mobile',
   RAZORPAY_PAYMENT_VERIFIED: 'Online payment verified successfully',
+  PATIENT_MOBILE_REQUIRED: 'Patient mobile number is required to send payment link',
+  PAYMENT_LINK_SMS_NOT_CONFIGURED: 'Payment link SMS template is not configured in MSG91',
+  PAYMENT_LINK_NOTIFICATION_NOT_CONFIGURED:
+    'Payment link SMS/WhatsApp/Email is not configured (MSG91, Foxglove, or Mail)',
 };
 
 export const STAFF_MESSAGES = {
@@ -241,6 +247,11 @@ export const PATIENT_MESSAGES = {
   INSURANCE_STATS_FETCHED: 'Insurance stats fetched successfully',
   INSURANCE_UPDATED: 'Patient health insurance saved successfully',
   VITALS_ADDED: 'Vitals recorded successfully',
+  NO_WHATSAPP_NUMBER: 'Patient does not have a WhatsApp number on file',
+  WHATSAPP_SENT: 'WhatsApp message sent successfully',
+  NO_EMAIL_ADDRESS: 'Patient does not have an email address on file',
+  EMAIL_SENT: 'Email sent successfully',
+  NOTIFICATION_SENT: 'Notification sent successfully',
   MOBILE_ALREADY_REGISTERED:
     'This mobile number is already registered. Please use a different number.',
   EMAIL_ALREADY_REGISTERED:

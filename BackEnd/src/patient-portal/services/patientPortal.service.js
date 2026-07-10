@@ -39,7 +39,11 @@ const assignAndSendOtp = async (patient) => {
   await patient.save();
 
   try {
-    await sendOtpNotification(patient.mobileNumber, otp);
+    await sendOtpNotification(patient.mobileNumber, otp, {
+      email: patient.email,
+      name: patient.name,
+      purpose: 'verify your account',
+    });
   } catch {
     patient.otp = undefined;
     patient.otpExpiresAt = undefined;

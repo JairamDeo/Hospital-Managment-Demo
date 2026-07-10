@@ -41,6 +41,7 @@ const hmsPatientSchema = new Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, lowercase: true, trim: true, unique: true, sparse: true },
   mobileNumber: { type: String, required: true, unique: true, trim: true },
+  whatsappNumber: { type: String, trim: true, default: '' },
   age: { type: Number, min: 1, max: 120 },
   gender: { type: String, enum: ['Male', 'Female', 'Other', 'Not recorded'], default: 'Not recorded' },
   bloodGroup: { type: String, trim: true, default: '' },

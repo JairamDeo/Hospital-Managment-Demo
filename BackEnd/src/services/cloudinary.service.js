@@ -37,6 +37,38 @@ export const uploadPrescriptionPdf = async (buffer, { patientCode, originalName 
   });
 };
 
+/** Temporary public HTTPS URL for Foxglove WhatsApp document/image headers. */
+export const uploadWhatsAppMedia = async (
+  buffer,
+  { patientCode, filename, mimeType = 'application/pdf' }
+) => {
+  ensureCloudinary();
+  const folder = `HMS/whatsapp/${patientCode}`;
+  const base = safeBaseName(filename);
+  const isImage = /^image\//i.test(mimeType);
+  const resourceType = isImage ? 'image' : 'raw';
+  const format = isImage
+    ? (mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg')
+    : 'pdf';
+
+  return new Promise((resolve, reject) => {
+    const upload = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: resourceType,
+        public_id: `${Date.now()}_${base}`,
+        format,
+        access_mode: 'public',
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    upload.end(buffer);
+  });
+};
+
 export const deleteCloudinaryAsset = async (publicId, resourceType = 'raw') => {
   ensureCloudinary();
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });

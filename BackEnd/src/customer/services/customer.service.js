@@ -48,7 +48,11 @@ const assignAndSendOtp = async (customer) => {
   await customer.save();
 
   try {
-    await sendOtpNotification(customer.mobileNumber, otp);
+    await sendOtpNotification(customer.mobileNumber, otp, {
+      email: customer.email,
+      name: customer.name,
+      purpose: 'verify your account',
+    });
   } catch {
     customer.otp = undefined;
     customer.otpExpiresAt = undefined;

@@ -25,6 +25,11 @@ export const isFollowUpReminderSmsEnabled = () => {
   return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_FOLLOWUP_TEMPLATE_ID);
 };
 
+export const isPaymentLinkSmsEnabled = () => {
+  if (!isMsg91GloballyEnabled()) return false;
+  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_PAYMENT_LINK_TEMPLATE_ID);
+};
+
 /**
  * Generic MSG91 Flow API sender — plug in template id + variable map from env.
  * @see https://docs.msg91.com/
@@ -118,5 +123,22 @@ export const sendFollowUpReminderSms = async (mobileNumber, payload) => {
     mobileNumber,
     variables: followUpReminderVars(payload),
     logLabel: 'follow-up reminder',
+  });
+};
+
+const paymentLinkSmsVars = ({ patientName, amount, invoiceCode, paymentLink }) => ({
+  [process.env.MSG91_PAYLINK_VAR_PATIENT || 'PATIENT']: patientName,
+  [process.env.MSG91_PAYLINK_VAR_AMOUNT || 'AMOUNT']: amount,
+  [process.env.MSG91_PAYLINK_VAR_INVOICE || 'INVOICE']: invoiceCode,
+  [process.env.MSG91_PAYLINK_VAR_LINK || 'LINK']: paymentLink,
+});
+
+/** SMS with Razorpay payment link for billing collect-payment flow. */
+export const sendPaymentLinkSms = async (mobileNumber, payload) => {
+  return sendFlowSms({
+    templateId: process.env.MSG91_PAYMENT_LINK_TEMPLATE_ID,
+    mobileNumber,
+    variables: paymentLinkSmsVars(payload),
+    logLabel: 'payment link',
   });
 };

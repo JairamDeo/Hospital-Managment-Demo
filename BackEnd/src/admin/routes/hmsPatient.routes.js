@@ -39,6 +39,10 @@ import {
   viewPatientPrescriptionPdf,
   deletePatientPrescriptionHandler,
 } from '../controllers/patientPrescription.controller.js';
+import {
+  postStructuredPrescriptionWhatsApp,
+  postUploadedPrescriptionWhatsApp,
+} from '../controllers/patientWhatsApp.controller.js';
 import { PATIENT_MESSAGES } from '../../utils/constants.js';
 
 const router = Router();
@@ -69,6 +73,10 @@ router.get(
   '/:patientCode/structured-prescriptions/:prescriptionCode/pdf',
   getStructuredPrescriptionPdf
 );
+router.post(
+  '/:patientCode/structured-prescriptions/:prescriptionCode/whatsapp',
+  postStructuredPrescriptionWhatsApp
+);
 router.get('/:patientCode/prescriptions', getPatientPrescriptions);
 router.post('/:patientCode/prescriptions', (req, res, next) => {
   prescriptionPdfUpload(req, res, (err) => {
@@ -85,6 +93,10 @@ router.post('/:patientCode/prescriptions', (req, res, next) => {
 router.get(
   '/:patientCode/prescriptions/:prescriptionId/view',
   viewPatientPrescriptionPdf
+);
+router.post(
+  '/:patientCode/prescriptions/:prescriptionId/whatsapp',
+  postUploadedPrescriptionWhatsApp
 );
 router.delete(
   '/:patientCode/prescriptions/:prescriptionId',

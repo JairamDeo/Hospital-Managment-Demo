@@ -4,12 +4,18 @@ export type InvoiceFilter = 'all' | 'paid' | 'pending' | 'partial' | 'overdue';
 
 export type FeeType = 'Consultation' | 'Medicine' | 'Panchakarma';
 
-export type PaymentMethodType = 'Cash' | 'UPI' | 'Card' | 'Online';
+export type PaymentMethodType = 'Cash' | 'UPI' | 'Card' | 'Online' | 'Payment Link';
 
 export const OFFLINE_PAYMENT_METHOD_OPTIONS = ['Cash', 'UPI', 'Card'] as const;
 export type OfflinePaymentMethodType = (typeof OFFLINE_PAYMENT_METHOD_OPTIONS)[number];
 
-export const PAYMENT_METHOD_OPTIONS: PaymentMethodType[] = ['Cash', 'UPI', 'Card', 'Online'];
+export const PAYMENT_METHOD_OPTIONS: PaymentMethodType[] = [
+  'Cash',
+  'UPI',
+  'Card',
+  'Online',
+  'Payment Link',
+];
 
 export interface Invoice {
   id: string;
@@ -127,6 +133,33 @@ export interface RazorpayQrResponse {
   collectedBy: string;
   paymentRef: string;
 }
+
+export interface RazorpayPaymentLinkResponse {
+  paymentLinkId: string;
+  paymentLinkUrl: string;
+  amount: number;
+  amountPaise: number;
+  currency: string;
+  invoiceCode: string;
+  patientCode: string;
+  patientName: string;
+  patientMobileMasked: string;
+  feeType: FeeType;
+  feeTypeLabel: string;
+  doctorName: string;
+  treatment: string;
+  description: string;
+  collectedBy: string;
+  paymentRef: string;
+  status: 'pending';
+  smsSent: boolean;
+  whatsappSent?: boolean;
+  whatsappSkipped?: boolean;
+  emailSent?: boolean;
+  emailSkipped?: boolean;
+}
+
+export type RazorpayCollectionStatus = 'pending' | 'paid' | 'failed';
 
 export interface PaymentCollectionSuccess {
   invoiceCode: string;

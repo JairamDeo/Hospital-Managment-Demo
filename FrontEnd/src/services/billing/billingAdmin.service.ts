@@ -1,7 +1,7 @@
 import axiosInstance from '../http/axiosInstance';
 import type { SaleUnit } from '@/types/pharmacy.types';
 import type { ApiResponse } from '@/types/api.types';
-import type { BillingStats, Invoice, InvoiceDetail, OfflinePaymentMethodType, PaymentCollectionSuccess, RazorpayOrderResponse, RazorpayPublicConfig, RazorpayQrResponse } from '@/types/billing.types';
+import type { BillingStats, Invoice, InvoiceDetail, OfflinePaymentMethodType, PaymentCollectionSuccess, RazorpayCollectionStatus, RazorpayOrderResponse, RazorpayPaymentLinkResponse, RazorpayPublicConfig, RazorpayQrResponse } from '@/types/billing.types';
 
 class BillingAdminService {
   list(params?: {
@@ -40,13 +40,41 @@ class BillingAdminService {
   getRazorpayStatus(qrCodeId: string) {
     return axiosInstance.get<
       ApiResponse<{
-        status: 'pending' | 'paid';
+        status: RazorpayCollectionStatus;
         invoice?: InvoiceDetail;
         collection?: PaymentCollectionSuccess;
         qrCodeId?: string;
         amount?: number;
       }>
     >(`/admin/billing/razorpay/status/${encodeURIComponent(qrCodeId)}`);
+  }
+
+  createRazorpayPaymentLink(invoiceCode: string, amount?: number) {
+    return axiosInstance.post<ApiResponse<{ paymentLink: RazorpayPaymentLinkResponse }>>(
+      `/admin/billing/${encodeURIComponent(invoiceCode)}/razorpay/payment-link`,
+      amount != null ? { amount } : {}
+    );
+  }
+
+  retryRazorpayPaymentLink(invoiceCode: string, amount?: number) {
+    return axiosInstance.post<ApiResponse<{ paymentLink: RazorpayPaymentLinkResponse }>>(
+      `/admin/billing/${encodeURIComponent(invoiceCode)}/razorpay/payment-link/retry`,
+      amount != null ? { amount } : {}
+    );
+  }
+
+  getRazorpayPaymentLinkStatus(paymentLinkId: string) {
+    return axiosInstance.get<
+      ApiResponse<{
+        status: RazorpayCollectionStatus;
+        invoice?: InvoiceDetail;
+        collection?: PaymentCollectionSuccess;
+        paymentLinkId?: string;
+        amount?: number;
+        patientMobileMasked?: string;
+        failureReason?: string;
+      }>
+    >(`/admin/billing/razorpay/payment-link/status/${encodeURIComponent(paymentLinkId)}`);
   }
 
   get(invoiceCode: string) {

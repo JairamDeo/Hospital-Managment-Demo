@@ -14,10 +14,15 @@ const hmsRazorpayPaymentSchema = new Schema({
   invoiceCode: { type: String, required: true, index: true },
   razorpayOrderId: { type: String },
   razorpayQrCodeId: { type: String },
+  razorpayPaymentLinkId: { type: String },
   razorpayPaymentId: { type: String, index: true },
-  collectionType: { type: String, enum: ['checkout', 'qr'], default: 'qr' },
+  collectionType: { type: String, enum: ['checkout', 'qr', 'payment_link'], default: 'qr' },
   qrImageUrl: { type: String, default: '' },
   qrShortUrl: { type: String, default: '' },
+  paymentLinkUrl: { type: String, default: '' },
+  patientMobile: { type: String, default: '' },
+  smsSentAt: { type: Date, default: null },
+  failureReason: { type: String, default: '' },
   patientCode: { type: String, default: '' },
   patientName: { type: String, default: '' },
   feeType: { type: String, default: '' },
@@ -39,8 +44,9 @@ hmsRazorpayPaymentSchema.pre('save', function setUpdated(next) {
   next();
 });
 
-// Sparse: QR records omit orderId; checkout records omit qrCodeId.
+// Sparse: each flow omits unrelated Razorpay ids.
 hmsRazorpayPaymentSchema.index({ razorpayOrderId: 1 }, { unique: true, sparse: true });
 hmsRazorpayPaymentSchema.index({ razorpayQrCodeId: 1 }, { unique: true, sparse: true });
+hmsRazorpayPaymentSchema.index({ razorpayPaymentLinkId: 1 }, { unique: true, sparse: true });
 
 export default model('HmsRazorpayPayment', hmsRazorpayPaymentSchema);

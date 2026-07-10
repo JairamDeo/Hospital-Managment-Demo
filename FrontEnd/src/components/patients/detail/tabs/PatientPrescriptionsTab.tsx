@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Eye, FileText, Loader2, Plus } from 'lucide-react';
+import { Download, Eye, FileText, Loader2, MessageCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { prescriptionPath } from '@/constants/routes';
@@ -24,6 +24,7 @@ export const PatientPrescriptionsTab = ({
 }: Props) => {
   const { showToast } = useToast();
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
+  const [waLoading, setWaLoading] = useState<string | null>(null);
 
   const openPdf = async (code: string, audience: 'patient' | 'staff', download = false) => {
     setPdfLoading(`${code}-${audience}`);
@@ -47,6 +48,35 @@ export const PatientPrescriptionsTab = ({
       showToast(getApiErrorMessage(err), 'error');
     } finally {
       setPdfLoading(null);
+    }
+  };
+
+  const sendWhatsApp = async (code: string) => {
+    setWaLoading(code);
+    try {
+      const { data } = await patientAdminService.sendStructuredPrescriptionWhatsApp(
+        patientCode,
+        code
+      );
+      const res = data.res;
+      const channels: string[] = [];
+      if (res?.whatsappSent) channels.push('WhatsApp');
+      if (res?.emailSent) channels.push('Email');
+      if (channels.length) {
+        showToast(`Prescription sent via ${channels.join(' & ')}`, 'success');
+      } else {
+        showToast('Prescription notification sent', 'success');
+      }
+      if (res?.whatsapp?.skipped && !res?.whatsappSent) {
+        showToast('Patient does not have a WhatsApp number on file', 'info');
+      }
+      if (res?.email?.skipped && !res?.emailSent) {
+        showToast('Patient does not have an email address on file', 'info');
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setWaLoading(null);
     }
   };
 
@@ -131,6 +161,19 @@ export const PatientPrescriptionsTab = ({
                   title="Download PDF"
                 >
                   <Download className="h-4 w-4" strokeWidth={1.75} />
+                </button>
+                <button
+                  type="button"
+                  disabled={waLoading === rx.prescriptionCode}
+                  onClick={() => void sendWhatsApp(rx.prescriptionCode)}
+                  className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
+                  title="Send on WhatsApp"
+                >
+                  {waLoading === rx.prescriptionCode ? (
+                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+                  ) : (
+                    <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
+                  )}
                 </button>
               </div>
             </div>

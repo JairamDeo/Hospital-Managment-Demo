@@ -12,6 +12,7 @@ const syncRazorpayPaymentIndexes = async () => {
   // Empty strings are indexed (unlike null/missing) and break sparse unique indexes.
   await coll.updateMany({ razorpayOrderId: '' }, { $unset: { razorpayOrderId: '' } });
   await coll.updateMany({ razorpayQrCodeId: '' }, { $unset: { razorpayQrCodeId: '' } });
+  await coll.updateMany({ razorpayPaymentLinkId: '' }, { $unset: { razorpayPaymentLinkId: '' } });
   await HmsRazorpayPayment.syncIndexes();
   logger.info('HmsRazorpayPayment indexes synced');
 };

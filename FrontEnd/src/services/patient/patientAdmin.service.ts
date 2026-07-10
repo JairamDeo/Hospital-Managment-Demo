@@ -216,6 +216,22 @@ class PatientAdminService {
     return res.data;
   }
 
+  sendStructuredPrescriptionWhatsApp(patientCode: string, prescriptionCode: string) {
+    return axiosInstance.post<
+      ApiResponse<{ sent: boolean; patientMobileMasked: string; prescriptionCode: string }>
+    >(
+      `/admin/patients/${encodeURIComponent(patientCode)}/structured-prescriptions/${encodeURIComponent(prescriptionCode)}/whatsapp`
+    );
+  }
+
+  sendUploadedPrescriptionWhatsApp(patientCode: string, prescriptionId: string) {
+    return axiosInstance.post<
+      ApiResponse<{ sent: boolean; patientMobileMasked: string; prescriptionId: string }>
+    >(
+      `/admin/patients/${encodeURIComponent(patientCode)}/prescriptions/${encodeURIComponent(prescriptionId)}/whatsapp`
+    );
+  }
+
   updateInsurance(patientCode: string, values: PatientInsuranceFormValues) {
     return axiosInstance.patch<ApiResponse<{ row: PatientInsuranceRow }>>(
       `/admin/patients/${encodeURIComponent(patientCode)}/insurance`,

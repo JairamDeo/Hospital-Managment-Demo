@@ -139,7 +139,11 @@ export const sendForgotPasswordOtp = async (mobileNumber) => {
   await user.save();
 
   try {
-    await sendOtpNotification(mobileNumber, otp);
+    await sendOtpNotification(mobileNumber, otp, {
+      email: user.email,
+      name: user.firstName || 'Admin',
+      purpose: 'reset your password',
+    });
   } catch (error) {
     user.otp = undefined;
     user.otpExpiresAt = undefined;

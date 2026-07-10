@@ -45,6 +45,30 @@ const buildBodyComponent = (texts) => {
   return { type: 'body', parameters };
 };
 
+const buildHeaderComponent = ({ document, image }) => {
+  if (document?.link) {
+    return {
+      type: 'header',
+      parameters: [
+        {
+          type: 'document',
+          document: {
+            link: document.link,
+            filename: document.filename || 'document.pdf',
+          },
+        },
+      ],
+    };
+  }
+  if (image?.link) {
+    return {
+      type: 'header',
+      parameters: [{ type: 'image', image: { link: image.link } }],
+    };
+  }
+  return null;
+};
+
 const buildOtpButtonComponent = (otp) => {
   const mode = process.env.FOXGLOVE_WA_OTP_BUTTON_TYPE || 'copy_code';
   if (mode === 'url') {
@@ -72,6 +96,8 @@ export const sendWhatsAppTemplate = async ({
   mobileNumber,
   bodyTexts = [],
   buttonComponents = [],
+  headerDocument = null,
+  headerImage = null,
   logLabel = 'WhatsApp',
 }) => {
   if (!isWaGloballyEnabled() || !waBaseConfigured() || !templateName) {
@@ -81,6 +107,11 @@ export const sendWhatsAppTemplate = async ({
 
   const to = formatWaRecipient(mobileNumber);
   const components = [];
+  const header = buildHeaderComponent({
+    document: headerDocument,
+    image: headerImage,
+  });
+  if (header) components.push(header);
   const body = buildBodyComponent(bodyTexts);
   if (body) components.push(body);
   components.push(...buttonComponents.filter(Boolean));
@@ -185,5 +216,60 @@ export const sendFollowUpReminderWhatsApp = async (mobileNumber, payload) => {
     mobileNumber,
     bodyTexts: [patientName, doctorName, date, time],
     logLabel: 'follow-up reminder',
+  });
+};
+
+export const isPaymentLinkWhatsAppEnabled = () => {
+  if (!isWaGloballyEnabled() || !waBaseConfigured()) return false;
+  return Boolean(waEnv('FOXGLOVE_WA_PAYMENT_LINK_TEMPLATE_NAME'));
+};
+
+export const isPrescriptionWhatsAppEnabled = () => {
+  if (!isWaGloballyEnabled() || !waBaseConfigured()) return false;
+  return Boolean(waEnv('FOXGLOVE_WA_PRESCRIPTION_TEMPLATE_NAME'));
+};
+
+export const isInvoiceWhatsAppEnabled = () => {
+  if (!isWaGloballyEnabled() || !waBaseConfigured()) return false;
+  return Boolean(waEnv('FOXGLOVE_WA_INVOICE_TEMPLATE_NAME'));
+};
+
+/** Payment link collect — body: patient, amount, invoice, link (optional 5th: hospital). */
+export const sendPaymentLinkWhatsApp = async (mobileNumber, payload) => {
+  const { patientName, amount, invoiceCode, paymentLink, hospitalName } = payload;
+  const bodyTexts = [patientName, amount, invoiceCode, paymentLink];
+  if (hospitalName) bodyTexts.push(hospitalName);
+  return sendWhatsAppTemplate({
+    templateName: waEnv('FOXGLOVE_WA_PAYMENT_LINK_TEMPLATE_NAME'),
+    mobileNumber,
+    bodyTexts,
+    logLabel: 'payment link',
+  });
+};
+
+/** Prescription PDF — header: document; body: patient, prescription label. */
+export const sendPrescriptionDocumentWhatsApp = async (mobileNumber, payload) => {
+  const { patientName, prescriptionLabel, documentUrl, filename } = payload;
+  return sendWhatsAppTemplate({
+    templateName: waEnv('FOXGLOVE_WA_PRESCRIPTION_TEMPLATE_NAME'),
+    mobileNumber,
+    headerDocument: { link: documentUrl, filename: filename || 'prescription.pdf' },
+    bodyTexts: [patientName, prescriptionLabel],
+    logLabel: 'prescription document',
+  });
+};
+
+/** Invoice / receipt — header document (pdf/png/jpg) or image; body: patient, invoice, amount. */
+export const sendInvoiceDocumentWhatsApp = async (mobileNumber, payload) => {
+  const { patientName, invoiceCode, amount, documentUrl, filename, mimeType } = payload;
+  const isImage = /^image\//i.test(mimeType || '') || /\.(png|jpe?g|webp)$/i.test(filename || '');
+  return sendWhatsAppTemplate({
+    templateName: waEnv('FOXGLOVE_WA_INVOICE_TEMPLATE_NAME'),
+    mobileNumber,
+    ...(isImage
+      ? { headerImage: { link: documentUrl } }
+      : { headerDocument: { link: documentUrl, filename: filename || 'invoice.pdf' } }),
+    bodyTexts: [patientName, invoiceCode, amount],
+    logLabel: 'invoice document',
   });
 };

@@ -60,6 +60,35 @@ export const fetchRazorpayQrPayments = async (qrCodeId) => {
   return client.qrCode.fetchAllPayments(qrCodeId, { count: 5 });
 };
 
+export const createRazorpayPaymentLink = async ({
+  amountPaise,
+  description,
+  customer,
+  notes = {},
+  expireByUnix,
+}) => {
+  const client = getClient();
+  const payload = {
+    amount: amountPaise,
+    currency: 'INR',
+    description: description.slice(0, 255),
+    customer: {
+      name: customer.name?.slice(0, 50) || 'Patient',
+      contact: customer.contact,
+    },
+    notify: { sms: false, email: false },
+    reminder_enable: false,
+    notes,
+  };
+  if (expireByUnix) payload.expire_by = expireByUnix;
+  return client.paymentLink.create(payload);
+};
+
+export const fetchRazorpayPaymentLink = async (paymentLinkId) => {
+  const client = getClient();
+  return client.paymentLink.fetch(paymentLinkId);
+};
+
 export const verifyRazorpayPaymentSignature = ({ orderId, paymentId, signature }) => {
   const secret = process.env.RAZORPAY_KEY_SECRET?.trim();
   if (!secret || !orderId || !paymentId || !signature) return false;
