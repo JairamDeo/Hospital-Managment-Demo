@@ -80,6 +80,9 @@ export const getPatientTreatmentHistory = async (patientCode, req) => {
         treatmentGiven: note.treatmentGiven?.trim() || '',
         medicines: note.medicines?.trim() || '',
         observations: note.observations?.trim() || '',
+        bp: note.bp?.trim() || '',
+        pulse: note.pulse?.trim() || '',
+        spo2: note.spo2?.trim() || '',
         recordedByName: note.recordedBy?.name?.trim() || '',
       })),
     };

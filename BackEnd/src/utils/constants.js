@@ -203,6 +203,14 @@ export const BILLING_MESSAGES = {
   INVALID_PAYMENT_AMOUNT: 'Invalid payment amount',
   PAYMENT_EXCEEDS_BALANCE: 'Payment exceeds remaining balance',
   FEE_REQUIRED: 'Consultation fee is required',
+  RAZORPAY_NOT_CONFIGURED: 'Online payment is not configured',
+  RAZORPAY_MIN_AMOUNT: 'Minimum online payment amount is ₹1',
+  RAZORPAY_INVALID_SIGNATURE: 'Payment verification failed',
+  RAZORPAY_INVALID_WEBHOOK: 'Invalid webhook signature',
+  RAZORPAY_ORDER_NOT_FOUND: 'Payment order not found',
+  RAZORPAY_ORDER_CREATED: 'Payment order created successfully',
+  RAZORPAY_QR_CREATED: 'Payment QR generated successfully',
+  RAZORPAY_PAYMENT_VERIFIED: 'Online payment verified successfully',
 };
 
 export const STAFF_MESSAGES = {

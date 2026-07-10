@@ -37,3 +37,15 @@ export const createMedicineInvoiceSchema = Joi.object({
   paymentMethod: paymentMethod.optional(),
   markPaid: Joi.boolean().optional().default(false),
 });
+
+export const createRazorpayOrderSchema = Joi.object({
+  amount: Joi.number().min(0.01).optional(),
+});
+
+export const verifyRazorpayPaymentSchema = Joi.object({
+  invoiceCode: Joi.string().required(),
+  razorpayOrderId: Joi.string().required(),
+  razorpayPaymentId: Joi.string().required(),
+  razorpaySignature: Joi.string().required(),
+  razorpayMethod: Joi.string().allow('', null).optional(),
+});

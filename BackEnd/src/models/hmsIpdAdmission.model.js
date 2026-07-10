@@ -6,6 +6,9 @@ const caseNoteSchema = new Schema(
     treatmentGiven: { type: String, default: '', trim: true },
     medicines: { type: String, default: '', trim: true },
     observations: { type: String, default: '', trim: true },
+    bp: { type: String, default: '', trim: true },
+    pulse: { type: String, default: '', trim: true },
+    spo2: { type: String, default: '', trim: true },
     recordedBy: {
       type: { type: String, enum: ['admin', 'staff'], default: 'admin' },
       staffCode: { type: String, default: '' },

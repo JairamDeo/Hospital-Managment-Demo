@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type {
+  IpdDailyTreatmentRecord,
   IpdTreatmentHistoryItem,
   OpdTreatmentHistoryItem,
   PatientTreatmentHistory,
@@ -39,6 +40,43 @@ const OpdRecord = ({ item }: { item: OpdTreatmentHistoryItem }) => (
       </div>
     </dl>
   </article>
+);
+
+const IpdDailyRecordsTable = ({ records }: { records: IpdDailyTreatmentRecord[] }) => (
+  <div className="overflow-x-auto rounded-lg border border-border-sage">
+    <table className="w-full min-w-[760px] text-left text-sm">
+      <thead>
+        <tr className="border-b border-border-sage bg-cream/50 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+          <th className="whitespace-nowrap px-3 py-2">Day</th>
+          <th className="whitespace-nowrap px-3 py-2">Date</th>
+          <th className="whitespace-nowrap px-3 py-2">BP</th>
+          <th className="whitespace-nowrap px-3 py-2">Pulse</th>
+          <th className="whitespace-nowrap px-3 py-2">SpO₂</th>
+          <th className="min-w-[140px] px-3 py-2">Treatment</th>
+          <th className="min-w-[120px] px-3 py-2">Medicines</th>
+          <th className="min-w-[120px] px-3 py-2">Observations</th>
+          <th className="whitespace-nowrap px-3 py-2">By</th>
+        </tr>
+      </thead>
+      <tbody>
+        {records.map((day) => (
+          <tr key={day.id} className="border-b border-border-sage/60 align-top last:border-0">
+            <td className="whitespace-nowrap px-3 py-2 font-semibold text-sage-deep">{day.dayLabel}</td>
+            <td className="whitespace-nowrap px-3 py-2 text-ink-soft">{day.date}</td>
+            <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">{emptyText(day.bp)}</td>
+            <td className="whitespace-nowrap px-3 py-2">{emptyText(day.pulse)}</td>
+            <td className="whitespace-nowrap px-3 py-2">{emptyText(day.spo2)}</td>
+            <td className="px-3 py-2 text-ink-soft">{emptyText(day.treatmentGiven)}</td>
+            <td className="px-3 py-2 text-ink-soft">{emptyText(day.medicines)}</td>
+            <td className="px-3 py-2 text-ink-soft">{emptyText(day.observations)}</td>
+            <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-ghost">
+              {emptyText(day.recordedByName)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
 );
 
 const IpdAdmissionCard = ({ admission }: { admission: IpdTreatmentHistoryItem }) => (
@@ -89,49 +127,13 @@ const IpdAdmissionCard = ({ admission }: { admission: IpdTreatmentHistoryItem })
       ) : null}
     </header>
 
-    {admission.dailyRecords.length === 0 ? (
-      <p className="px-4 py-6 text-sm text-ink-soft sm:px-5">No day-wise treatment notes recorded.</p>
-    ) : (
-      <div className="divide-y divide-border-sage/70">
-        {admission.dailyRecords.map((day) => (
-          <div key={day.id} className="px-4 py-4 sm:px-5">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="inline-flex rounded-full bg-sage-mist px-2.5 py-0.5 text-xs font-semibold text-sage-deep">
-                {day.dayLabel}
-              </span>
-              <span className="text-xs text-ink-ghost">{day.date}</span>
-              {day.recordedByName ? (
-                <span className="text-xs text-ink-ghost">· {day.recordedByName}</span>
-              ) : null}
-            </div>
-            <dl className="grid gap-3 text-sm sm:grid-cols-1">
-              <div>
-                <dt className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                  Treatment
-                </dt>
-                <dd className="mt-1 leading-relaxed text-ink-soft">{emptyText(day.treatmentGiven)}</dd>
-              </div>
-              {day.medicines ? (
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                    Medicines
-                  </dt>
-                  <dd className="mt-1 leading-relaxed text-ink-soft">{day.medicines}</dd>
-                </div>
-              ) : null}
-              {day.observations ? (
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                    Observations
-                  </dt>
-                  <dd className="mt-1 leading-relaxed text-ink-soft">{day.observations}</dd>
-                </div>
-              ) : null}
-            </dl>
-          </div>
-        ))}
-      </div>
-    )}
+    <div className="px-4 py-4 sm:px-5">
+      {admission.dailyRecords.length === 0 ? (
+        <p className="py-4 text-sm text-ink-soft">No day-wise treatment notes recorded.</p>
+      ) : (
+        <IpdDailyRecordsTable records={admission.dailyRecords} />
+      )}
+    </div>
   </article>
 );
 

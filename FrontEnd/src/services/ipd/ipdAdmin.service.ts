@@ -46,7 +46,15 @@ class IpdAdminService {
   addCaseNote(admissionCode: string, values: CaseNoteFormValues) {
     return axiosInstance.post<ApiResponse<{ admission: IpdAdmission }>>(
       `/admin/ipd/admissions/${encodeURIComponent(admissionCode)}/case-notes`,
-      values
+      {
+        treatmentGiven: values.treatmentGiven,
+        medicines: values.medicines,
+        observations: values.observations,
+        bpSystolic: values.bpSystolic,
+        bpDiastolic: values.bpDiastolic,
+        pulse: values.pulse,
+        spo2: values.spo2,
+      }
     );
   }
 

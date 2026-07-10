@@ -21,6 +21,10 @@ const emptyCaseNote = (): CaseNoteFormValues => ({
   treatmentGiven: '',
   medicines: '',
   observations: '',
+  bpSystolic: '',
+  bpDiastolic: '',
+  pulse: '',
+  spo2: '',
 });
 
 const emptyDischarge = (admission?: IpdAdmission | null): DischargeFormValues => ({
@@ -89,8 +93,15 @@ export const IpdAdmissionDetailPage = () => {
 
   const handleAddCaseNote = async () => {
     if (!admission) return;
-    if (!caseNoteForm.treatmentGiven.trim() && !caseNoteForm.observations.trim()) {
-      showToast('Enter treatment or daily observations', 'error');
+    if (
+      !caseNoteForm.treatmentGiven.trim() &&
+      !caseNoteForm.observations.trim() &&
+      !caseNoteForm.bpSystolic.trim() &&
+      !caseNoteForm.bpDiastolic.trim() &&
+      !caseNoteForm.pulse.trim() &&
+      !caseNoteForm.spo2.trim()
+    ) {
+      showToast('Enter vitals, treatment, or observations', 'error');
       return;
     }
     setSubmitting(true);
@@ -262,36 +273,40 @@ export const IpdAdmissionDetailPage = () => {
                   No daily records yet. Add medicines, therapies and observations below.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {[...admission.caseNotes].reverse().map((n) => (
-                    <article
-                      key={n.id}
-                      className="rounded-lg border border-border-sage/80 bg-cream/30 p-4"
-                    >
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-ink-ghost">
-                        {formatIpdDateTime(n.noteDate)}
-                        {n.recordedBy?.name ? ` · ${n.recordedBy.name}` : ''}
-                      </p>
-                      {n.treatmentGiven ? (
-                        <p className="mt-2 text-sm">
-                          <span className="font-semibold text-ink">Treatment:</span>{' '}
-                          <span className="text-ink-soft">{n.treatmentGiven}</span>
-                        </p>
-                      ) : null}
-                      {n.medicines ? (
-                        <p className="mt-1.5 text-sm">
-                          <span className="font-semibold text-ink">Medicines:</span>{' '}
-                          <span className="text-ink-soft">{n.medicines}</span>
-                        </p>
-                      ) : null}
-                      {n.observations ? (
-                        <p className="mt-1.5 text-sm">
-                          <span className="font-semibold text-ink">Observations:</span>{' '}
-                          <span className="text-ink-soft">{n.observations}</span>
-                        </p>
-                      ) : null}
-                    </article>
-                  ))}
+                <div className="overflow-x-auto rounded-lg border border-border-sage">
+                  <table className="w-full min-w-[720px] text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border-sage bg-cream/50 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+                        <th className="px-3 py-2">Date</th>
+                        <th className="px-3 py-2">BP</th>
+                        <th className="px-3 py-2">Pulse</th>
+                        <th className="px-3 py-2">SpO₂</th>
+                        <th className="px-3 py-2">Treatment</th>
+                        <th className="px-3 py-2">Medicines</th>
+                        <th className="px-3 py-2">Observations</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...admission.caseNotes].reverse().map((n) => (
+                        <tr key={n.id} className="border-b border-border-sage/60 align-top last:border-0">
+                          <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
+                            {formatIpdDateTime(n.noteDate)}
+                            {n.recordedBy?.name ? (
+                              <span className="mt-0.5 block text-ink-ghost">{n.recordedBy.name}</span>
+                            ) : null}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2 font-medium text-ink">
+                            {n.bp || '—'}
+                          </td>
+                          <td className="whitespace-nowrap px-3 py-2">{n.pulse || '—'}</td>
+                          <td className="whitespace-nowrap px-3 py-2">{n.spo2 || '—'}</td>
+                          <td className="px-3 py-2 text-ink-soft">{n.treatmentGiven || '—'}</td>
+                          <td className="px-3 py-2 text-ink-soft">{n.medicines || '—'}</td>
+                          <td className="px-3 py-2 text-ink-soft">{n.observations || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -304,6 +319,38 @@ export const IpdAdmissionDetailPage = () => {
                 Document today&apos;s Panchakarma, medicines, diet and clinical observations.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
+                <Input
+                  label="BP systolic (mmHg)"
+                  type="number"
+                  min={0}
+                  value={caseNoteForm.bpSystolic}
+                  onChange={(e) =>
+                    setCaseNoteForm((f) => ({ ...f, bpSystolic: e.target.value }))
+                  }
+                  placeholder="120"
+                />
+                <Input
+                  label="BP diastolic (mmHg)"
+                  type="number"
+                  min={0}
+                  value={caseNoteForm.bpDiastolic}
+                  onChange={(e) =>
+                    setCaseNoteForm((f) => ({ ...f, bpDiastolic: e.target.value }))
+                  }
+                  placeholder="80"
+                />
+                <Input
+                  label="Pulse (bpm)"
+                  value={caseNoteForm.pulse}
+                  onChange={(e) => setCaseNoteForm((f) => ({ ...f, pulse: e.target.value }))}
+                  placeholder="72"
+                />
+                <Input
+                  label="SpO₂ (%)"
+                  value={caseNoteForm.spo2}
+                  onChange={(e) => setCaseNoteForm((f) => ({ ...f, spo2: e.target.value }))}
+                  placeholder="98"
+                />
                 <Input
                   label="Treatment / therapy given"
                   value={caseNoteForm.treatmentGiven}

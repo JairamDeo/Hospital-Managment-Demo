@@ -15,6 +15,7 @@ import rbacRoutes from './admin/routes/rbac.routes.js';
 import masterRoutes from './admin/routes/master.routes.js';
 import pharmacyRoutes from './admin/routes/pharmacy.routes.js';
 import hmsBillingRoutes from './admin/routes/hmsBilling.routes.js';
+import { postRazorpayWebhook } from './admin/controllers/hmsBilling.controller.js';
 import hmsIpdRoutes from './admin/routes/hmsIpd.routes.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
@@ -51,6 +52,13 @@ app.use(
 );
 
 app.options('*', cors());
+
+app.post(
+  '/api/admin/billing/razorpay/webhook',
+  express.raw({ type: 'application/json' }),
+  postRazorpayWebhook
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

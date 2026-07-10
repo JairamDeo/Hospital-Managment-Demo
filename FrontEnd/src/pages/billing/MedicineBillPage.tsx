@@ -21,8 +21,8 @@ import {
 import { ROUTES } from '@/constants/routes';
 import {
   formatRupee,
-  PAYMENT_METHOD_OPTIONS,
-  type PaymentMethodType,
+  OFFLINE_PAYMENT_METHOD_OPTIONS,
+  type OfflinePaymentMethodType,
 } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
 import type { PharmacyItemApi, SaleUnit } from '@/types/pharmacy.types';
@@ -46,7 +46,7 @@ interface MedicineBillDraft {
   patientCode: string;
   search: string;
   selected: Record<string, BillLineSelection | number>;
-  paymentMethod: PaymentMethodType;
+  paymentMethod: OfflinePaymentMethodType;
 }
 
 const normalizeSelected = (
@@ -67,7 +67,7 @@ export const MedicineBillPage = () => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
   const [selected, setSelected] = useState<Record<string, BillLineSelection>>({});
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const buildDraftLabel = useCallback(
@@ -419,10 +419,10 @@ export const MedicineBillPage = () => {
             <span className={formLabelClass}>Payment method</span>
             <select
               value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+              onChange={(e) => setPaymentMethod(e.target.value as OfflinePaymentMethodType)}
               className={formSelectClass}
             >
-              {PAYMENT_METHOD_OPTIONS.map((m) => (
+              {OFFLINE_PAYMENT_METHOD_OPTIONS.map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>

@@ -184,3 +184,5 @@ SyntaxError: The requested module '../controllers/hmsPatient.controller.js' does
     at async start (file:///C:/Users/jaira/Desktop/Frelancing/HospitalMgmtSoft2025/BackEnd/src/server.js:8:28)
 2026-07-07 23:08:26 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
 2026-07-07 23:08:26 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-09 21:32:36 [error] [_stream_transform.js:166 - Transform._read] Create Razorpay QR error: E11000 duplicate key error collection: ArogyaLocal.hmsrazorpaypayments index: razorpayOrderId_1 dup key: { razorpayOrderId: "" }
+2026-07-09 21:33:08 [error] [_stream_transform.js:166 - Transform._read] Create Razorpay QR error: E11000 duplicate key error collection: ArogyaLocal.hmsrazorpaypayments index: razorpayOrderId_1 dup key: { razorpayOrderId: "" }

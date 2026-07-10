@@ -4,9 +4,12 @@ export type InvoiceFilter = 'all' | 'paid' | 'pending' | 'partial' | 'overdue';
 
 export type FeeType = 'Consultation' | 'Medicine' | 'Panchakarma';
 
-export type PaymentMethodType = 'Cash' | 'UPI' | 'Card';
+export type PaymentMethodType = 'Cash' | 'UPI' | 'Card' | 'Online';
 
-export const PAYMENT_METHOD_OPTIONS: PaymentMethodType[] = ['Cash', 'UPI', 'Card'];
+export const OFFLINE_PAYMENT_METHOD_OPTIONS = ['Cash', 'UPI', 'Card'] as const;
+export type OfflinePaymentMethodType = (typeof OFFLINE_PAYMENT_METHOD_OPTIONS)[number];
+
+export const PAYMENT_METHOD_OPTIONS: PaymentMethodType[] = ['Cash', 'UPI', 'Card', 'Online'];
 
 export interface Invoice {
   id: string;
@@ -91,6 +94,61 @@ export interface PaymentMethodStat {
   icon: PaymentMethodIcon;
   iconClass: string;
 }
+
+export interface RazorpayPublicConfig {
+  enabled: boolean;
+  keyId: string;
+}
+
+export interface RazorpayOrderResponse {
+  keyId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  invoiceCode: string;
+  patientName: string;
+  description: string;
+}
+
+export interface RazorpayQrResponse {
+  qrCodeId: string;
+  qrImageUrl: string;
+  amount: number;
+  amountPaise: number;
+  currency: string;
+  invoiceCode: string;
+  patientCode: string;
+  patientName: string;
+  feeType: FeeType;
+  feeTypeLabel: string;
+  doctorName: string;
+  treatment: string;
+  description: string;
+  collectedBy: string;
+  paymentRef: string;
+}
+
+export interface PaymentCollectionSuccess {
+  invoiceCode: string;
+  patientCode: string;
+  patientName: string;
+  feeType: FeeType | string;
+  feeTypeLabel: string;
+  treatment: string;
+  doctorName: string;
+  description: string;
+  amount: number;
+  paymentMethod: string;
+  collectedBy: string;
+  status: string;
+  paidAt?: string | Date | null;
+}
+
+export const feeTypeDisplayLabel = (feeType: FeeType | string) => {
+  if (feeType === 'Medicine') return 'Medicine / Pharmacy';
+  if (feeType === 'Panchakarma') return 'Panchakarma';
+  return 'Consultation / Doctor fee';
+};
 
 export interface MedicineBillItem {
   itemCode: string;

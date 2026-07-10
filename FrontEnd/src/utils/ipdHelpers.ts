@@ -24,3 +24,17 @@ export const roomOccupancyPercent = (occupied: number, capacity: number) => {
   if (!capacity) return 0;
   return Math.min(100, Math.round((occupied / capacity) * 100));
 };
+
+export const formatBpFromParts = (systolic: string, diastolic: string) => {
+  const sys = systolic.trim();
+  const dia = diastolic.trim();
+  if (sys && dia) return `${sys}/${dia}`;
+  return sys || dia || '';
+};
+
+export const parseBpValue = (bp?: string | null) => {
+  const raw = (bp ?? '').trim();
+  if (!raw) return { systolic: '', diastolic: '' };
+  const [systolic = '', diastolic = ''] = raw.split('/');
+  return { systolic: systolic.trim(), diastolic: diastolic.trim() };
+};

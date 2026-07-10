@@ -1,7 +1,7 @@
 import axiosInstance from '../http/axiosInstance';
 import type { SaleUnit } from '@/types/pharmacy.types';
 import type { ApiResponse } from '@/types/api.types';
-import type { BillingStats, Invoice, InvoiceDetail, PaymentMethodType } from '@/types/billing.types';
+import type { BillingStats, Invoice, InvoiceDetail, OfflinePaymentMethodType, PaymentCollectionSuccess, RazorpayOrderResponse, RazorpayPublicConfig, RazorpayQrResponse } from '@/types/billing.types';
 
 class BillingAdminService {
   list(params?: {
@@ -17,14 +17,48 @@ class BillingAdminService {
     return axiosInstance.get<ApiResponse<{ stats: BillingStats }>>('/admin/billing/stats/summary');
   }
 
+  getRazorpayConfig() {
+    return axiosInstance.get<ApiResponse<{ razorpay: RazorpayPublicConfig }>>(
+      '/admin/billing/razorpay/config'
+    );
+  }
+
+  createRazorpayOrder(invoiceCode: string, amount?: number) {
+    return axiosInstance.post<ApiResponse<{ order: RazorpayOrderResponse }>>(
+      `/admin/billing/${encodeURIComponent(invoiceCode)}/razorpay/order`,
+      amount != null ? { amount } : {}
+    );
+  }
+
+  createRazorpayQr(invoiceCode: string, amount?: number) {
+    return axiosInstance.post<ApiResponse<{ qr: RazorpayQrResponse }>>(
+      `/admin/billing/${encodeURIComponent(invoiceCode)}/razorpay/qr`,
+      amount != null ? { amount } : {}
+    );
+  }
+
+  getRazorpayStatus(qrCodeId: string) {
+    return axiosInstance.get<
+      ApiResponse<{
+        status: 'pending' | 'paid';
+        invoice?: InvoiceDetail;
+        collection?: PaymentCollectionSuccess;
+        qrCodeId?: string;
+        amount?: number;
+      }>
+    >(`/admin/billing/razorpay/status/${encodeURIComponent(qrCodeId)}`);
+  }
+
   get(invoiceCode: string) {
     return axiosInstance.get<ApiResponse<{ invoice: InvoiceDetail }>>(
       `/admin/billing/${encodeURIComponent(invoiceCode)}`
     );
   }
 
-  collectPayment(invoiceCode: string, paymentMethod: PaymentMethodType, amount?: number) {
-    return axiosInstance.patch<ApiResponse<{ invoice: InvoiceDetail }>>(
+  collectPayment(invoiceCode: string, paymentMethod: OfflinePaymentMethodType, amount?: number) {
+    return axiosInstance.patch<
+      ApiResponse<{ invoice: InvoiceDetail; collection: PaymentCollectionSuccess }>
+    >(
       `/admin/billing/${encodeURIComponent(invoiceCode)}/collect`,
       { paymentMethod, ...(amount != null ? { amount } : {}) }
     );
@@ -38,7 +72,7 @@ class BillingAdminService {
       saleUnit?: SaleUnit;
       unitPrice?: number;
     }[];
-    paymentMethod?: PaymentMethodType;
+    paymentMethod?: OfflinePaymentMethodType;
     markPaid?: boolean;
   }) {
     return axiosInstance.post<ApiResponse<{ invoice: InvoiceDetail }>>('/admin/billing/medicine', payload);
@@ -47,7 +81,7 @@ class BillingAdminService {
   createPanchakarmaPayment(payload: {
     programCode: string;
     amount?: number;
-    paymentMethod?: PaymentMethodType;
+    paymentMethod?: OfflinePaymentMethodType;
     markPaid?: boolean;
   }) {
     return axiosInstance.post<ApiResponse<{ invoice: InvoiceDetail }>>(

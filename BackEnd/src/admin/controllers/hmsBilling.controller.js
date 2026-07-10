@@ -10,6 +10,15 @@ import {
   collectInvoicePayment,
   createPanchakarmaInvoice,
 } from '../services/hmsBilling.service.js';
+import {
+  createRazorpayOrderForInvoice,
+  createRazorpayQrForInvoice,
+  getRazorpayCollectionStatus,
+  getRazorpayPublicConfig,
+  handleRazorpayWebhook,
+  verifyRazorpayPaymentForInvoice,
+  buildOfflineCollectionSummary,
+} from '../services/hmsBillingRazorpay.service.js';
 
 const decodeParam = (param) => decodeURIComponent(param ?? '');
 
@@ -30,6 +39,17 @@ const billingErrorStatus = (message) => {
     return 404;
   }
   if (message === BILLING_MESSAGES.ITEMS_REQUIRED || message === BILLING_MESSAGES.INVALID_QUANTITY) {
+    return 400;
+  }
+  if (
+    message === BILLING_MESSAGES.RAZORPAY_NOT_CONFIGURED ||
+    message === BILLING_MESSAGES.RAZORPAY_MIN_AMOUNT ||
+    message === BILLING_MESSAGES.RAZORPAY_INVALID_SIGNATURE ||
+    message === BILLING_MESSAGES.RAZORPAY_INVALID_WEBHOOK ||
+    message === BILLING_MESSAGES.RAZORPAY_ORDER_NOT_FOUND ||
+    message === BILLING_MESSAGES.INVALID_PAYMENT_AMOUNT ||
+    message === BILLING_MESSAGES.PAYMENT_EXCEEDS_BALANCE
+  ) {
     return 400;
   }
   return 500;
@@ -82,7 +102,8 @@ export const postMedicineInvoice = async (req, res) => {
 export const patchCollectPayment = async (req, res) => {
   try {
     const invoice = await collectInvoicePayment(decodeParam(req.params.invoiceCode), req.body, req);
-    return customResponse(res, BILLING_MESSAGES.PAYMENT_COLLECTED, 200, { invoice });
+    const collection = buildOfflineCollectionSummary(invoice, req);
+    return customResponse(res, BILLING_MESSAGES.PAYMENT_COLLECTED, 200, { invoice, collection });
   } catch (error) {
     const status = billingErrorStatus(error.message);
     if (status !== 500) return customResponse(res, error.message, status);
@@ -108,5 +129,82 @@ export const postPanchakarmaPayment = async (req, res) => {
     if (status !== 500) return customResponse(res, error.message, status);
     logger.error('Panchakarma payment error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getRazorpayConfig = async (_req, res) => {
+  try {
+    const config = getRazorpayPublicConfig();
+    return customResponse(res, BILLING_MESSAGES.FETCHED, 200, { razorpay: config });
+  } catch (error) {
+    logger.error('Razorpay config error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayOrder = async (req, res) => {
+  try {
+    const order = await createRazorpayOrderForInvoice(
+      decodeParam(req.params.invoiceCode),
+      req.body,
+      req
+    );
+    return customResponse(res, BILLING_MESSAGES.RAZORPAY_ORDER_CREATED, 200, { order });
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Create Razorpay order error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayQr = async (req, res) => {
+  try {
+    const qr = await createRazorpayQrForInvoice(
+      decodeParam(req.params.invoiceCode),
+      req.body,
+      req
+    );
+    return customResponse(res, BILLING_MESSAGES.RAZORPAY_QR_CREATED, 200, { qr });
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Create Razorpay QR error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const getRazorpayStatus = async (req, res) => {
+  try {
+    const status = await getRazorpayCollectionStatus(decodeParam(req.params.qrCodeId));
+    return customResponse(res, BILLING_MESSAGES.FETCHED, 200, status);
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Razorpay status error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayVerify = async (req, res) => {
+  try {
+    const result = await verifyRazorpayPaymentForInvoice(req.body, req);
+    return customResponse(res, BILLING_MESSAGES.RAZORPAY_PAYMENT_VERIFIED, 200, result);
+  } catch (error) {
+    const status = billingErrorStatus(error.message);
+    if (status !== 500) return customResponse(res, error.message, status);
+    logger.error('Verify Razorpay payment error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postRazorpayWebhook = async (req, res) => {
+  try {
+    const signature = req.headers['x-razorpay-signature'];
+    const result = await handleRazorpayWebhook(req.body, signature);
+    return res.status(200).json({ received: true, ...result });
+  } catch (error) {
+    logger.error('Razorpay webhook error:', error);
+    return res.status(400).json({ received: false, message: error.message });
   }
 };

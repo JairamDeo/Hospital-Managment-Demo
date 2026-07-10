@@ -13,8 +13,8 @@ import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES, patientDetailPath } from '@/constants/routes';
 import { THERAPY_OPTIONS, type TherapyType } from '@/types/panchakarma.types';
 import {
-  PAYMENT_METHOD_OPTIONS,
-  type PaymentMethodType,
+  OFFLINE_PAYMENT_METHOD_OPTIONS,
+  type OfflinePaymentMethodType,
 } from '@/types/billing.types';
 import type { HmsAppointment } from '@/types/api.types';
 
@@ -38,7 +38,7 @@ interface PanchakarmaTreatmentDraft {
   dailyRows: DailyRow[];
   markPaid: boolean;
   payAmount: string;
-  paymentMethod: PaymentMethodType;
+  paymentMethod: OfflinePaymentMethodType;
 }
 
 const addDaysIso = (base: string, days: number) => {
@@ -62,7 +62,7 @@ export const PanchakarmaTreatmentPage = () => {
   const [dailyRows, setDailyRows] = useState<DailyRow[]>([]);
   const [markPaid, setMarkPaid] = useState(false);
   const [payAmount, setPayAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
 
   const buildDraftLabel = useCallback((draft: PanchakarmaTreatmentDraft) => {
     const name = draft.treatmentName.trim() || draft.therapy;
@@ -404,10 +404,10 @@ export const PanchakarmaTreatmentPage = () => {
               <span className={formLabelClass}>Payment method</span>
               <select
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                onChange={(e) => setPaymentMethod(e.target.value as OfflinePaymentMethodType)}
                 className={formSelectClass}
               >
-                {PAYMENT_METHOD_OPTIONS.map((m) => (
+                {OFFLINE_PAYMENT_METHOD_OPTIONS.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>

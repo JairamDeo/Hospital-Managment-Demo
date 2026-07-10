@@ -52,8 +52,6 @@ export const InvoiceDetailPage = () => {
 
   const handleCollected = async () => {
     await load();
-    setCollectOpen(false);
-    showToast('Payment collected successfully', 'success');
   };
 
   return (

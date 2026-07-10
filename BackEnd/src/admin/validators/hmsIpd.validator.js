@@ -14,6 +14,11 @@ export const addIpdCaseNoteSchema = Joi.object({
   treatmentGiven: Joi.string().trim().max(1000).allow('', null).optional(),
   medicines: Joi.string().trim().max(1000).allow('', null).optional(),
   observations: Joi.string().trim().max(1000).allow('', null).optional(),
+  bp: Joi.string().trim().max(20).allow('', null).optional(),
+  bpSystolic: Joi.string().trim().max(10).allow('', null).optional(),
+  bpDiastolic: Joi.string().trim().max(10).allow('', null).optional(),
+  pulse: Joi.string().trim().max(20).allow('', null).optional(),
+  spo2: Joi.string().trim().max(20).allow('', null).optional(),
   noteDate: Joi.string().allow('', null).optional(),
 });
 

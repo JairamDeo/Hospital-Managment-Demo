@@ -121,6 +121,15 @@ export const createIpdAdmission = async (payload, req) => {
   return formatHmsIpdAdmission(admission);
 };
 
+const resolveBp = (payload = {}) => {
+  const direct = payload.bp?.trim();
+  if (direct) return direct;
+  const systolic = payload.bpSystolic?.trim() || '';
+  const diastolic = payload.bpDiastolic?.trim() || '';
+  if (systolic && diastolic) return `${systolic}/${diastolic}`;
+  return systolic || diastolic || '';
+};
+
 export const addIpdCaseNote = async (admissionCode, payload, req) => {
   const admission = await HmsIpdAdmission.findOne({ admissionCode });
   if (!admission) throw new Error(IPD_MESSAGES.NOT_FOUND);
@@ -131,6 +140,9 @@ export const addIpdCaseNote = async (admissionCode, payload, req) => {
     treatmentGiven: payload.treatmentGiven?.trim() || '',
     medicines: payload.medicines?.trim() || '',
     observations: payload.observations?.trim() || '',
+    bp: resolveBp(payload),
+    pulse: payload.pulse?.trim() || '',
+    spo2: payload.spo2?.trim() || '',
     recordedBy: recordedByFromReq(req),
   });
 

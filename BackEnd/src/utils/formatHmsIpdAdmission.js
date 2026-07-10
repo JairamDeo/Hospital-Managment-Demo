@@ -6,6 +6,9 @@ const formatCaseNote = (note) => ({
   treatmentGiven: note.treatmentGiven || '',
   medicines: note.medicines || '',
   observations: note.observations || '',
+  bp: note.bp || '',
+  pulse: note.pulse || '',
+  spo2: note.spo2 || '',
   recordedBy: note.recordedBy || null,
 });
 

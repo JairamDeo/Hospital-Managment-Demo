@@ -45,6 +45,9 @@ export interface IpdDailyTreatmentRecord {
   treatmentGiven: string;
   medicines: string;
   observations: string;
+  bp: string;
+  pulse: string;
+  spo2: string;
   recordedByName: string;
 }
 

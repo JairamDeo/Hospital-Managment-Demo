@@ -19,6 +19,9 @@ export interface IpdCaseNote {
   treatmentGiven: string;
   medicines: string;
   observations: string;
+  bp: string;
+  pulse: string;
+  spo2: string;
   recordedBy?: { type: string; staffCode: string; name: string } | null;
 }
 
@@ -85,4 +88,8 @@ export interface CaseNoteFormValues {
   treatmentGiven: string;
   medicines: string;
   observations: string;
+  bpSystolic: string;
+  bpDiastolic: string;
+  pulse: string;
+  spo2: string;
 }

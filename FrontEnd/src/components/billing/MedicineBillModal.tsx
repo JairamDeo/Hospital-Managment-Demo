@@ -16,7 +16,7 @@ import {
   PHARMACY_SEARCH_MIN_CHARS,
   searchPharmacyItems,
 } from '@/utils/pharmacySearch.util';
-import { formatRupee, PAYMENT_METHOD_OPTIONS, type PaymentMethodType } from '@/types/billing.types';
+import { formatRupee, OFFLINE_PAYMENT_METHOD_OPTIONS, type PaymentMethodType, type OfflinePaymentMethodType } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
 import type { PharmacyItemApi, SaleUnit } from '@/types/pharmacy.types';
 import {
@@ -50,7 +50,7 @@ interface MedicineBillModalDraft {
   patientCode: string;
   search: string;
   lines: LineRow[];
-  paymentMethod: PaymentMethodType;
+  paymentMethod: OfflinePaymentMethodType;
 }
 
 export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
@@ -64,7 +64,7 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
   const debouncedSearch = useDebouncedValue(search, 300);
   const [qty, setQty] = useState(1);
   const [saleUnit, setSaleUnit] = useState<SaleUnit>('unit');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -524,10 +524,10 @@ export const MedicineBillModal = ({ open, onClose, onCreated }: Props) => {
               <span className="mb-1 block text-xs font-semibold text-ink-ghost">Payment method</span>
               <select
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                onChange={(e) => setPaymentMethod(e.target.value as OfflinePaymentMethodType)}
                 className="w-full rounded-lg border border-border-sage px-3 py-2 text-sm"
               >
-                {PAYMENT_METHOD_OPTIONS.map((m) => (
+                {OFFLINE_PAYMENT_METHOD_OPTIONS.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>

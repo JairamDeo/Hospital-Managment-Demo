@@ -7,12 +7,7 @@ import { billingAdminService } from '@/services/billing/billingAdmin.service';
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES, invoiceDetailPath } from '@/constants/routes';
-import {
-  formatRupee,
-  PAYMENT_METHOD_OPTIONS,
-  type Invoice,
-  type PaymentMethodType,
-} from '@/types/billing.types';
+import { formatRupee, OFFLINE_PAYMENT_METHOD_OPTIONS, type Invoice, type OfflinePaymentMethodType } from '@/types/billing.types';
 
 export const ConsultationBillPage = () => {
   const navigate = useNavigate();
@@ -21,7 +16,7 @@ export const ConsultationBillPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCode, setSelectedCode] = useState('');
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
@@ -158,10 +153,10 @@ export const ConsultationBillPage = () => {
                     <span className={formLabelClass}>Payment method</span>
                     <select
                       value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                      onChange={(e) => setPaymentMethod(e.target.value as OfflinePaymentMethodType)}
                       className={formSelectClass}
                     >
-                      {PAYMENT_METHOD_OPTIONS.map((m) => (
+                      {OFFLINE_PAYMENT_METHOD_OPTIONS.map((m) => (
                         <option key={m} value={m}>
                           {m}
                         </option>

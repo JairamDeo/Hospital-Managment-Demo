@@ -10,8 +10,8 @@ import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES, invoiceDetailPath } from '@/constants/routes';
 import {
   formatRupee,
-  PAYMENT_METHOD_OPTIONS,
-  type PaymentMethodType,
+  OFFLINE_PAYMENT_METHOD_OPTIONS,
+  type OfflinePaymentMethodType,
 } from '@/types/billing.types';
 import type { HmsPanchakarmaProgram } from '@/types/api.types';
 
@@ -22,7 +22,7 @@ export const PanchakarmaBillPage = () => {
   const [loading, setLoading] = useState(true);
   const [programCode, setProgramCode] = useState('');
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Cash');
+  const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
   const [markPaid, setMarkPaid] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -186,10 +186,10 @@ export const PanchakarmaBillPage = () => {
                     <span className={formLabelClass}>Payment method</span>
                     <select
                       value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                      onChange={(e) => setPaymentMethod(e.target.value as OfflinePaymentMethodType)}
                       className={formSelectClass}
                     >
-                      {PAYMENT_METHOD_OPTIONS.map((m) => (
+                      {OFFLINE_PAYMENT_METHOD_OPTIONS.map((m) => (
                         <option key={m} value={m}>
                           {m}
                         </option>
