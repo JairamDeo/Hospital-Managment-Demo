@@ -18,7 +18,8 @@ const decodeParam = (param) => decodeURIComponent(param ?? '');
 const notificationErrorStatus = (message) => {
   if (
     message === PATIENT_MESSAGES.NO_WHATSAPP_NUMBER ||
-    message === PATIENT_MESSAGES.NO_EMAIL_ADDRESS
+    message === PATIENT_MESSAGES.NO_EMAIL_ADDRESS ||
+    message === PATIENT_MESSAGES.WHATSAPP_ALREADY_SENT
   ) {
     return 400;
   }
@@ -57,7 +58,7 @@ export const postStructuredPrescriptionWhatsApp = async (req, res) => {
     const audience = req.body?.audience === 'staff' ? 'staff' : 'patient';
 
     const [waResult, emailResult] = await Promise.allSettled([
-      sendStructuredPrescriptionWhatsApp(patientCode, prescriptionCode, { audience }),
+      sendStructuredPrescriptionWhatsApp(patientCode, prescriptionCode, { audience, req }),
       sendStructuredPrescriptionEmail(patientCode, prescriptionCode, { audience }),
     ]);
 

@@ -91,6 +91,8 @@ export interface StructuredPrescription {
   churans: PrescriptionChuran[];
   createdAt?: string;
   updatedAt?: string;
+  whatsappSentAt?: string | null;
+  whatsappSentBy?: string;
 }
 
 export interface StructuredPrescriptionPayload {

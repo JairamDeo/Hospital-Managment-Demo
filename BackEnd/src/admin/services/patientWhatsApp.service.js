@@ -1,3 +1,4 @@
+import HmsStructuredPrescription from '../../models/hmsStructuredPrescription.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import PatientPrescription from '../../models/patientPrescription.model.js';
 import HmsInvoice from '../../models/hmsInvoice.model.js';
@@ -12,6 +13,26 @@ import {
   sendInvoiceDocumentWhatsApp,
 } from '../../services/sms/foxgloveWhatsApp.service.js';
 import { generateStructuredPrescriptionPdf } from './hmsStructuredPrescription.service.js';
+
+const performerFromReq = (req) => {
+  if (req?.accountType === 'admin') {
+    return {
+      type: 'admin',
+      name: req.admin?.firstName
+        ? `${req.admin.firstName} ${req.admin.lastName || ''}`.trim()
+        : req.admin?.email || 'Admin',
+      adminId: req.admin?._id,
+    };
+  }
+  if (req?.accountType === 'staff') {
+    return {
+      type: 'staff',
+      name: req.staff?.name || 'Staff',
+      staffCode: req.staff?.staffCode,
+    };
+  }
+  return { type: 'admin', name: 'System' };
+};
 
 const loadPatient = async (patientCode) => {
   const patient = await HmsPatient.findOne({ patientCode, status: true });
@@ -28,13 +49,19 @@ const requireWhatsAppNumber = (patient) => {
 export const sendStructuredPrescriptionWhatsApp = async (
   patientCode,
   prescriptionCode,
-  { audience = 'patient' } = {}
+  { audience = 'patient', req = null } = {}
 ) => {
   if (!isPrescriptionWhatsAppEnabled()) {
     throw new Error('Prescription WhatsApp template is not configured');
   }
   if (!isCloudinaryConfigured()) {
     throw new Error('Cloudinary is not configured. Add CLOUDINARY_* variables to .env');
+  }
+
+  const prescription = await HmsStructuredPrescription.findOne({ patientCode, prescriptionCode });
+  if (!prescription) throw new Error(PATIENT_MESSAGES.PRESCRIPTION_NOT_FOUND);
+  if (prescription.whatsappSentAt) {
+    throw new Error(PATIENT_MESSAGES.WHATSAPP_ALREADY_SENT);
   }
 
   const patient = await loadPatient(patientCode);
@@ -60,10 +87,16 @@ export const sendStructuredPrescriptionWhatsApp = async (
     filename: file.filename,
   });
 
+  prescription.whatsappSentAt = new Date();
+  prescription.whatsappSentBy = performerFromReq(req);
+  await prescription.save();
+
   return {
     sent: true,
+    alreadySent: false,
     patientMobileMasked: maskWhatsAppNumber(whatsappNumber),
     prescriptionCode,
+    whatsappSentAt: prescription.whatsappSentAt,
   };
 };
 

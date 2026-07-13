@@ -1,5 +1,6 @@
 import moment from 'moment';
 import HmsInvoice from '../../models/hmsInvoice.model.js';
+import HmsAppointment from '../../models/hmsAppointment.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import PharmacyItem from '../../models/pharmacyItem.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
@@ -24,6 +25,12 @@ const resolvePatient = async (patientCode) => {
 };
 
 const performerFromReq = (req) => {
+  if (req?.accountType === 'patient') {
+    return {
+      type: 'admin',
+      name: req.patient?.name ? `Patient — ${req.patient.name}` : 'Patient',
+    };
+  }
   if (req.accountType === 'admin') {
     return {
       type: 'admin',
@@ -166,6 +173,72 @@ export const getBillingStats = async () => {
   };
 };
 
+export const syncAppointmentPaymentFromInvoice = async (invoiceCode) => {
+  const invoice = await HmsInvoice.findOne({ invoiceCode }).lean();
+  if (!invoice?.appointmentCode || invoice.status !== 'Paid') return null;
+
+  const appt = await HmsAppointment.findOne({ appointmentCode: invoice.appointmentCode });
+  if (!appt || appt.paymentStatus === 'paid') return appt;
+
+  appt.paymentStatus = 'paid';
+  appt.consultationInvoiceCode = invoice.invoiceCode;
+  if (appt.consultationFeeExpected == null) {
+    appt.consultationFeeExpected = invoice.amount;
+  }
+  await appt.save();
+  return appt;
+};
+
+export const createBookingInvoiceForAppointment = async (appointment, consultationFee, actor) => {
+  const existing = await HmsInvoice.findOne({
+    appointmentCode: appointment.appointmentCode,
+    feeType: 'Consultation',
+  });
+  if (existing) return formatHmsInvoice(existing);
+
+  const fee = Number(consultationFee);
+  if (!Number.isFinite(fee) || fee <= 0) {
+    throw new Error(BILLING_MESSAGES.FEE_REQUIRED);
+  }
+
+  const visitType = visitTypeForAppointment(appointment.appointmentType);
+  const label =
+    visitType === 'Follow-up'
+      ? `Follow-up consultation — ${appointment.doctorName}`
+      : `${appointment.appointmentType} — ${appointment.doctorName}`;
+
+  const row = await HmsInvoice.create({
+    invoiceCode: await generateInvoiceCode(),
+    patientCode: appointment.patientCode,
+    patient: appointment.patient,
+    patientName: appointment.patientName,
+    feeType: 'Consultation',
+    visitType,
+    appointmentCode: appointment.appointmentCode,
+    doctorName: appointment.doctorName,
+    description: label,
+    lineItems: [
+      {
+        description: label,
+        quantity: 1,
+        unitPrice: fee,
+        amount: fee,
+      },
+    ],
+    amount: fee,
+    amountPaid: 0,
+    status: 'Pending',
+    paymentMethod: '',
+    paidAt: null,
+    collectedBy: null,
+    createdBy: actor || { type: 'admin', name: 'System' },
+  });
+
+  const formatted = formatHmsInvoice(row);
+  await syncInvoiceToPatientCare(formatted);
+  return formatted;
+};
+
 export const createConsultationInvoiceFromAppointment = async (
   appointment,
   req,
@@ -176,7 +249,17 @@ export const createConsultationInvoiceFromAppointment = async (
     appointmentCode: appointment.appointmentCode,
     feeType: 'Consultation',
   });
-  if (existing) return formatHmsInvoice(existing);
+  if (existing) {
+    if (markPaid && existing.status !== 'Paid') {
+      const balance = existing.amount - (Number(existing.amountPaid) || 0);
+      return collectInvoicePayment(
+        existing.invoiceCode,
+        { amount: balance, paymentMethod: paymentMethod || 'Cash' },
+        req
+      );
+    }
+    return formatHmsInvoice(existing);
+  }
 
   const fee = Number(consultationFee);
   if (!Number.isFinite(fee) || fee < 0) {
@@ -365,6 +448,10 @@ export const collectInvoicePayment = async (invoiceCode, payload, req) => {
   }
 
   await row.save();
+
+  if (row.status === 'Paid' && row.appointmentCode) {
+    await syncAppointmentPaymentFromInvoice(row.invoiceCode);
+  }
 
   const formatted = formatHmsInvoice(row);
   await syncInvoiceToPatientCare(formatted);

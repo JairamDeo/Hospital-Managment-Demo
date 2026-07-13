@@ -19,10 +19,16 @@ import { isPaymentLinkNotificationEnabled, sendPaymentLinkNotification } from '.
 import { formatIndianMobile } from '../../services/sms/msg91.service.js';
 import { resolvePatientWhatsAppNumber } from '../../utils/patientWhatsApp.util.js';
 import { resolvePatientEmail } from '../../utils/patientEmail.util.js';
-import { collectInvoicePayment, getInvoiceByCode } from './hmsBilling.service.js';
+import { collectInvoicePayment, getInvoiceByCode, syncAppointmentPaymentFromInvoice } from './hmsBilling.service.js';
 import { logger } from '../../utils/logger.js';
 
 const performerFromReq = (req) => {
+  if (req?.accountType === 'patient') {
+    return {
+      type: 'admin',
+      name: req.patient?.name ? `Patient — ${req.patient.name}` : 'Patient',
+    };
+  }
   if (req?.accountType === 'admin') {
     return {
       type: 'admin',
@@ -203,11 +209,16 @@ export const createRazorpayOrderForInvoice = async (invoiceCode, payload = {}, r
   const order = await createRazorpayOrder({
     amountPaise,
     receipt,
-    notes: { invoiceCode, patientCode: row.patientCode },
+    notes: {
+      invoiceCode,
+      patientCode: row.patientCode,
+      appointmentCode: payload.appointmentCode || row.appointmentCode || '',
+    },
   });
 
   await HmsRazorpayPayment.create({
     invoiceCode,
+    appointmentCode: payload.appointmentCode || row.appointmentCode || '',
     razorpayOrderId: order.id,
     collectionType: 'checkout',
     patientCode: row.patientCode,
@@ -347,24 +358,37 @@ const fulfillRazorpayPayment = async ({
     const row = await HmsInvoice.findOne({ invoiceCode: paymentRecord.invoiceCode });
     if (!row) return null;
     const invoice = formatHmsInvoice(row);
+    if (row.appointmentCode) {
+      await syncAppointmentPaymentFromInvoice(row.invoiceCode);
+    }
     return { invoice, collection: buildCollectionSummary(paymentRecord, invoice) };
   }
 
-  const actorReq = req || reqFromInitiatedBy(paymentRecord.initiatedBy);
-  const invoice = await collectInvoicePayment(
-    paymentRecord.invoiceCode,
-    {
-      amount: paymentRecord.amount,
-      paymentMethod: mapRazorpayMethod(razorpayMethod),
-    },
-    actorReq
-  );
+  let invoice;
+  try {
+    const actorReq = req || reqFromInitiatedBy(paymentRecord.initiatedBy);
+    invoice = await collectInvoicePayment(
+      paymentRecord.invoiceCode,
+      {
+        amount: paymentRecord.amount,
+        paymentMethod: mapRazorpayMethod(razorpayMethod),
+      },
+      actorReq
+    );
+  } catch (error) {
+    if (error.message !== BILLING_MESSAGES.ALREADY_PAID) throw error;
+    invoice = await getInvoiceByCode(paymentRecord.invoiceCode);
+  }
 
   paymentRecord.status = 'paid';
   paymentRecord.razorpayPaymentId = razorpayPaymentId || paymentRecord.razorpayPaymentId;
   paymentRecord.paymentMethod = mapRazorpayMethod(razorpayMethod);
   paymentRecord.paidAt = new Date();
   await paymentRecord.save();
+
+  if (invoice.appointmentCode) {
+    await syncAppointmentPaymentFromInvoice(invoice.invoiceCode);
+  }
 
   return { invoice, collection: buildCollectionSummary(paymentRecord, invoice) };
 };

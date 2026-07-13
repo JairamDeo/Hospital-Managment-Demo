@@ -6,6 +6,11 @@ import { logger } from '../utils/logger.js';
 config();
 
 const syncRazorpayPaymentIndexes = async () => {
+  // Heavy index migration — run once via SYNC_RAZORPAY_INDEXES=true, not on every nodemon restart.
+  if (process.env.SYNC_RAZORPAY_INDEXES !== 'true') {
+    return;
+  }
+
   const { default: HmsRazorpayPayment } = await import('../models/hmsRazorpayPayment.model.js');
   const coll = HmsRazorpayPayment.collection;
 

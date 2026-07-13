@@ -338,6 +338,7 @@ export const PatientDetailPage = () => {
               loading: rxLoading,
               canCreate: canCreatePrescription,
               canView: canView('prescriptions'),
+              onRefresh: loadPrescriptions,
             }}
             panchakarma={{
               patientCode: patient.id,

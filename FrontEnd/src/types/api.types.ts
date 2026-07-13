@@ -204,6 +204,9 @@ export interface HmsAppointment {
   followUpNotes?: string;
   visitNotes?: string;
   consultationFeeCharged?: number | null;
+  consultationFeeExpected?: number | null;
+  consultationInvoiceCode?: string;
+  paymentStatus?: 'not_required' | 'unpaid' | 'paid';
   followUpAddedBy?: { type: string; name?: string; staffCode?: string };
   followUpAddedAt?: string;
 }

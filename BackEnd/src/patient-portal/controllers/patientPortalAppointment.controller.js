@@ -3,11 +3,11 @@ import { APPOINTMENT_MESSAGES, ErrorMessages } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 import { resolveApiErrorMessage } from '../../utils/resolveApiErrorMessage.js';
 import {
-  listAppointmentsByPatient,
   getAvailabilityForDoctor,
   createAppointment,
   listDoctorsForBooking,
 } from '../../admin/services/hmsAppointment.service.js';
+import { enrichPatientAppointmentsForPayment } from '../services/appointmentPayment.service.js';
 
 const appointmentErrorStatus = (message) => {
   if (message === APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE) return 409;
@@ -17,7 +17,7 @@ const appointmentErrorStatus = (message) => {
 
 export const patientListAppointments = async (req, res) => {
   try {
-    const appointments = await listAppointmentsByPatient(req.patient.patientCode);
+    const appointments = await enrichPatientAppointmentsForPayment(req.patient.patientCode);
     return customResponse(res, APPOINTMENT_MESSAGES.LIST_FETCHED, 200, { appointments });
   } catch (error) {
     logger.error('Patient list appointments error:', error);

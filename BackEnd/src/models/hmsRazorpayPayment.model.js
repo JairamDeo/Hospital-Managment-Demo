@@ -12,6 +12,7 @@ const actorSchema = new Schema(
 
 const hmsRazorpayPaymentSchema = new Schema({
   invoiceCode: { type: String, required: true, index: true },
+  appointmentCode: { type: String, default: '', index: true },
   razorpayOrderId: { type: String },
   razorpayQrCodeId: { type: String },
   razorpayPaymentLinkId: { type: String },

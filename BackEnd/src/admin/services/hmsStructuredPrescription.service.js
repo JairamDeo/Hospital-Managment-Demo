@@ -76,6 +76,8 @@ const formatPrescription = (doc) => {
     })),
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    whatsappSentAt: row.whatsappSentAt ?? null,
+    whatsappSentBy: row.whatsappSentBy?.name || '',
   };
 };
 

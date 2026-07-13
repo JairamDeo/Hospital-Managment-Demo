@@ -56,6 +56,7 @@ interface PrescriptionProps {
   loading: boolean;
   canCreate?: boolean;
   canView?: boolean;
+  onRefresh?: () => void | Promise<void>;
 }
 
 interface PanchakarmaProps {
@@ -252,6 +253,7 @@ export const PatientDetailTabs = ({
             prescriptions={prescriptions.prescriptions}
             loading={prescriptions.loading}
             canCreate={prescriptions.canCreate}
+            onRefresh={prescriptions.onRefresh}
           />
         ) : null}
 

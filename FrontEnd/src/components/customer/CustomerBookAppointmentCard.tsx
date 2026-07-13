@@ -2,13 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
+import { AppointmentPayButton } from '@/components/customer/AppointmentPayButton';
+import { usePatientPortalAuth } from '@/hooks/usePatientPortalAuth';
 import { useToast } from '@/hooks/useToast';
-import { patientPortalAppointmentService } from '@/services/appointment/patientPortalAppointment.service';
+import {
+  payAppointmentWithRazorpay,
+  patientPortalAppointmentService,
+} from '@/services/appointment/patientPortalAppointment.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import {
   TIME_SLOTS,
   type AppointmentDoctor,
 } from '@/types/appointment.types';
+import type { HmsAppointment } from '@/types/api.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
 
 interface Props {
@@ -17,6 +23,7 @@ interface Props {
 
 export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const { showToast } = useToast();
+  const { patient } = usePatientPortalAuth();
   const [doctors, setDoctors] = useState<AppointmentDoctor[]>([]);
   const [staffCode, setStaffCode] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -25,11 +32,17 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [lastBooked, setLastBooked] = useState<HmsAppointment | null>(null);
+  const [razorpayEnabled, setRazorpayEnabled] = useState(false);
 
   const loadDoctorsAndMine = async () => {
     try {
-      const doctorsRes = await patientPortalAppointmentService.listDoctors();
+      const [doctorsRes, configRes] = await Promise.all([
+        patientPortalAppointmentService.listDoctors(),
+        patientPortalAppointmentService.getRazorpayConfig().catch(() => null),
+      ]);
       setDoctors(doctorsRes.data.res?.doctors ?? []);
+      setRazorpayEnabled(Boolean(configRes?.data.res?.razorpay?.enabled));
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     }
@@ -75,8 +88,9 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   }, [availableSlots, timeSlot]);
 
   const selectedDoctor = doctors.find((d) => d.staffCode === staffCode);
+  const consultationFee = selectedDoctor?.consultationFee ?? 0;
 
-  const handleBook = async () => {
+  const handleBook = async (payNow = false) => {
     if (!staffCode) {
       showToast('Please select a doctor', 'error');
       return;
@@ -104,10 +118,31 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
         notes: notes.trim() || undefined,
       });
       if (data.status_code === 201) {
+        const appointment = data.res?.appointment;
+        if (appointment) {
+          setLastBooked(appointment);
+        }
         showToast('Your appointment has been scheduled successfully', 'success');
         setNotes('');
         await loadDoctorsAndMine();
         onBooked?.();
+
+        if (
+          payNow &&
+          appointment?.paymentStatus === 'unpaid' &&
+          razorpayEnabled &&
+          patient?.name
+        ) {
+          try {
+            await payAppointmentWithRazorpay(appointment.appointmentCode, patient.name, (updated) => {
+              setLastBooked(updated);
+              onBooked?.();
+              showToast('Payment successful. Your visit fee is paid.', 'success');
+            });
+          } catch (payErr) {
+            showToast(getApiErrorMessage(payErr), 'error');
+          }
+        }
       }
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
@@ -135,6 +170,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
               {doctors.map((d) => (
                 <option key={d.staffCode} value={d.staffCode}>
                   {d.name} — {d.title}
+                  {(d.consultationFee ?? 0) > 0 ? ` · ₹${d.consultationFee}` : ''}
                 </option>
               ))}
             </select>
@@ -187,13 +223,54 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
             />
           </div>
 
-          <Button
-            className="w-full"
-            onClick={handleBook}
-            disabled={submitting || loadingSlots || !staffCode || !timeSlot}
-          >
-            {submitting ? 'Booking…' : 'Book appointment'}
-          </Button>
+          {selectedDoctor && consultationFee > 0 ? (
+            <p className="text-sm text-ink-soft">
+              Consultation fee:{' '}
+              <span className="font-semibold text-ink">₹{consultationFee}</span>
+              {razorpayEnabled ? ' — pay online after booking' : ''}
+            </p>
+          ) : null}
+
+          {lastBooked?.paymentStatus === 'unpaid' ? (
+            <AppointmentPayButton
+              appointment={lastBooked}
+              patientName={patient?.name || lastBooked.patientName}
+              onPaid={(updated) => {
+                setLastBooked(updated);
+                onBooked?.();
+              }}
+            />
+          ) : null}
+
+          <div className={consultationFee > 0 && razorpayEnabled ? 'grid gap-2 sm:grid-cols-2' : ''}>
+            {consultationFee > 0 && razorpayEnabled ? (
+              <>
+                <Button
+                  className="w-full"
+                  variant="secondary"
+                  onClick={() => void handleBook(false)}
+                  disabled={submitting || loadingSlots || !staffCode || !timeSlot}
+                >
+                  {submitting ? 'Booking…' : 'Book only'}
+                </Button>
+                <Button
+                  className="w-full"
+                  onClick={() => void handleBook(true)}
+                  disabled={submitting || loadingSlots || !staffCode || !timeSlot}
+                >
+                  {submitting ? 'Booking…' : 'Book & pay now'}
+                </Button>
+              </>
+            ) : (
+              <Button
+                className="w-full"
+                onClick={() => void handleBook(false)}
+                disabled={submitting || loadingSlots || !staffCode || !timeSlot}
+              >
+                {submitting ? 'Booking…' : 'Book appointment'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
   );

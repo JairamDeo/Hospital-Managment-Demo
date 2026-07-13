@@ -184,6 +184,12 @@ export const APPOINTMENT_MESSAGES = {
   DOCTOR_SLOT_UNAVAILABLE:
     'This doctor already has an appointment at the selected date and time. Please choose another slot.',
   STAFF_NOT_DOCTOR: 'Selected staff member is not a doctor',
+  ALREADY_PAID: 'Appointment fee is already paid',
+  PAYMENT_NOT_REQUIRED: 'No payment is required for this appointment',
+  PAYMENT_UNAVAILABLE: 'Online payment is not available for this appointment',
+  PAYMENT_ORDER_CREATED: 'Payment order created successfully',
+  PAYMENT_VERIFIED: 'Appointment payment verified successfully',
+  CANCELLED_NO_PAY: 'Cannot pay for a cancelled appointment',
 };
 
 export const BILLING_MESSAGES = {
@@ -249,6 +255,7 @@ export const PATIENT_MESSAGES = {
   VITALS_ADDED: 'Vitals recorded successfully',
   NO_WHATSAPP_NUMBER: 'Patient does not have a WhatsApp number on file',
   WHATSAPP_SENT: 'WhatsApp message sent successfully',
+  WHATSAPP_ALREADY_SENT: 'WhatsApp already sent for this prescription',
   NO_EMAIL_ADDRESS: 'Patient does not have an email address on file',
   EMAIL_SENT: 'Email sent successfully',
   NOTIFICATION_SENT: 'Notification sent successfully',

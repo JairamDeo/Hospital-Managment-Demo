@@ -15,6 +15,7 @@ export interface AppointmentDoctor {
   name: string;
   title: string;
   role: string;
+  consultationFee?: number;
 }
 
 export interface Appointment {

@@ -26,6 +26,13 @@ import {
   patientListDoctors,
   patientBookAppointment,
 } from '../controllers/patientPortalAppointment.controller.js';
+import {
+  patientGetRazorpayConfig,
+  patientGetAppointmentPaymentStatus,
+  patientCreateAppointmentRazorpayOrder,
+  patientVerifyAppointmentRazorpayPayment,
+} from '../controllers/patientPortalAppointmentPayment.controller.js';
+import { patientVerifyAppointmentPaymentSchema } from '../validators/patientPortal.validator.js';
 
 const router = Router();
 
@@ -49,6 +56,24 @@ router.post(
   patientPortalAuth,
   validateRequest(patientCreateAppointmentSchema),
   patientBookAppointment
+);
+
+router.get('/billing/razorpay/config', patientPortalAuth, patientGetRazorpayConfig);
+router.get(
+  '/appointments/:appointmentCode/payment',
+  patientPortalAuth,
+  patientGetAppointmentPaymentStatus
+);
+router.post(
+  '/appointments/:appointmentCode/razorpay/order',
+  patientPortalAuth,
+  patientCreateAppointmentRazorpayOrder
+);
+router.post(
+  '/appointments/:appointmentCode/razorpay/verify',
+  patientPortalAuth,
+  validateRequest(patientVerifyAppointmentPaymentSchema),
+  patientVerifyAppointmentRazorpayPayment
 );
 
 export default router;

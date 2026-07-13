@@ -1,5 +1,6 @@
 import moment from 'moment';
 import HmsAppointment from '../../models/hmsAppointment.model.js';
+import HmsInvoice from '../../models/hmsInvoice.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
@@ -15,7 +16,7 @@ import {
 } from '../../utils/appointment.util.js';
 import { formatHmsAppointment } from '../../utils/formatHmsAppointment.js';
 import { generateAppointmentCode } from '../../utils/generateAppointmentCode.js';
-import { createConsultationInvoiceFromAppointment } from './hmsBilling.service.js';
+import { createConsultationInvoiceFromAppointment, createBookingInvoiceForAppointment } from './hmsBilling.service.js';
 
 const syncAppointmentToPatientCare = async (appointment) => {
   const care =
@@ -268,6 +269,30 @@ export const createAppointment = async (payload, createdBy) => {
   });
 
   await syncAppointmentToPatientCare(appointment);
+
+  const fee = Number(doctor.consultationFee) || 0;
+  if (fee > 0) {
+    const actor =
+      createdBy?.type === 'patient'
+        ? { type: 'admin', name: createdBy.name ? `Patient — ${createdBy.name}` : 'Patient' }
+        : createdBy?.type === 'staff'
+          ? { type: 'staff', name: createdBy.name || 'Staff', staffCode: createdBy.staffCode || '' }
+          : {
+              type: 'admin',
+              name: createdBy?.name || 'Admin',
+              adminId: createdBy?.adminId,
+            };
+    const invoice = await createBookingInvoiceForAppointment(appointment, fee, actor);
+    appointment.consultationFeeExpected = fee;
+    appointment.consultationInvoiceCode = invoice.invoiceCode;
+    appointment.paymentStatus = 'unpaid';
+    await appointment.save();
+  } else {
+    appointment.paymentStatus = 'not_required';
+    appointment.consultationFeeExpected = 0;
+    await appointment.save();
+  }
+
   return formatHmsAppointment(appointment);
 };
 
@@ -332,7 +357,17 @@ export const attendAppointmentWithFollowUp = async (appointmentCode, payload, re
 
   let resolvedFee = null;
   if (!wasCompleted) {
-    resolvedFee = await resolveConsultationFee(row, payload.consultationFee);
+    if (row.consultationInvoiceCode) {
+      const bookingInvoice = await HmsInvoice.findOne({
+        invoiceCode: row.consultationInvoiceCode,
+      });
+      if (bookingInvoice?.status === 'Paid') {
+        resolvedFee = bookingInvoice.amount;
+      }
+    }
+    if (resolvedFee == null) {
+      resolvedFee = await resolveConsultationFee(row, payload.consultationFee);
+    }
   }
 
   if (row.status !== 'Completed') {

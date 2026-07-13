@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Eye, FileText, Loader2, MessageCircle, Plus } from 'lucide-react';
+import { Check, Download, Eye, FileText, Loader2, MessageCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { prescriptionPath } from '@/constants/routes';
@@ -21,6 +21,7 @@ export const PatientPrescriptionsTab = ({
   prescriptions,
   loading = false,
   canCreate = false,
+  onRefresh,
 }: Props) => {
   const { showToast } = useToast();
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
@@ -64,20 +65,35 @@ export const PatientPrescriptionsTab = ({
       if (res?.emailSent) channels.push('Email');
       if (channels.length) {
         showToast(`Prescription sent via ${channels.join(' & ')}`, 'success');
-      } else {
-        showToast('Prescription notification sent', 'success');
       }
       if (res?.whatsapp?.skipped && !res?.whatsappSent) {
-        showToast('Patient does not have a WhatsApp number on file', 'info');
+        showToast(
+          res.whatsapp.reason?.includes('already sent')
+            ? 'WhatsApp already sent for this prescription'
+            : 'Patient does not have a WhatsApp number on file',
+          'info'
+        );
       }
       if (res?.email?.skipped && !res?.emailSent) {
         showToast('Patient does not have an email address on file', 'info');
       }
+      await onRefresh?.();
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
       setWaLoading(null);
     }
+  };
+
+  const formatWaSentDate = (iso?: string | null) => {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (loading) {
@@ -119,65 +135,84 @@ export const PatientPrescriptionsTab = ({
           <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
             Prescriptions ({prescriptions.length})
           </p>
-          {prescriptions.map((rx) => (
-            <div
-              key={rx.prescriptionCode}
-              className="flex items-center gap-3 rounded-xl border border-border-sage bg-white px-4 py-3 shadow-sm"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sage-mist text-sage-deep">
-                <FileText className="h-5 w-5" strokeWidth={2} />
+          {prescriptions.map((rx) => {
+            const waAlreadySent = Boolean(rx.whatsappSentAt);
+            return (
+              <div
+                key={rx.prescriptionCode}
+                className="flex items-center gap-3 rounded-xl border border-border-sage bg-white px-4 py-3 shadow-sm"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-sage-mist text-sage-deep">
+                  <FileText className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">
+                    {rx.diagnosis?.trim() || rx.prescriptionCode}
+                  </p>
+                  <p className="text-xs text-ink-ghost">
+                    {rx.prescriptionCode}
+                    {rx.doctorName ? ` · ${rx.doctorName}` : ''}
+                    {rx.createdAt
+                      ? ` · ${new Date(rx.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })}`
+                      : ''}
+                  </p>
+                  {waAlreadySent ? (
+                    <p className="mt-0.5 text-[10px] font-medium text-emerald-700">
+                      WhatsApp sent {formatWaSentDate(rx.whatsappSentAt)}
+                      {rx.whatsappSentBy ? ` · by ${rx.whatsappSentBy}` : ''}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={pdfLoading === `${rx.prescriptionCode}-staff`}
+                    onClick={() => void openPdf(rx.prescriptionCode, 'staff')}
+                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
+                    title="View PDF (staff)"
+                  >
+                    <Eye className="h-4 w-4" strokeWidth={1.75} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pdfLoading === `${rx.prescriptionCode}-patient`}
+                    onClick={() => void openPdf(rx.prescriptionCode, 'patient', true)}
+                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
+                    title="Download PDF"
+                  >
+                    <Download className="h-4 w-4" strokeWidth={1.75} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waAlreadySent || waLoading === rx.prescriptionCode}
+                    onClick={() => void sendWhatsApp(rx.prescriptionCode)}
+                    className={`rounded-lg p-2 disabled:opacity-50 ${
+                      waAlreadySent
+                        ? 'cursor-not-allowed bg-emerald-50 text-emerald-600'
+                        : 'cursor-pointer text-ink-ghost hover:bg-emerald-50 hover:text-emerald-700'
+                    }`}
+                    title={
+                      waAlreadySent
+                        ? `WhatsApp sent on ${formatWaSentDate(rx.whatsappSentAt)}`
+                        : 'Send on WhatsApp'
+                    }
+                  >
+                    {waLoading === rx.prescriptionCode ? (
+                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+                    ) : waAlreadySent ? (
+                      <Check className="h-4 w-4" strokeWidth={2} />
+                    ) : (
+                      <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink">
-                  {rx.diagnosis?.trim() || rx.prescriptionCode}
-                </p>
-                <p className="text-xs text-ink-ghost">
-                  {rx.prescriptionCode}
-                  {rx.doctorName ? ` · ${rx.doctorName}` : ''}
-                  {rx.createdAt
-                    ? ` · ${new Date(rx.createdAt).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}`
-                    : ''}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  disabled={pdfLoading === `${rx.prescriptionCode}-staff`}
-                  onClick={() => void openPdf(rx.prescriptionCode, 'staff')}
-                  className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
-                  title="View PDF (staff)"
-                >
-                  <Eye className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-                <button
-                  type="button"
-                  disabled={pdfLoading === `${rx.prescriptionCode}-patient`}
-                  onClick={() => void openPdf(rx.prescriptionCode, 'patient', true)}
-                  className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
-                  title="Download PDF"
-                >
-                  <Download className="h-4 w-4" strokeWidth={1.75} />
-                </button>
-                <button
-                  type="button"
-                  disabled={waLoading === rx.prescriptionCode}
-                  onClick={() => void sendWhatsApp(rx.prescriptionCode)}
-                  className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
-                  title="Send on WhatsApp"
-                >
-                  {waLoading === rx.prescriptionCode ? (
-                    <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
-                  ) : (
-                    <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

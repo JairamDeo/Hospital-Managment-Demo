@@ -27,3 +27,11 @@ export const patientUpdateProfileSchema = Joi.object({
   prakritiId: Joi.string().hex().length(24).allow(null, ''),
   treatmentId: Joi.string().hex().length(24).allow(null, ''),
 }).min(1);
+
+export const patientVerifyAppointmentPaymentSchema = Joi.object({
+  appointmentCode: Joi.string().required(),
+  razorpayOrderId: Joi.string().required(),
+  razorpayPaymentId: Joi.string().required(),
+  razorpaySignature: Joi.string().required(),
+  razorpayMethod: Joi.string().allow('', null).optional(),
+});
