@@ -1,28 +1,16 @@
-import {
-  CalendarDays,
-  Leaf,
-  Pill,
-  Receipt,
-  Users,
-  type LucideIcon,
-} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
-import type { AppNotification, NotificationType } from './mockNotifications';
-
-const TYPE_CONFIG: Record<NotificationType, { icon: LucideIcon; tone: string }> = {
-  appointment: { icon: CalendarDays, tone: 'bg-blue-50 text-blue-600' },
-  billing: { icon: Receipt, tone: 'bg-amber-50 text-amber-600' },
-  pharmacy: { icon: Pill, tone: 'bg-violet-50 text-violet-600' },
-  panchakarma: { icon: Leaf, tone: 'bg-emerald-50 text-emerald-600' },
-  patient: { icon: Users, tone: 'bg-pink-50 text-pink-600' },
-};
+import {
+  NOTIFICATION_TYPE_CONFIG,
+  type AppNotification,
+} from '@/components/layout/notificationTypes';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   notifications: AppNotification[];
+  loading?: boolean;
   onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
 }
@@ -31,6 +19,7 @@ export const NotificationsModal = ({
   open,
   onClose,
   notifications,
+  loading = false,
   onMarkRead,
   onMarkAllRead,
 }: Props) => {
@@ -51,30 +40,31 @@ export const NotificationsModal = ({
       onClose={onClose}
       title="Notifications"
       subtitle={
-        unreadCount > 0
-          ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
-          : 'All caught up'
+        loading
+          ? 'Loading…'
+          : unreadCount > 0
+            ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
+            : 'All caught up'
       }
       size="lg"
       footer={
         <>
-          <Button
-            variant="secondary"
-            onClick={onMarkAllRead}
-            disabled={unreadCount === 0}
-          >
+          <Button variant="secondary" onClick={onMarkAllRead} disabled={unreadCount === 0}>
             Mark all as read
           </Button>
           <Button onClick={onClose}>Close</Button>
         </>
       }
     >
-      {notifications.length === 0 ? (
-        <p className="py-8 text-center text-sm text-ink-soft">No notifications</p>
+      {loading && notifications.length === 0 ? (
+        <p className="py-8 text-center text-sm text-ink-soft">Loading notifications…</p>
+      ) : notifications.length === 0 ? (
+        <p className="py-8 text-center text-sm text-ink-soft">No notifications yet</p>
       ) : (
         <div className="space-y-2">
           {notifications.map((n) => {
-            const { icon: Icon, tone } = TYPE_CONFIG[n.type];
+            const cfg = NOTIFICATION_TYPE_CONFIG[n.type] ?? NOTIFICATION_TYPE_CONFIG.info;
+            const { icon: Icon, tone } = cfg;
             return (
               <button
                 key={n.id}

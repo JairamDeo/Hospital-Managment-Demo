@@ -11,6 +11,7 @@ import { purgePharmacistRole } from './purgePharmacistRole.js';
 import { seedStaffActivityIfEmpty } from './seedStaffActivity.js';
 import { seedHmsPanchakarma } from './seedHmsPanchakarma.js';
 import { seedRbacIfEmpty, mergeRbacDefaults } from '../utils/rbac.service.js';
+import { seedLabMasters } from './seedLabMastersAndAccess.js';
 import { logger } from '../utils/logger.js';
 
 config();
@@ -32,6 +33,7 @@ const run = async () => {
     await seedHmsPanchakarma();
     await seedRbacIfEmpty();
     await mergeRbacDefaults();
+    await seedLabMasters();
     logger.info('Database seed completed');
 
     process.exit(0);

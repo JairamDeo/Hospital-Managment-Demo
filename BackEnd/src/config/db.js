@@ -28,6 +28,12 @@ const connectDB = async () => {
     });
     logger.info('MongoDB connected successfully');
     await syncRazorpayPaymentIndexes();
+    try {
+      const { mergeRbacDefaults } = await import('../utils/rbac.service.js');
+      await mergeRbacDefaults();
+    } catch (error) {
+      logger.warn(`RBAC merge skipped: ${error.message}`);
+    }
   } catch (err) {
     logger.error('MongoDB connection error: ' + err.message);
     process.exit(1);

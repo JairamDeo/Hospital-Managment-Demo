@@ -5,6 +5,7 @@ export type RbacModuleKey =
   | 'prescriptions'
   | 'panchakarma'
   | 'ipd'
+  | 'lab'
   | 'masterData'
   | 'pharmacy'
   | 'staff'
@@ -13,7 +14,7 @@ export type RbacModuleKey =
   | 'billing'
   | 'settings';
 
-export type StaffRole = 'Doctor' | 'Therapist' | 'Support';
+export type StaffRole = 'Doctor' | 'Therapist' | 'Support' | 'Lab';
 
 export interface ModulePermission {
   view: boolean;
@@ -34,6 +35,7 @@ export const RBAC_MODULE_LABELS: Record<RbacModuleKey, string> = {
   prescriptions: 'Prescriptions',
   panchakarma: 'Panchakarma',
   ipd: 'IPD',
+  lab: 'Lab',
   masterData: 'Master Data',
   pharmacy: 'Pharmacy',
   staff: 'Staff',
@@ -50,6 +52,7 @@ export const RBAC_MODULE_KEYS: RbacModuleKey[] = [
   'prescriptions',
   'panchakarma',
   'ipd',
+  'lab',
   'masterData',
   'pharmacy',
   'staff',

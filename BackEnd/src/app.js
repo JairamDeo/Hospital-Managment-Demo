@@ -1,8 +1,6 @@
 import express from 'express';
 import { config } from 'dotenv';
 import cors from 'cors';
-import path from 'path';
-import fs from 'fs';
 import patientRoutes from './routes/patient.routes.js';
 import userRoutes from './routes/user.routes.js';
 import adminRoutes from './admin/routes/admin.routes.js';
@@ -17,6 +15,7 @@ import pharmacyRoutes from './admin/routes/pharmacy.routes.js';
 import hmsBillingRoutes from './admin/routes/hmsBilling.routes.js';
 import { postRazorpayWebhook } from './admin/controllers/hmsBilling.controller.js';
 import hmsIpdRoutes from './admin/routes/hmsIpd.routes.js';
+import hmsLabRoutes from './admin/routes/hmsLab.routes.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
 
@@ -78,18 +77,16 @@ app.use('/api/admin/master', masterRoutes);
 app.use('/api/admin/pharmacy', pharmacyRoutes);
 app.use('/api/admin/billing', hmsBillingRoutes);
 app.use('/api/admin/ipd', hmsIpdRoutes);
+app.use('/api/admin/lab', hmsLabRoutes);
 app.use('/api/patient-portal', patientPortalRoutes);
 
-app.use(
-  '/api/upload',
-  (req, res, next) => {
-    const filePath = path.join(process.cwd(), 'upload', req.path);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found' });
-    }
-    next();
-  },
-  express.static(path.join(process.cwd(), 'upload'))
+// Legacy local /api/upload paths — files now go to Cloudinary
+app.use('/api/upload', (_req, res) =>
+  customResponse(
+    res,
+    'This file was stored locally and is no longer available. Re-upload the report (Cloudinary).',
+    410
+  )
 );
 
 app.use((req, res) => {

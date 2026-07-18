@@ -69,6 +69,52 @@ export const uploadWhatsAppMedia = async (
   });
 };
 
+/**
+ * Generic HMS upload (lab reports, images, PDFs). Returns secure HTTPS URL.
+ * Does not write to the local /upload folder.
+ */
+export const uploadHmsFile = async (
+  buffer,
+  { folder = 'HMS/uploads', originalName = 'file', mimeType = '' } = {}
+) => {
+  ensureCloudinary();
+  const base = safeBaseName(originalName);
+  const isPdf = /\.pdf$/i.test(originalName) || /pdf/i.test(mimeType);
+  const isImage =
+    /^image\//i.test(mimeType) ||
+    /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(originalName);
+
+  let resourceType = 'auto';
+  let format;
+  if (isImage) {
+    resourceType = 'image';
+    if (/png/i.test(mimeType) || /\.png$/i.test(originalName)) format = 'png';
+    else if (/webp/i.test(mimeType) || /\.webp$/i.test(originalName)) format = 'webp';
+    else if (/gif/i.test(mimeType) || /\.gif$/i.test(originalName)) format = 'gif';
+    else format = 'jpg';
+  } else if (isPdf) {
+    resourceType = 'raw';
+    format = 'pdf';
+  }
+
+  return new Promise((resolve, reject) => {
+    const upload = cloudinary.uploader.upload_stream(
+      {
+        folder: String(folder).replace(/\/+$/, ''),
+        resource_type: resourceType,
+        public_id: `${Date.now()}_${base}`,
+        ...(format ? { format } : {}),
+        access_mode: 'public',
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    upload.end(buffer);
+  });
+};
+
 export const deleteCloudinaryAsset = async (publicId, resourceType = 'raw') => {
   ensureCloudinary();
   return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });

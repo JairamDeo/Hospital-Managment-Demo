@@ -94,6 +94,7 @@ export interface LabReport {
   result: string;
   status: 'Normal' | 'Abnormal' | 'Pending';
   lab: string;
+  fileUrl?: string;
 }
 
 export interface PatientInvoice {

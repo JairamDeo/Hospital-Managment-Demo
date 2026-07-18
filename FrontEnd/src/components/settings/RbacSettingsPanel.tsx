@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, Stethoscope, Headphones, Leaf } from 'lucide-react';
+import { ChevronDown, Stethoscope, Headphones, Leaf, FlaskConical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { rbacAdminService } from '@/services/rbac/rbacAdmin.service';
@@ -11,7 +11,7 @@ import {
   type StaffRole,
 } from '@/types/rbac.types';
 
-const ROLES: StaffRole[] = ['Doctor', 'Therapist', 'Support'];
+const ROLES: StaffRole[] = ['Doctor', 'Therapist', 'Support', 'Lab'];
 
 const ROLE_META: Record<
   StaffRole,
@@ -28,6 +28,10 @@ const ROLE_META: Record<
   Support: {
     summary: 'Front desk — patients, appointments & billing',
     icon: Headphones,
+  },
+  Lab: {
+    summary: 'Lab workspace by default — admin can enable extra modules below',
+    icon: FlaskConical,
   },
 };
 
@@ -88,10 +92,17 @@ export const RbacSettingsPanel = () => {
     if (!config) return;
     setSavingRole(role);
     try {
-      await rbacAdminService.update(role, config.modules);
-      showToast(`${role} access updated`, 'success');
+      const { data } = await rbacAdminService.update(role, config.modules);
+      const saved = data.res?.config;
+      if (saved) {
+        setConfigs((prev) => prev.map((c) => (c.role === role ? saved : c)));
+      } else {
+        await load();
+      }
+      showToast(`${role} access saved — users with this role should refresh`, 'success');
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
+      await load();
     } finally {
       setSavingRole(null);
     }
@@ -106,8 +117,8 @@ export const RbacSettingsPanel = () => {
       <div className="border-b border-border-sage px-5 py-4">
         <h2 className="font-serif text-lg font-semibold text-ink">Access Control</h2>
         <p className="mt-0.5 text-sm text-ink-soft">
-          Toggle module access per staff role. Changes apply to all users with that role (e.g. all
-          Doctors, all Therapists).
+          Toggle module access per staff role, then click Save. Changes are stored permanently and
+          apply after that role&apos;s users refresh or re-login.
         </p>
       </div>
 

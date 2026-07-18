@@ -15,15 +15,18 @@ const toPlainModules = (modules, roleDefaults = {}) => {
 
 export const seedRbacIfEmpty = async () => {
   for (const [role, modules] of Object.entries(DEFAULT_RBAC_BY_ROLE)) {
-    await RbacRoleConfig.findOneAndUpdate(
-      { role },
-      { role, modules },
-      { upsert: true, new: true }
-    );
+    const existing = await RbacRoleConfig.findOne({ role }).lean();
+    if (existing) continue;
+    await RbacRoleConfig.create({ role, modules });
   }
 };
 
-/** Merge saved modules with role defaults so new modules appear even before DB migration. */
+/**
+ * Startup merge only:
+ * - create missing role configs from defaults
+ * - add newly introduced module keys that are absent in DB
+ * Never overwrites admin-saved view/edit flags (persistence).
+ */
 export const mergeRbacDefaults = async () => {
   for (const [role, defaults] of Object.entries(DEFAULT_RBAC_BY_ROLE)) {
     const row = await RbacRoleConfig.findOne({ role });
@@ -31,11 +34,12 @@ export const mergeRbacDefaults = async () => {
       await RbacRoleConfig.create({ role, modules: defaults });
       continue;
     }
-    const modules = row.modules?.toObject?.() ?? { ...row.modules };
+
+    const modules = row.modules?.toObject?.() ?? { ...(row.modules || {}) };
     let changed = false;
     for (const key of RBAC_MODULE_KEYS) {
-      if (modules[key] == null && defaults[key]) {
-        modules[key] = defaults[key];
+      if (modules[key] == null && defaults[key] != null) {
+        modules[key] = { ...defaults[key] };
         changed = true;
       }
     }
@@ -57,27 +61,38 @@ export const getPermissionsForStaffRole = async (staffRole) => {
 export const listRbacConfigs = async () => {
   const allowed = Object.keys(DEFAULT_RBAC_BY_ROLE);
   const rows = await RbacRoleConfig.find({ role: { $in: allowed } }).sort({ role: 1 }).lean();
-  return rows.map((r) => ({
-    role: r.role,
-    modules: toPlainModules(r.modules, DEFAULT_RBAC_BY_ROLE[r.role]),
-  }));
+  const byRole = Object.fromEntries(rows.map((r) => [r.role, r]));
+
+  return allowed.map((role) => {
+    const r = byRole[role];
+    return {
+      role,
+      modules: toPlainModules(r?.modules, DEFAULT_RBAC_BY_ROLE[role]),
+    };
+  });
 };
 
 export const updateRbacConfig = async (role, modules) => {
+  if (!DEFAULT_RBAC_BY_ROLE[role]) {
+    throw new Error(`Invalid staff role: ${role}`);
+  }
+
   const payload = {};
   for (const key of RBAC_MODULE_KEYS) {
-    if (modules?.[key]) {
-      payload[key] = {
-        view: Boolean(modules[key].view),
-        edit: Boolean(modules[key].edit),
-      };
-    }
+    const mod = modules?.[key];
+    const view = Boolean(mod?.view);
+    payload[key] = {
+      view,
+      edit: view && Boolean(mod?.edit),
+    };
   }
+
   const row = await RbacRoleConfig.findOneAndUpdate(
     { role },
-    { role, modules: payload },
-    { upsert: true, new: true }
+    { $set: { role, modules: payload } },
+    { upsert: true, new: true, runValidators: true }
   );
+
   return { role: row.role, modules: toPlainModules(row.modules, DEFAULT_RBAC_BY_ROLE[role]) };
 };
 

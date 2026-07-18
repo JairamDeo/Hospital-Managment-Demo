@@ -348,7 +348,16 @@ export const AppointmentFollowUpPage = () => {
                 patientCode={appointment.patientCode}
                 appointmentCode={appointment.appointmentCode}
                 onSaved={() => {
-                  if (followUpDate) void handleSaveFollowUp();
+                  const goToPatient = () => {
+                    navigate(patientDetailPath(appointment.patientCode), {
+                      state: { activeTab: 'prescriptions' as const },
+                    });
+                  };
+                  if (followUpDate) {
+                    void handleSaveFollowUp().finally(goToPatient);
+                  } else {
+                    goToPatient();
+                  }
                 }}
               />
             </div>

@@ -16,6 +16,7 @@ import {
   X,
   UserRound,
   ShieldCheck,
+  FlaskConical,
 } from 'lucide-react';
 import { ROUTES, staffDetailPath } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,6 +48,7 @@ const mainNavBase: NavItemDef[] = [
   },
   { to: ROUTES.ADMIN_PANCHAKARMA, label: 'Panchakarma', icon: Leaf, module: 'panchakarma' },
   { to: ROUTES.ADMIN_IPD, label: 'IPD', icon: BedDouble, module: 'ipd' },
+  { to: ROUTES.ADMIN_LAB, label: 'Lab', icon: FlaskConical, module: 'lab' },
 ];
 
 const manageNav: NavItemDef[] = [

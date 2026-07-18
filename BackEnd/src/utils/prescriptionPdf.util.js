@@ -125,45 +125,63 @@ const drawMedicineTable = (doc, medicines, startY) => {
 };
 
 const drawPrescriptionFooter = (doc, { pageW, pageH, branding, footerPath }) => {
-  const footerBarH = 28;
-  const barY = pageH - footerBarH;
-  const footerContentH = 82;
-  const footerTop = barY - footerContentH;
+  // PDFKit auto-paginates when writing inside the bottom margin — clear margins for footer.
+  const m = doc.page.margins;
+  const prev = { top: m.top, left: m.left, bottom: m.bottom, right: m.right };
+  m.top = 0;
+  m.left = 0;
+  m.bottom = 0;
+  m.right = 0;
 
+  const footerBarH = 26;
+  const barY = pageH - footerBarH;
+  const footerContentH = 78;
+  const footerTop = barY - footerContentH;
+  const decoW = 170;
+  const decoH = footerContentH;
+
+  // Decorative graphic flush against the left page edge
   if (footerPath) {
-    doc.image(footerPath, 28, footerTop + 6, { width: 172, height: footerContentH - 8 });
+    doc.image(footerPath, 0, footerTop, { width: decoW, height: decoH });
   }
 
-  const lineY = footerTop + 14;
-  drawHLine(doc, lineY, 188, pageW - 40, TEAL, 1);
+  const contactX = decoW + 10;
+  drawHLine(doc, footerTop + 12, contactX, pageW - 36, TEAL, 1);
 
-  const contactX = 192;
   const iconW = 10;
-  let contactY = footerTop + 28;
-
-  drawPinIcon(doc, contactX, contactY, iconW);
+  const addressY = footerTop + 26;
+  drawPinIcon(doc, contactX, addressY, iconW);
   doc.font('Times-Roman').fontSize(9).fillColor(MUTED);
-  doc.text(branding.address, contactX + iconW + 7, contactY, {
-    width: pageW - contactX - iconW - 50,
-    lineGap: 0,
+  doc.text(branding.address, contactX + iconW + 7, addressY, {
+    width: pageW - contactX - iconW - 44,
+    lineBreak: false,
   });
 
-  contactY = doc.y + 7;
-  drawPhoneIcon(doc, contactX, contactY, iconW, 11);
-  doc.text(branding.phones.join(', '), contactX + iconW + 7, contactY, {
-    width: pageW - contactX - iconW - 50,
+  const phoneY = addressY + 16;
+  drawPhoneIcon(doc, contactX, phoneY, iconW, 11);
+  doc.text(branding.phones.join(', '), contactX + iconW + 7, phoneY, {
+    width: pageW - contactX - iconW - 44,
+    lineBreak: false,
   });
 
   doc.save();
   doc.rect(0, barY, pageW, footerBarH).fill(TEAL_LIGHT);
-  drawClockIcon(doc, 48, barY + 8, 11);
-  doc.fillColor(TEAL_DARK).font('Helvetica-Bold').fontSize(9);
-  doc.text(`Timings: ${branding.timings}`, 68, barY + 10, {
-    width: pageW - 80,
+  drawClockIcon(doc, 36, barY + 7, 11);
+  doc.fillColor(TEAL_DARK).font('Helvetica-Bold').fontSize(8.5);
+  doc.text(`Timings: ${branding.timings}`, 54, barY + 9, {
+    width: pageW - 70,
     align: 'center',
+    lineBreak: false,
   });
   doc.restore();
+
+  m.top = prev.top;
+  m.left = prev.left;
+  m.bottom = prev.bottom;
+  m.right = prev.right;
 };
+
+const FOOTER_RESERVED = 110;
 
 const drawPrescriptionHeader = (doc, { pageW, margin, contentW, branding, doctor, prescription, headerBrandPath, logoPath }) => {
   const headerY = margin;
@@ -202,13 +220,19 @@ const drawPrescriptionHeader = (doc, { pageW, margin, contentW, branding, doctor
 
 export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCombination }) =>
   new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: 'A4', autoFirstPage: true });
+    const footerReserve = FOOTER_RESERVED;
+    const doc = new PDFDocument({
+      size: 'A4',
+      autoFirstPage: true,
+      margins: { top: 40, left: 40, right: 40, bottom: footerReserve },
+    });
     const chunks = [];
     const pageW = doc.page.width;
     const pageH = doc.page.height;
     const margin = 40;
     const contentW = pageW - margin * 2;
     const branding = PRESCRIPTION_BRANDING;
+    const contentBottomLimit = pageH - footerReserve;
 
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -222,7 +246,10 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
       doc.save();
       doc.opacity(0.05);
       const wmSize = 300;
-      doc.image(logoPath, (pageW - wmSize) / 2, (pageH - wmSize) / 2 - 30, { width: wmSize, height: wmSize });
+      doc.image(logoPath, (pageW - wmSize) / 2, (pageH - wmSize) / 2 - 30, {
+        width: wmSize,
+        height: wmSize,
+      });
       doc.opacity(1);
       doc.restore();
     }
@@ -270,23 +297,25 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
       y += 8;
     }
 
-    if (prescription.medicines?.length) {
+    if (prescription.medicines?.length && y < contentBottomLimit) {
       y = drawSectionLabel(doc, 'MEDICINES', margin, y);
       y += 4;
       y = drawMedicineTable(doc, prescription.medicines, y);
     }
 
-    if (prescription.churans?.length) {
+    if (prescription.churans?.length && y < contentBottomLimit) {
       y = drawSectionLabel(doc, 'CHURAN', margin, y);
       y += 4;
       doc.font('Helvetica').fontSize(9.5).fillColor(INK);
       prescription.churans.forEach((row, index) => {
+        if (y >= contentBottomLimit) return;
         doc.font('Helvetica-Bold').text(`${index + 1}. ${row.name}`, margin + 14, y);
         y = doc.y + 2;
         doc.font('Helvetica');
         const powderRows = row.powders?.filter((p) => p?.name?.trim()) ?? [];
         if (powderRows.length) {
           powderRows.forEach((p) => {
+            if (y >= contentBottomLimit) return;
             const spoons = Number(p.quantitySpoons);
             const spoonGrams = Number(p.spoonGrams);
             const grams = Number(p.quantityGrams);
@@ -303,7 +332,7 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
           doc.text(`Mix: ${row.combination.trim()}`, margin + 28, y);
           y = doc.y + 2;
         }
-        if (row.howToIntake?.trim()) {
+        if (row.howToIntake?.trim() && y < contentBottomLimit) {
           doc.text(`Intake: ${row.howToIntake.trim()}`, margin + 28, y);
           y = doc.y + 2;
         }
@@ -312,13 +341,27 @@ export const buildPrescriptionPdf = ({ prescription, patient, doctor, includeCom
       y += 4;
     }
 
-    if (prescription.remarks?.trim()) {
-      y = drawSectionLabel(doc, 'REMARK', margin, y, {
+    if (prescription.recommendedTests?.length && y < contentBottomLimit) {
+      y = drawSectionLabel(doc, 'RECOMMENDED LAB / PF TESTS', margin, y);
+      y += 4;
+      doc.font('Helvetica').fontSize(9.5).fillColor(INK);
+      prescription.recommendedTests.forEach((test, index) => {
+        if (y >= contentBottomLimit) return;
+        const label = test.categoryName
+          ? `${test.testName} (${test.categoryName})`
+          : test.testName;
+        doc.text(`${index + 1}. ${label}`, margin + 14, y);
+        y = doc.y + 3;
+      });
+      y += 6;
+    }
+
+    if (prescription.remarks?.trim() && y < contentBottomLimit) {
+      drawSectionLabel(doc, 'REMARK', margin, y, {
         inlineValue: prescription.remarks.trim(),
       });
     }
 
     drawPrescriptionFooter(doc, { pageW, pageH, branding, footerPath });
-
     doc.end();
   });

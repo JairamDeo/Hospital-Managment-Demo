@@ -8,6 +8,7 @@ export const ROUTES = {
   CUSTOMER_VERIFY_OTP: '/verify-otp',
   CUSTOMER_HOME: '/home',
   CUSTOMER_APPOINTMENTS: '/appointments',
+  CUSTOMER_REPORTS: '/reports',
   CUSTOMER_PROFILE: '/profile',
 
   // Admin auth
@@ -24,6 +25,7 @@ export const ROUTES = {
   ADMIN_APPOINTMENT_FOLLOWUP: `${ADMIN}/appointments/:appointmentId/follow-up`,
   ADMIN_PANCHAKARMA: `${ADMIN}/panchakarma`,
   ADMIN_IPD: `${ADMIN}/ipd`,
+  ADMIN_LAB: `${ADMIN}/lab`,
   ADMIN_IPD_ADMISSION_DETAIL: `${ADMIN}/ipd/admissions/:admissionCode`,
   ADMIN_PANCHAKARMA_PROGRAM_ATTEND: `${ADMIN}/panchakarma/programs/:programCode/attend`,
   ADMIN_PHARMACY: `${ADMIN}/pharmacy`,

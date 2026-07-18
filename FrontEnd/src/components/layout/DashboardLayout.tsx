@@ -11,6 +11,7 @@ const titles: Record<string, string> = {
   [ROUTES.ADMIN_PATIENT_INSURANCE]: 'Health insurance',
   [ROUTES.ADMIN_APPOINTMENTS]: 'Appointments',
   [ROUTES.ADMIN_PANCHAKARMA]: 'Panchakarma',
+  [ROUTES.ADMIN_LAB]: 'Lab',
   [ROUTES.ADMIN_PHARMACY]: 'Pharmacy',
   [ROUTES.ADMIN_STAFF]: 'Staff',
   [ROUTES.ADMIN_STAFF_COMPENSATION]: 'Staff compensation',

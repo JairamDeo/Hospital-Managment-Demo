@@ -1,26 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Users, UserPlus, CalendarCheck, Activity, Sprout, FlaskConical, Droplets, Flower2 } from 'lucide-react';
+import { Users, UserPlus, CalendarCheck, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
 import { hmsToAppointment, formatTimeLabel } from '@/utils/appointmentHelpers';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { AppointmentRow } from '@/components/dashboard/AppointmentRow';
-import { PharmacyItem } from '@/components/dashboard/PharmacyItem';
+import { LabDashboardPanel } from '@/components/dashboard/LabDashboardPanel';
 import { ROUTES } from '@/constants/routes';
 import type { Appointment } from '@/types/appointment.types';
 
-const inventory = [
-  { name: 'Ashwagandha Powder', unitsRemaining: 215, maxUnits: 500, status: 'Low' as const, icon: Sprout },
-  { name: 'Triphala Churna', unitsRemaining: 380, maxUnits: 500, status: 'OK' as const, icon: Flower2 },
-  { name: 'Brahmi Oil', unitsRemaining: 45, maxUnits: 300, status: 'Critical' as const, icon: Droplets },
-  { name: 'Chyawanprash', unitsRemaining: 275, maxUnits: 400, status: 'OK' as const, icon: FlaskConical },
-];
-
-export const DashboardPage = () => {
+const ClinicDashboardPanel = () => {
   const { user } = useAuth();
+  const { staffRole, isAdmin } = usePermissions();
   const [patientTotal, setPatientTotal] = useState(0);
   const [newThisWeek, setNewThisWeek] = useState(0);
   const [todayVisits, setTodayVisits] = useState(0);
@@ -64,6 +59,8 @@ export const DashboardPage = () => {
   const initials = getInitials(user?.firstName, user?.lastName);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  const titlePrefix =
+    isAdmin || staffRole === 'Doctor' ? 'Dr. ' : staffRole === 'Therapist' ? '' : '';
 
   const dashboardRows = useMemo(
     () =>
@@ -88,7 +85,8 @@ export const DashboardPage = () => {
         <div className="min-w-0">
           <p className="text-sm font-medium text-ink-soft">{greeting},</p>
           <h2 className="mt-2 truncate font-serif text-2xl font-semibold leading-tight text-ink">
-            Dr. {name}
+            {titlePrefix}
+            {name}
           </h2>
           <p className="mt-1.5 text-xs text-ink-soft">Here&apos;s your clinic overview for today</p>
         </div>
@@ -120,46 +118,47 @@ export const DashboardPage = () => {
           icon={CalendarCheck}
           className="bg-sage-mid"
         />
-        <StatCard label="Active Treatments" value="98" subLabel="Ongoing" icon={Activity} className="bg-sage-light" />
+        <StatCard
+          label="Today's Queue"
+          value={String(todayAppointments.length)}
+          subLabel="Listed below"
+          icon={Activity}
+          className="bg-sage-light"
+        />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-sage bg-white lg:col-span-2">
-          <div className="flex shrink-0 items-center justify-between border-b border-border-sage px-4 py-3">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Today&apos;s Appointments
-            </h3>
-            <Link
-              to={ROUTES.ADMIN_APPOINTMENTS}
-              className="cursor-pointer rounded-full border border-border-sage px-3 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist"
-            >
-              List view
-            </Link>
-          </div>
-          <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
-            {dashboardRows.length === 0 ? (
-              <p className="py-8 text-center text-sm text-ink-soft">No appointments scheduled for today</p>
-            ) : (
-              dashboardRows.map((a) => <AppointmentRow key={a.appointmentId} {...a} />)
-            )}
-          </div>
-        </section>
-
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-sage bg-white">
-          <div className="shrink-0 border-b border-border-sage px-4 py-3">
-            <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-              Pharmacy Inventory
-            </h3>
-          </div>
-          <div className="flex-1 divide-y divide-border-sage overflow-y-auto">
-            {inventory.map((item) => (
-              <PharmacyItem key={item.name} {...item} />
-            ))}
-          </div>
-        </section>
-      </div>
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border-sage bg-white">
+        <div className="flex shrink-0 items-center justify-between border-b border-border-sage px-4 py-3">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+            Today&apos;s Appointments
+          </h3>
+          <Link
+            to={ROUTES.ADMIN_APPOINTMENTS}
+            className="cursor-pointer rounded-full border border-border-sage px-3 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist"
+          >
+            List view
+          </Link>
+        </div>
+        <div className="flex-1 space-y-2.5 overflow-y-auto p-3">
+          {dashboardRows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-ink-soft">No appointments scheduled for today</p>
+          ) : (
+            dashboardRows.map((a) => <AppointmentRow key={a.appointmentId} {...a} />)
+          )}
+        </div>
+      </section>
     </div>
   );
+};
+
+export const DashboardPage = () => {
+  const { staffRole } = usePermissions();
+
+  if (staffRole === 'Lab') {
+    return <LabDashboardPanel />;
+  }
+
+  return <ClinicDashboardPanel />;
 };
 
 export default DashboardPage;

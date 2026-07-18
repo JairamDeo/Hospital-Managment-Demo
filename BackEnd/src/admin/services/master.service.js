@@ -4,6 +4,8 @@ import PharmacyCategoryMaster from '../../models/pharmacyCategoryMaster.model.js
 import PharmacyUnitMaster from '../../models/pharmacyUnitMaster.model.js';
 import PharmacySpoonMaster from '../../models/pharmacySpoonMaster.model.js';
 import RoomMaster from '../../models/roomMaster.model.js';
+import LabTestCategoryMaster from '../../models/labTestCategoryMaster.model.js';
+import LabTestMaster from '../../models/labTestMaster.model.js';
 import { MASTER_MESSAGES } from '../../utils/constants.js';
 
 const nextPrakritiCode = async () => {
@@ -225,13 +227,91 @@ export const updateRoom = async (id, payload) => {
   }
   if (payload.name !== undefined) item.name = payload.name.trim();
   if (payload.roomType !== undefined) item.roomType = payload.roomType;
-  if (payload.capacity !== undefined) {
-    const capacity = Number(payload.capacity);
-    if (!Number.isFinite(capacity) || capacity < 1) {
-      throw new Error('Room capacity must be at least 1');
-    }
-    item.capacity = capacity;
+  if (payload.active !== undefined) item.active = payload.active;
+  await item.save();
+  return item;
+};
+
+const nextLabCategoryCode = async () => {
+  const count = await LabTestCategoryMaster.countDocuments();
+  return `LTC-${String(count + 1).padStart(3, '0')}`;
+};
+
+const nextLabTestCode = async () => {
+  const count = await LabTestMaster.countDocuments();
+  return `LBT-${String(count + 1).padStart(3, '0')}`;
+};
+
+export const listLabTestCategories = async (activeOnly = false) => {
+  const filter = activeOnly ? { active: true } : {};
+  return LabTestCategoryMaster.find(filter).sort({ name: 1 }).lean();
+};
+
+export const createLabTestCategory = async (name) => {
+  const trimmed = name.trim();
+  const exists = await LabTestCategoryMaster.findOne({ name: new RegExp(`^${trimmed}$`, 'i') });
+  if (exists) throw new Error(MASTER_MESSAGES.LAB_CATEGORY_EXISTS);
+  return LabTestCategoryMaster.create({ code: await nextLabCategoryCode(), name: trimmed });
+};
+
+export const updateLabTestCategory = async (id, payload) => {
+  const item = await LabTestCategoryMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+  if (payload.name !== undefined) item.name = payload.name.trim();
+  if (payload.active !== undefined) item.active = payload.active;
+  await item.save();
+
+  if (payload.name !== undefined || payload.active !== undefined) {
+    await LabTestMaster.updateMany(
+      { category: item._id },
+      {
+        ...(payload.name !== undefined ? { categoryName: item.name } : {}),
+        ...(payload.active === false ? { active: false } : {}),
+      }
+    );
   }
+  return item;
+};
+
+export const listLabTests = async (activeOnly = false, categoryId) => {
+  const filter = {};
+  if (activeOnly) filter.active = true;
+  if (categoryId) filter.category = categoryId;
+  return LabTestMaster.find(filter).sort({ categoryName: 1, name: 1 }).lean();
+};
+
+export const createLabTest = async ({ name, categoryId }) => {
+  const trimmed = name.trim();
+  const category = await LabTestCategoryMaster.findById(categoryId);
+  if (!category || !category.active) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+
+  const exists = await LabTestMaster.findOne({
+    category: category._id,
+    name: new RegExp(`^${trimmed}$`, 'i'),
+  });
+  if (exists) throw new Error(MASTER_MESSAGES.LAB_TEST_EXISTS);
+
+  return LabTestMaster.create({
+    code: await nextLabTestCode(),
+    name: trimmed,
+    category: category._id,
+    categoryCode: category.code,
+    categoryName: category.name,
+  });
+};
+
+export const updateLabTest = async (id, payload) => {
+  const item = await LabTestMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+
+  if (payload.categoryId) {
+    const category = await LabTestCategoryMaster.findById(payload.categoryId);
+    if (!category) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+    item.category = category._id;
+    item.categoryCode = category.code;
+    item.categoryName = category.name;
+  }
+  if (payload.name !== undefined) item.name = payload.name.trim();
   if (payload.active !== undefined) item.active = payload.active;
   await item.save();
   return item;

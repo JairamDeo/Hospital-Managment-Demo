@@ -273,7 +273,9 @@ export const PatientDetailTabs = ({
           <p className="py-8 text-center text-sm text-ink-soft">Panchakarma data unavailable.</p>
         ) : null}
 
-        {activeTab === 'labs' ? <PatientLabReportsTab reports={patient.labReports} /> : null}
+        {activeTab === 'labs' ? (
+          <PatientLabReportsTab reports={patient.labReports} patientCode={patient.id} />
+        ) : null}
 
         {activeTab === 'billing' ? <PatientBillingTab invoices={patient.invoices} /> : null}
 

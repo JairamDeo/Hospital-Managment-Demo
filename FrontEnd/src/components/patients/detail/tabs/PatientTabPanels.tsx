@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Download, Eye, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { invoiceDetailPath } from '@/constants/routes';
+import { labAdminService } from '@/services/lab/labAdmin.service';
 import type { PatientDocument, LabReport, PatientInvoice } from '@/types/patientDetail.types';
 import { formatPatientRupee } from '@/types/patientDetail.types';
 
@@ -31,7 +32,57 @@ const INV_STATUS: Record<PatientInvoice['status'], string> = {
 
 export { PatientPrescriptionsTab } from './PatientPrescriptionsTab';
 
-export const PatientLabReportsTab = ({ reports }: { reports: LabReport[] }) => (
+export const PatientLabReportsTab = ({
+  reports: seedReports,
+  patientCode,
+}: {
+  reports: LabReport[];
+  patientCode?: string;
+}) => {
+  const [reports, setReports] = useState(seedReports);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setReports(seedReports);
+  }, [seedReports]);
+
+  useEffect(() => {
+    if (!patientCode) return;
+    let cancelled = false;
+    setLoading(true);
+    labAdminService
+      .listReports({ patientCode })
+      .then((res) => {
+        if (cancelled) return;
+        const live = (res.data.res?.reports ?? []).map((r) => ({
+          id: r.reportCode,
+          testName: r.testName,
+          date: r.date || '',
+          result: r.result || '',
+          status: r.status,
+          lab: r.labName || r.lab || 'Lab',
+          fileUrl: r.fileUrl || '',
+        }));
+        if (live.length) setReports(live);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [patientCode]);
+
+  if (loading && reports.length === 0) {
+    return <p className="py-6 text-sm text-ink-soft">Loading lab reports…</p>;
+  }
+
+  if (!reports.length) {
+    return <p className="py-6 text-sm text-ink-ghost">No lab reports yet.</p>;
+  }
+
+  return (
   <TableShell>
     <thead>
       <tr className="border-b border-border-sage bg-cream/60">
@@ -40,6 +91,7 @@ export const PatientLabReportsTab = ({ reports }: { reports: LabReport[] }) => (
         <Th>Result</Th>
         <Th>Lab</Th>
         <Th>Status</Th>
+        <Th>Report</Th>
       </tr>
     </thead>
     <tbody>
@@ -54,11 +106,27 @@ export const PatientLabReportsTab = ({ reports }: { reports: LabReport[] }) => (
               {r.status}
             </span>
           </td>
+          <td className="px-4 py-3">
+            {r.fileUrl ? (
+              <a
+                href={r.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-border-sage bg-white px-2.5 py-1 text-xs font-semibold text-sage-deep transition hover:bg-sage-mist"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                View
+              </a>
+            ) : (
+              <span className="text-xs text-ink-ghost">No file</span>
+            )}
+          </td>
         </tr>
       ))}
     </tbody>
   </TableShell>
-);
+  );
+};
 
 export const PatientBillingTab = ({ invoices }: { invoices: PatientInvoice[] }) => {
   const total = invoices.reduce((sum, inv) => sum + inv.amount, 0);

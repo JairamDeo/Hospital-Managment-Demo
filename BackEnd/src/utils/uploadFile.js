@@ -1,28 +1,25 @@
-import fs from 'fs';
-import path from 'path';
+import { uploadHmsFile } from '../services/cloudinary.service.js';
 
-
-export const uploadFile = async (file) => {
-  try {
-    if (!file || !file.buffer) {
-      throw new Error('Invalid file data');
-    }
-    
-    const uploadsDir = path.join(process.cwd(), '/upload');
-
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const fileName = `${Date.now()}-${file.originalname}`;
-    const filePath = path.join(uploadsDir, fileName);
-    fs.writeFileSync(filePath, file.buffer); // Write buffer to file
-
-    return `upload/${fileName}`;
-  } catch (error) {
-    console.error('Error saving file locally:', error);
-    throw error;
+/**
+ * Upload file buffer to Cloudinary and return a public HTTPS URL.
+ * Local /upload folder is not used.
+ */
+export const uploadFile = async (file, { folder = 'HMS/lab/reports' } = {}) => {
+  if (!file || !file.buffer) {
+    throw new Error('Invalid file data');
   }
+
+  const result = await uploadHmsFile(file.buffer, {
+    folder,
+    originalName: file.originalname || 'report',
+    mimeType: file.mimetype || '',
+  });
+
+  if (!result?.secure_url) {
+    throw new Error('Cloudinary upload failed — no URL returned');
+  }
+
+  return result.secure_url;
 };
 
-export default { uploadFile }
+export default { uploadFile };

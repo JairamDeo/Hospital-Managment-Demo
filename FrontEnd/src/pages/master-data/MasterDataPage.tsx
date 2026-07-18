@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DoorOpen, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { DoorOpen, FlaskConical, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { formLabelClass, formSelectClass } from '@/components/ui/formStyles';
+import { LabMasterPanel } from '@/components/master-data/LabMasterPanel';
 import { useToast } from '@/hooks/useToast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
+import { ROUTES } from '@/constants/routes';
 import type { MasterItem, PharmacySpoonItem, RoomMasterItem } from '@/types/api.types';
 
-type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room';
+type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room' | 'lab';
 
 const MasterCard = ({ item }: { item: MasterItem }) => (
   <div
@@ -109,6 +113,7 @@ const TAB_LABELS: Record<Tab, string> = {
   treatment: 'Treatment',
   pharmacySpoon: 'Spoon Size',
   room: 'Room',
+  lab: 'Lab Tests',
 };
 
 const emptyRoomForm = () => ({
@@ -121,6 +126,7 @@ const emptyRoomForm = () => ({
 
 export const MasterDataPage = () => {
   const [tab, setTab] = useState<Tab>('prakriti');
+  const { canView, canEdit } = usePermissions();
   const [prakriti, setPrakriti] = useState<MasterItem[]>([]);
   const [treatments, setTreatments] = useState<MasterItem[]>([]);
   const [pharmacySpoons, setPharmacySpoons] = useState<PharmacySpoonItem[]>([]);
@@ -319,6 +325,7 @@ export const MasterDataPage = () => {
     { id: 'treatment', label: 'Treatment', icon: Stethoscope },
     { id: 'room', label: 'Room', icon: DoorOpen },
     { id: 'pharmacySpoon', label: 'Spoon Size', icon: Soup },
+    { id: 'lab', label: 'Lab Tests', icon: FlaskConical },
   ];
 
   const roomFields = (
@@ -359,6 +366,10 @@ export const MasterDataPage = () => {
     </>
   );
 
+  if (!canView('masterData')) {
+    return <Navigate to={ROUTES.ADMIN_ACCESS_DENIED} replace />;
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -367,13 +378,15 @@ export const MasterDataPage = () => {
             Master Data
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Prakriti, treatments, IPD &amp; Panchakarma rooms, and spoon sizes
+            Prakriti, treatments, rooms, spoon sizes, and lab test catalog
           </p>
         </div>
-        <Button className="gap-2 rounded-lg px-4 py-2" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-4 w-4" strokeWidth={2} />
-          Add {TAB_LABELS[tab]}
-        </Button>
+        {tab !== 'lab' && canEdit('masterData') ? (
+          <Button className="gap-2 rounded-lg px-4 py-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            Add {TAB_LABELS[tab]}
+          </Button>
+        ) : null}
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
@@ -406,7 +419,9 @@ export const MasterDataPage = () => {
         </p>
       ) : null}
 
-      {loading ? (
+      {tab === 'lab' ? (
+        <LabMasterPanel />
+      ) : loading ? (
         <p className="text-sm text-ink-soft">Loading…</p>
       ) : tab === 'pharmacySpoon' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

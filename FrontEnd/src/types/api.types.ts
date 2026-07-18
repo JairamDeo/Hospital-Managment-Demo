@@ -19,7 +19,7 @@ export interface AdminUser {
   mobileNumber?: string;
   role: string;
   accountType?: 'admin' | 'staff';
-  staffRole?: 'Doctor' | 'Therapist' | 'Support';
+  staffRole?: 'Doctor' | 'Therapist' | 'Support' | 'Lab';
   staffCode?: string;
   title?: string;
   permissions?: Record<string, ModulePermission>;
@@ -131,7 +131,7 @@ export interface HmsStaff {
   staffCode: string;
   id: string;
   name: string;
-  role: 'Doctor' | 'Therapist' | 'Support';
+  role: 'Doctor' | 'Therapist' | 'Support' | 'Lab';
   title: string;
   dutyStatus: 'On Duty' | 'Off Duty';
   status: 'On Duty' | 'Off Duty';

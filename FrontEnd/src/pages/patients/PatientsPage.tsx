@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Download, FileSpreadsheet, FileText, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { PopoverMenu, PopoverMenuItem } from '@/components/ui/PopoverMenu';
@@ -8,7 +8,7 @@ import { PatientPagination } from '@/components/patients/PatientPagination';
 import { PatientFormModal } from '@/components/modals/PatientFormModal';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
-import { patientDetailPath } from '@/constants/routes';
+import { patientDetailPath, ROUTES } from '@/constants/routes';
 import type { Patient, PatientFormValues, PatientStats } from '@/types/patient.types';
 import {
   emptyPatientForm,
@@ -59,7 +59,7 @@ export const PatientsPage = () => {
   const exportRef = useRef<HTMLDivElement>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
-  const { canEdit } = usePermissions();
+  const { canView, canEdit } = usePermissions();
 
   const activePrakriti = useMemo(
     () => prakritiMasters.filter((p) => p.active),
@@ -73,16 +73,17 @@ export const PatientsPage = () => {
   const loadData = useCallback(async () => {
     setListLoading(true);
     try {
-      const [patRes, statsRes, pRes, tRes] = await Promise.all([
-        patientAdminService.list(),
-        patientAdminService.getStats(),
-        masterService.listPrakriti(),
-        masterService.listTreatments(),
-      ]);
+      const patRes = await patientAdminService.list();
       setPatients((patRes.data.res?.patients ?? []).map(hmsToPatient));
-      setStats(statsRes.data.res?.stats ?? defaultStats());
-      setPrakritiMasters(pRes.data.res?.items ?? []);
-      setTreatmentMasters(tRes.data.res?.items ?? []);
+
+      const [statsRes, pRes, tRes] = await Promise.all([
+        patientAdminService.getStats().catch(() => null),
+        masterService.listPrakriti().catch(() => null),
+        masterService.listTreatments().catch(() => null),
+      ]);
+      if (statsRes?.data.res?.stats) setStats(statsRes.data.res.stats);
+      setPrakritiMasters(pRes?.data.res?.items ?? []);
+      setTreatmentMasters(tRes?.data.res?.items ?? []);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -175,6 +176,10 @@ export const PatientsPage = () => {
       showToast('PDF print dialog opened', 'success');
     }
   };
+
+  if (!canView('patients')) {
+    return <Navigate to={ROUTES.ADMIN_ACCESS_DENIED} replace />;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

@@ -1,4 +1,6 @@
 import HmsPatient from '../models/hmsPatient.model.js';
+import '../models/prakritiMaster.model.js';
+import '../models/treatmentMaster.model.js';
 
 export const withHmsPatientPopulate = (query) =>
   query.populate('prakriti').populate('treatment');

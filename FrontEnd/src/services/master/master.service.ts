@@ -131,6 +131,56 @@ class MasterService {
     );
   }
 
+  listLabCategories(activeOnly = false) {
+    const query = activeOnly ? '?active=true' : '';
+    return axiosInstance.get<ApiResponse<{ items: MasterItem[] }>>(
+      `/admin/master/lab-categories${query}`
+    );
+  }
+
+  createLabCategory(name: string) {
+    return axiosInstance.post<ApiResponse<{ item: MasterItem }>>('/admin/master/lab-categories', {
+      name,
+    });
+  }
+
+  updateLabCategory(id: string, payload: { name?: string; active?: boolean }) {
+    return axiosInstance.patch<ApiResponse<{ item: MasterItem }>>(
+      `/admin/master/lab-categories/${id}`,
+      payload
+    );
+  }
+
+  listLabTests(activeOnly = false, categoryId?: string) {
+    const params = new URLSearchParams();
+    if (activeOnly) params.set('active', 'true');
+    if (categoryId) params.set('categoryId', categoryId);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return axiosInstance.get<
+      ApiResponse<{
+        items: Array<MasterItem & { categoryCode?: string; categoryName?: string; category?: string }>;
+      }>
+    >(`/admin/master/lab-tests${query}`);
+  }
+
+  createLabTest(payload: { name: string; categoryId: string }) {
+    return axiosInstance.post<
+      ApiResponse<{
+        item: MasterItem & { categoryCode?: string; categoryName?: string };
+      }>
+    >('/admin/master/lab-tests', payload);
+  }
+
+  updateLabTest(
+    id: string,
+    payload: { name?: string; categoryId?: string; active?: boolean }
+  ) {
+    return axiosInstance.patch<ApiResponse<{ item: MasterItem }>>(
+      `/admin/master/lab-tests/${id}`,
+      payload
+    );
+  }
+
   portalMasters() {
     return axiosInstance.get<
       ApiResponse<{ prakriti: MasterItem[]; treatments: MasterItem[] }>

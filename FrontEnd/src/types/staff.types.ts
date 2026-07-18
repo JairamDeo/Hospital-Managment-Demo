@@ -1,4 +1,4 @@
-export type StaffRole = 'Doctor' | 'Therapist' | 'Support';
+export type StaffRole = 'Doctor' | 'Therapist' | 'Support' | 'Lab';
 
 export type StaffFilter = 'all' | 'doctor' | 'therapist' | 'support';
 
@@ -52,7 +52,7 @@ export interface StaffFormValues {
   qualifications: StaffQualification[];
 }
 
-export const ROLE_OPTIONS: StaffRole[] = ['Doctor', 'Therapist', 'Support'];
+export const ROLE_OPTIONS: StaffRole[] = ['Doctor', 'Therapist', 'Support', 'Lab'];
 
 export const QUALIFICATION_LEVEL_OPTIONS: QualificationLevel[] = [
   'UG',

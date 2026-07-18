@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, Home, Leaf, UserRound } from 'lucide-react';
+import { CalendarDays, FileText, Home, Leaf, UserRound } from 'lucide-react';
 import { usePatientPortalAuth } from '@/hooks/usePatientPortalAuth';
 import { ROUTES } from '@/constants/routes';
 import { APP_NAME } from '@/constants/constants';
@@ -7,7 +7,7 @@ import { APP_NAME } from '@/constants/constants';
 const navItems = [
   { to: ROUTES.CUSTOMER_HOME, label: 'Home', icon: Home },
   { to: ROUTES.CUSTOMER_APPOINTMENTS, label: 'Appointments', icon: CalendarDays },
-  { to: ROUTES.CUSTOMER_HOME, label: 'Therapies', icon: Leaf, disabled: true },
+  { to: ROUTES.CUSTOMER_REPORTS, label: 'Reports', icon: FileText },
   { to: ROUTES.CUSTOMER_PROFILE, label: 'Profile', icon: UserRound },
 ];
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Bell, ChevronRight, Search, PanelLeftClose, PanelLeftOpen, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,10 +7,8 @@ import { getInitials } from '@/utils/helpers';
 import { DateTimeWidget } from './DateTimeWidget';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { NotificationsModal } from './NotificationsModal';
-import {
-  MOCK_NOTIFICATIONS,
-  type AppNotification,
-} from '@/components/layout/mockNotifications';
+import { mapApiNotification, type AppNotification } from '@/components/layout/notificationTypes';
+import { notificationAdminService } from '@/services/notification/notificationAdmin.service';
 
 export interface Breadcrumb {
   label: string;
@@ -28,18 +26,58 @@ export const Header = ({ title, breadcrumbs }: HeaderProps) => {
   const initials = getInitials(user?.firstName, user?.lastName);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [notifications, setNotifications] = useState<AppNotification[]>(MOCK_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(false);
+
+  const loadNotifications = useCallback(async () => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+    setLoadingNotifs(true);
+    try {
+      const res = await notificationAdminService.list();
+      const rows = res.data.res?.notifications ?? [];
+      setNotifications(rows.map(mapApiNotification));
+    } catch {
+      setNotifications([]);
+    } finally {
+      setLoadingNotifs(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    void loadNotifications();
+    const timer = window.setInterval(() => {
+      void loadNotifications();
+    }, 60000);
+    return () => window.clearInterval(timer);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    if (notificationsOpen) void loadNotifications();
+  }, [notificationsOpen, loadNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const markRead = (id: string) => {
+  const markRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
+    try {
+      await notificationAdminService.markRead(id);
+    } catch {
+      void loadNotifications();
+    }
   };
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await notificationAdminService.markAllRead();
+    } catch {
+      void loadNotifications();
+    }
   };
 
   return (
@@ -131,8 +169,9 @@ export const Header = ({ title, breadcrumbs }: HeaderProps) => {
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         notifications={notifications}
-        onMarkRead={markRead}
-        onMarkAllRead={markAllRead}
+        loading={loadingNotifs}
+        onMarkRead={(id) => void markRead(id)}
+        onMarkAllRead={() => void markAllRead()}
       />
     </header>
   );

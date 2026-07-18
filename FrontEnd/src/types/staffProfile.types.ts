@@ -43,7 +43,7 @@ export type StaffDetailTab = 'activity' | 'assignments' | 'documents' | 'leave';
 export interface StaffProfileCardData {
   id: string;
   name: string;
-  role: 'Doctor' | 'Therapist' | 'Support';
+  role: 'Doctor' | 'Therapist' | 'Support' | 'Lab';
   title: string;
   status: 'On Duty' | 'Off Duty';
   initials: string;

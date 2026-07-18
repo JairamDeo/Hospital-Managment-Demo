@@ -15,6 +15,11 @@ import {
   verifyOtp,
   resetPassword,
 } from '../controllers/admin.controller.js';
+import {
+  getMyNotifications,
+  postMarkNotificationRead,
+  postMarkAllNotificationsRead,
+} from '../controllers/hmsLab.controller.js';
 
 const router = Router();
 
@@ -25,5 +30,9 @@ router.post('/forgot-password/verify-otp', validateRequest(verifyOtpSchema), ver
 router.post('/forgot-password/reset-password', validateRequest(resetPasswordSchema), resetPassword);
 
 router.get('/me', portalAuth, adminMe);
+
+router.get('/notifications', portalAuth, getMyNotifications);
+router.post('/notifications/read-all', portalAuth, postMarkAllNotificationsRead);
+router.post('/notifications/:id/read', portalAuth, postMarkNotificationRead);
 
 export default router;

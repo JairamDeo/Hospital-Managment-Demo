@@ -22,12 +22,19 @@ import {
   getRoomList,
   postRoom,
   patchRoom,
+  getLabCategoryList,
+  postLabCategory,
+  patchLabCategory,
+  getLabTestList,
+  postLabTest,
+  patchLabTest,
 } from '../controllers/master.controller.js';
 import {
   createPharmacySpoonSchema,
   updatePharmacySpoonSchema,
 } from '../validators/pharmacySpoon.validator.js';
 import { createRoomSchema, updateRoomSchema } from '../validators/room.validator.js';
+import { createLabTestSchema, updateLabTestSchema } from '../validators/labTest.validator.js';
 
 const router = Router();
 
@@ -61,5 +68,13 @@ router.post('/pharmacy-spoons/:id/default', postPharmacySpoonDefault);
 router.get('/rooms', getRoomList);
 router.post('/rooms', validateRequest(createRoomSchema), postRoom);
 router.patch('/rooms/:id', validateRequest(updateRoomSchema), patchRoom);
+
+router.get('/lab-categories', getLabCategoryList);
+router.post('/lab-categories', validateRequest(masterNameSchema), postLabCategory);
+router.patch('/lab-categories/:id', validateRequest(masterUpdateSchema), patchLabCategory);
+
+router.get('/lab-tests', getLabTestList);
+router.post('/lab-tests', validateRequest(createLabTestSchema), postLabTest);
+router.patch('/lab-tests/:id', validateRequest(updateLabTestSchema), patchLabTest);
 
 export default router;

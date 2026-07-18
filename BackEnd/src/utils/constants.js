@@ -104,7 +104,30 @@ export const MASTER_MESSAGES = {
   ROOM_UPDATED: 'Room updated successfully',
   ROOM_EXISTS: 'Room number already exists',
   ROOM_NOT_FOUND: 'Room not found',
+  LAB_CATEGORY_LIST: 'Lab test categories fetched',
+  LAB_CATEGORY_CREATED: 'Lab test category created successfully',
+  LAB_CATEGORY_UPDATED: 'Lab test category updated successfully',
+  LAB_CATEGORY_EXISTS: 'Lab test category with this name already exists',
+  LAB_TEST_LIST: 'Lab tests fetched',
+  LAB_TEST_CREATED: 'Lab test created successfully',
+  LAB_TEST_UPDATED: 'Lab test updated successfully',
+  LAB_TEST_EXISTS: 'Lab test with this name already exists in this category',
   NOT_FOUND: 'Record not found',
+};
+
+export const LAB_MESSAGES = {
+  ORDERS_FETCHED: 'Lab orders fetched successfully',
+  ORDER_FETCHED: 'Lab order fetched successfully',
+  ORDER_CREATED: 'Lab order created successfully',
+  REPORTS_FETCHED: 'Lab reports fetched successfully',
+  REPORT_UPLOADED: 'Lab report uploaded successfully',
+  STATS_FETCHED: 'Lab stats fetched successfully',
+  NOT_FOUND: 'Lab order or report not found',
+  TESTS_REQUIRED: 'Select at least one lab test',
+  FILE_REQUIRED: 'Report file is required',
+  ORDER_REQUIRED: 'Upload only for a doctor-recommended test',
+  ALREADY_UPLOADED: 'This report is already uploaded. You can only view it.',
+  ORDER_MISMATCH: 'This test is not on your recommended lab list',
 };
 
 export const IPD_MESSAGES = {

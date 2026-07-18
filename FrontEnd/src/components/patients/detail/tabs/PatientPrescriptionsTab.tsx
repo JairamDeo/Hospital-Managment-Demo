@@ -160,6 +160,12 @@ export const PatientPrescriptionsTab = ({
                         })}`
                       : ''}
                   </p>
+                  {(rx.recommendedTests?.length ?? 0) > 0 ? (
+                    <p className="mt-1 text-[11px] text-ink-soft">
+                      Lab tests:{' '}
+                      {rx.recommendedTests!.map((t) => t.testName).join(', ')}
+                    </p>
+                  ) : null}
                   {waAlreadySent ? (
                     <p className="mt-0.5 text-[10px] font-medium text-emerald-700">
                       WhatsApp sent {formatWaSentDate(rx.whatsappSentAt)}

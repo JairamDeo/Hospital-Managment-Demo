@@ -19,6 +19,7 @@ import { formatAppointmentDateDisplay } from '../../utils/appointment.util.js';
 import { getDefaultPharmacySpoonGrams } from '../../utils/pharmacySpoon.util.js';
 import { applyStockBaseDeduction } from '../../utils/pharmacyStockDeduction.util.js';
 import { getStockBaseUnits } from '../../utils/pharmacyStockUnits.util.js';
+import { createLabOrderFromPrescription } from './hmsLab.service.js';
 
 const performerFromReq = (req) => {
   if (req.accountType === 'admin') {
@@ -74,6 +75,13 @@ const formatPrescription = (doc) => {
       intakeSpoonGrams: c.intakeSpoonGrams ?? null,
       howToIntake: c.howToIntake || '',
     })),
+    recommendedTests: (row.recommendedTests ?? []).map((t) => ({
+      testCode: t.testCode,
+      testName: t.testName,
+      categoryCode: t.categoryCode || '',
+      categoryName: t.categoryName || '',
+    })),
+    labOrderCode: row.labOrderCode || '',
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     whatsappSentAt: row.whatsappSentAt ?? null,
@@ -234,8 +242,8 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
     };
   });
 
-  if (!medicines.length && !(payload.churans?.length)) {
-    throw new Error('Add at least one medicine or churan');
+  if (!medicines.length && !(payload.churans?.length) && !(payload.recommendedTests?.length)) {
+    throw new Error('Add at least one medicine, churan, or lab test');
   }
 
   const defaultSpoonGrams = await getDefaultPharmacySpoonGrams();
@@ -269,6 +277,15 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
     await deductChuranPowderStock(allPowders, defaultSpoonGrams);
   }
 
+  const recommendedTests = (payload.recommendedTests ?? [])
+    .filter((t) => t?.testCode && t?.testName)
+    .map((t) => ({
+      testCode: String(t.testCode).trim(),
+      testName: String(t.testName).trim(),
+      categoryCode: t.categoryCode?.trim() || '',
+      categoryName: t.categoryName?.trim() || '',
+    }));
+
   const row = await HmsStructuredPrescription.create({
     prescriptionCode: await generatePrescriptionCode(),
     patientCode: patient.patientCode,
@@ -281,8 +298,22 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
     remarks: payload.remarks?.trim() || '',
     medicines,
     churans,
+    recommendedTests,
     createdBy: performerFromReq(req),
   });
+
+  if (recommendedTests.length) {
+    const labOrder = await createLabOrderFromPrescription({
+      patient,
+      prescription: row,
+      recommendedTests,
+      req,
+    });
+    if (labOrder) {
+      row.labOrderCode = labOrder.orderCode;
+      await row.save();
+    }
+  }
 
   await syncPrescriptionToTreatmentHistory(row);
   return formatPrescription(row);

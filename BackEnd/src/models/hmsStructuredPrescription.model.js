@@ -73,6 +73,18 @@ const hmsStructuredPrescriptionSchema = new Schema({
   remarks: { type: String, default: '' },
   medicines: { type: [prescriptionMedicineSchema], default: [] },
   churans: { type: [prescriptionChuranSchema], default: [] },
+  recommendedTests: {
+    type: [
+      {
+        testCode: { type: String, required: true, trim: true },
+        testName: { type: String, required: true, trim: true },
+        categoryCode: { type: String, default: '' },
+        categoryName: { type: String, default: '' },
+      },
+    ],
+    default: [],
+  },
+  labOrderCode: { type: String, default: '' },
   createdBy: { type: actorSchema, default: null },
   whatsappSentAt: { type: Date, default: null },
   whatsappSentBy: { type: actorSchema, default: null },

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import {
   Briefcase,
+  FlaskConical,
   Mail,
   Phone,
   SquarePen,
@@ -23,12 +24,14 @@ const ROLE_STYLES: Record<StaffProfileCardData['role'], string> = {
   Doctor: 'bg-violet-50 text-violet-700 ring-violet-200',
   Therapist: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   Support: 'bg-blue-50 text-blue-700 ring-blue-200',
+  Lab: 'bg-amber-50 text-amber-800 ring-amber-200',
 };
 
 const ROLE_ICONS: Record<StaffProfileCardData['role'], LucideIcon> = {
   Doctor: Stethoscope,
   Therapist: Briefcase,
   Support: Headphones,
+  Lab: FlaskConical,
 };
 
 const DetailCell = ({ label, value }: { label: string; value: string }) => (

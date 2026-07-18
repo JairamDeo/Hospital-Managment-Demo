@@ -1,7 +1,7 @@
 import Joi from 'joi';
 import { QUALIFICATION_LEVELS } from '../../config/prescriptionBranding.config.js';
 
-const staffRole = Joi.string().valid('Doctor', 'Therapist', 'Support');
+const staffRole = Joi.string().valid('Doctor', 'Therapist', 'Support', 'Lab');
 const dutyStatus = Joi.string().valid('On Duty', 'Off Duty');
 
 const aadharSchema = Joi.string()

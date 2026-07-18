@@ -77,6 +77,13 @@ export const maxSpoonsForPowderStock = (stockGrams: number, spoonGrams: number) 
   return Math.max(0, Math.floor(stockGrams / spoonGrams));
 };
 
+export interface RecommendedLabTest {
+  testCode: string;
+  testName: string;
+  categoryCode?: string;
+  categoryName?: string;
+}
+
 export interface StructuredPrescription {
   _id: string;
   prescriptionCode: string;
@@ -89,6 +96,8 @@ export interface StructuredPrescription {
   remarks: string;
   medicines: PrescriptionMedicine[];
   churans: PrescriptionChuran[];
+  recommendedTests?: RecommendedLabTest[];
+  labOrderCode?: string;
   createdAt?: string;
   updatedAt?: string;
   whatsappSentAt?: string | null;
@@ -103,6 +112,7 @@ export interface StructuredPrescriptionPayload {
   remarks?: string;
   medicines?: PrescriptionMedicine[];
   churans?: PrescriptionChuran[];
+  recommendedTests?: RecommendedLabTest[];
 }
 
 export const TIMING_LABELS: { key: keyof MedicineTiming; label: string; title: string }[] = [

@@ -13,26 +13,13 @@ import { listInvoicesByPatient } from './hmsBilling.service.js';
 import { mapInvoiceToPatientCare } from '../../utils/formatHmsInvoice.js';
 import {
   assertStaffCanAccessPatient,
-  getStaffScopedPatientCodes,
 } from '../../utils/staffPatientScope.util.js';
 
-export const getPatientStats = async (req) => {
+export const getPatientStats = async (_req) => {
   const weekAgo = moment().subtract(7, 'days').startOf('day').toDate();
-  let filter = {};
-  let newFilter = { createdAt: { $gte: weekAgo } };
-
-  if (req?.accountType === 'staff' && req.staff) {
-    const patientCodes = await getStaffScopedPatientCodes(req.staff);
-    if (patientCodes !== null) {
-      if (!patientCodes.length) return { total: 0, newThisWeek: 0 };
-      filter = { patientCode: { $in: patientCodes } };
-      newFilter = { patientCode: { $in: patientCodes }, createdAt: { $gte: weekAgo } };
-    }
-  }
-
   const [total, newThisWeek] = await Promise.all([
-    HmsPatient.countDocuments(filter),
-    HmsPatient.countDocuments(newFilter),
+    HmsPatient.countDocuments({}),
+    HmsPatient.countDocuments({ createdAt: { $gte: weekAgo } }),
   ]);
   return { total, newThisWeek };
 };

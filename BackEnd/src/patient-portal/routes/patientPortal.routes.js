@@ -33,6 +33,13 @@ import {
   patientVerifyAppointmentRazorpayPayment,
 } from '../controllers/patientPortalAppointmentPayment.controller.js';
 import { patientVerifyAppointmentPaymentSchema } from '../validators/patientPortal.validator.js';
+import {
+  patientListLabReports,
+  patientListLabOrders,
+  patientListLabMasters,
+  patientUploadLabReport,
+} from '../controllers/patientPortalLab.controller.js';
+import { labReportUpload } from '../../middleware/labReportUpload.middleware.js';
 
 const router = Router();
 
@@ -74,6 +81,21 @@ router.post(
   patientPortalAuth,
   validateRequest(patientVerifyAppointmentPaymentSchema),
   patientVerifyAppointmentRazorpayPayment
+);
+
+router.get('/lab/reports', patientPortalAuth, patientListLabReports);
+router.get('/lab/orders', patientPortalAuth, patientListLabOrders);
+router.get('/lab/masters', patientPortalAuth, patientListLabMasters);
+router.post(
+  '/lab/reports/upload',
+  patientPortalAuth,
+  (req, res, next) => {
+    labReportUpload(req, res, (err) => {
+      if (err) return res.status(400).json({ message: err.message, status_code: 400, res: null });
+      return next();
+    });
+  },
+  patientUploadLabReport
 );
 
 export default router;

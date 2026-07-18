@@ -17,6 +17,7 @@ const CustomerRegisterPage = lazy(() => import('@/pages/customer/CustomerRegiste
 const CustomerVerifyOtpPage = lazy(() => import('@/pages/customer/CustomerVerifyOtpPage'));
 const CustomerHomePage = lazy(() => import('@/pages/customer/CustomerHomePage'));
 const CustomerAppointmentsPage = lazy(() => import('@/pages/customer/CustomerAppointmentsPage'));
+const CustomerReportsPage = lazy(() => import('@/pages/customer/CustomerReportsPage'));
 const CustomerProfilePage = lazy(() => import('@/pages/customer/CustomerProfilePage'));
 
 const LoginPage = lazy(() => import('@/pages/auth/Login/LoginPage'));
@@ -47,6 +48,7 @@ const ProgramAttendPage = lazy(() => import('@/pages/panchakarma/ProgramAttendPa
 const MasterDataPage = lazy(() => import('@/pages/master-data/MasterDataPage'));
 const IpdPage = lazy(() => import('@/pages/ipd/IpdPage'));
 const IpdAdmissionDetailPage = lazy(() => import('@/pages/ipd/IpdAdmissionDetailPage'));
+const LabPage = lazy(() => import('@/pages/lab/LabPage'));
 
 const withSuspense = (el: React.ReactNode) => (
   <Suspense fallback={<PageLoader />}>{el}</Suspense>
@@ -100,6 +102,7 @@ export const AppRoutes = () => (
         path={ROUTES.CUSTOMER_APPOINTMENTS}
         element={withSuspense(<CustomerAppointmentsPage />)}
       />
+      <Route path={ROUTES.CUSTOMER_REPORTS} element={withSuspense(<CustomerReportsPage />)} />
       <Route path={ROUTES.CUSTOMER_PROFILE} element={withSuspense(<CustomerProfilePage />)} />
     </Route>
 
@@ -139,6 +142,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.ADMIN_APPOINTMENT_DETAIL} element={withSuspense(<AppointmentDetailPage />)} />
       <Route path={ROUTES.ADMIN_PANCHAKARMA} element={withSuspense(<PanchakarmaPage />)} />
       <Route path={ROUTES.ADMIN_IPD} element={withSuspense(<IpdPage />)} />
+      <Route path={ROUTES.ADMIN_LAB} element={withSuspense(<LabPage />)} />
       <Route
         path={ROUTES.ADMIN_IPD_ADMISSION_DETAIL}
         element={withSuspense(<IpdAdmissionDetailPage />)}

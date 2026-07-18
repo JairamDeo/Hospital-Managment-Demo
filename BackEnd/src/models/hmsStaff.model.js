@@ -1,7 +1,7 @@
 import { Schema, model } from 'mongoose';
 import bcrypt from 'bcrypt';
 
-const STAFF_ROLES = ['Doctor', 'Therapist', 'Support'];
+const STAFF_ROLES = ['Doctor', 'Therapist', 'Support', 'Lab'];
 const DUTY_STATUSES = ['On Duty', 'Off Duty'];
 const QUALIFICATION_LEVELS = ['UG', 'PG', 'Doctorate', 'Diploma', 'Certificate', 'Other'];
 

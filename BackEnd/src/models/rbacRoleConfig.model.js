@@ -16,6 +16,7 @@ const modulesSchema = new Schema(
     prescriptions: { type: permissionSchema, default: () => ({}) },
     panchakarma: { type: permissionSchema, default: () => ({}) },
     ipd: { type: permissionSchema, default: () => ({}) },
+    lab: { type: permissionSchema, default: () => ({}) },
     masterData: { type: permissionSchema, default: () => ({}) },
     pharmacy: { type: permissionSchema, default: () => ({}) },
     staff: { type: permissionSchema, default: () => ({}) },
@@ -31,7 +32,7 @@ const rbacRoleConfigSchema = new Schema(
   {
     role: {
       type: String,
-      enum: ['Doctor', 'Therapist', 'Support'],
+      enum: ['Doctor', 'Therapist', 'Support', 'Lab'],
       unique: true,
       required: true,
     },

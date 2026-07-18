@@ -105,6 +105,22 @@ const SEED_STAFF = [
     tags: ['Front Desk', 'Billing'],
     shift: '8AM – 5PM',
   },
+  // Lab (1)
+  {
+    staffCode: 'STF-010',
+    name: 'Lab User One',
+    role: 'Lab',
+    title: 'Lab Technician',
+    dutyStatus: 'On Duty',
+    statPrimaryValue: 0,
+    statPrimaryLabel: 'Reports',
+    todayCount: 0,
+    rating: 5,
+    tags: ['Lab', 'Diagnostics'],
+    shift: '9AM – 5PM',
+    email: 'lab1@ayurvedahealth.com',
+    password: 'Admin@123',
+  },
 ];
 
 const SEED_STAFF_CODES = SEED_STAFF.map((row) => row.staffCode);
@@ -118,20 +134,22 @@ export const pruneExtraStaff = async () => {
   return result.deletedCount;
 };
 
-/** Ensure every staff row can log in with email + STAFF_DEFAULT_PASSWORD */
+/** Ensure every staff row can log in with email + password */
 export const syncAllStaffCredentials = async () => {
+  const seedByCode = new Map(SEED_STAFF.map((row) => [row.staffCode, row]));
   const allStaff = await HmsStaff.find({ status: true });
   let synced = 0;
 
   for (const member of allStaff) {
-    member.email = staffEmailFromName(member.name);
-    member.set('password', STAFF_DEFAULT_PASSWORD);
+    const seedRow = seedByCode.get(member.staffCode);
+    member.email = seedRow?.email || staffEmailFromName(member.name);
+    member.set('password', seedRow?.password || STAFF_DEFAULT_PASSWORD);
     await member.save();
     synced += 1;
   }
 
   logger.info(
-    `Staff login credentials synced: ${synced} staff · password "${STAFF_DEFAULT_PASSWORD}"`
+    `Staff login credentials synced: ${synced} staff · default password "${STAFF_DEFAULT_PASSWORD}"`
   );
   return synced;
 };
@@ -144,17 +162,18 @@ export const seedHmsStaff = async () => {
 
   for (const row of SEED_STAFF) {
     const existing = await HmsStaff.findOne({ staffCode: row.staffCode });
+    const { email: rowEmail, password: rowPassword, ...rest } = row;
     const payload = {
-      ...row,
-      email: staffEmailFromName(row.name),
-      password: STAFF_DEFAULT_PASSWORD,
+      ...rest,
+      email: rowEmail || staffEmailFromName(row.name),
+      password: rowPassword || STAFF_DEFAULT_PASSWORD,
       todayLabel: 'Today',
       status: true,
     };
 
     if (existing) {
       existing.set(payload);
-      existing.set('password', STAFF_DEFAULT_PASSWORD);
+      existing.set('password', payload.password);
       await existing.save();
       updated += 1;
     } else {

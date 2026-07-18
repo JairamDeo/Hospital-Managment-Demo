@@ -20,6 +20,12 @@ import {
   listRooms,
   createRoom,
   updateRoom,
+  listLabTestCategories,
+  createLabTestCategory,
+  updateLabTestCategory,
+  listLabTests,
+  createLabTest,
+  updateLabTest,
 } from '../services/master.service.js';
 
 export const getPrakritiList = async (_req, res) => {
@@ -237,5 +243,78 @@ export const patchRoom = async (req, res) => {
       return customResponse(res, error.message, 409);
     }
     return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
+  }
+};
+
+export const getLabCategoryList = async (_req, res) => {
+  try {
+    const items = await listLabTestCategories(false);
+    return customResponse(res, MASTER_MESSAGES.LAB_CATEGORY_LIST, 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postLabCategory = async (req, res) => {
+  try {
+    const item = await createLabTestCategory(req.body.name);
+    return customResponse(res, MASTER_MESSAGES.LAB_CATEGORY_CREATED, 201, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.LAB_CATEGORY_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const patchLabCategory = async (req, res) => {
+  try {
+    const item = await updateLabTestCategory(req.params.id, req.body);
+    return customResponse(res, MASTER_MESSAGES.LAB_CATEGORY_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const getLabTestList = async (req, res) => {
+  try {
+    const activeOnly = req.query.active === 'true';
+    const items = await listLabTests(activeOnly, req.query.categoryId);
+    return customResponse(res, MASTER_MESSAGES.LAB_TEST_LIST, 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postLabTest = async (req, res) => {
+  try {
+    const item = await createLabTest({
+      name: req.body.name,
+      categoryId: req.body.categoryId,
+    });
+    return customResponse(res, MASTER_MESSAGES.LAB_TEST_CREATED, 201, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.LAB_TEST_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const patchLabTest = async (req, res) => {
+  try {
+    const item = await updateLabTest(req.params.id, req.body);
+    return customResponse(res, MASTER_MESSAGES.LAB_TEST_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
   }
 };

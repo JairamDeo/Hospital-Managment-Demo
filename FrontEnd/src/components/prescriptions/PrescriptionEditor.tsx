@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Loader2, Minus, Plus, Search, Trash2 } from 'lucide-react';
+import { FlaskConical, Loader2, Minus, Plus, Search, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NumericInput } from '@/components/ui/NumericInput';
 import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
 import { formInputClass, formLabelClass } from '@/components/ui/formStyles';
+import { RecommendLabTestsModal } from '@/components/prescriptions/RecommendLabTestsModal';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { useToast } from '@/hooks/useToast';
@@ -28,6 +29,7 @@ import {
   type MedicineTiming,
   type PrescriptionChuran,
   type PrescriptionMedicine,
+  type RecommendedLabTest,
   type StructuredPrescription,
 } from '@/types/structuredPrescription.types';
 import type { PharmacySpoonItem } from '@/types/api.types';
@@ -148,6 +150,7 @@ interface PrescriptionDraft {
   appointmentCode: string;
   medicines: PrescriptionMedicine[];
   churans: PrescriptionChuran[];
+  recommendedTests: RecommendedLabTest[];
   diagnosis: string;
   remarks: string;
   itemSearch: string;
@@ -239,6 +242,8 @@ export const PrescriptionEditor = ({
   const debouncedSearch = useDebouncedValue(itemSearch, 300);
   const [medicines, setMedicines] = useState<PrescriptionMedicine[]>([]);
   const [churans, setChurans] = useState<PrescriptionChuran[]>(() => [emptyChuran()]);
+  const [recommendedTests, setRecommendedTests] = useState<RecommendedLabTest[]>([]);
+  const [labModalOpen, setLabModalOpen] = useState(false);
   const [diagnosis, setDiagnosis] = useState('');
   const [remarks, setRemarks] = useState('');
   const [saved, setSaved] = useState<StructuredPrescription | null>(null);
@@ -287,6 +292,7 @@ export const PrescriptionEditor = ({
     appointmentCode,
     medicines,
     churans,
+    recommendedTests,
     diagnosis,
     remarks,
     itemSearch,
@@ -295,6 +301,7 @@ export const PrescriptionEditor = ({
   const applyDraft = (draft: PrescriptionDraft) => {
     setMedicines(draft.medicines);
     setChurans(draft.churans.length ? draft.churans : [emptyChuran()]);
+    setRecommendedTests(draft.recommendedTests ?? []);
     setDiagnosis(draft.diagnosis);
     setRemarks(draft.remarks);
     setItemSearch(draft.itemSearch);
@@ -472,8 +479,8 @@ export const PrescriptionEditor = ({
         powders: c.powders ?? [],
       }));
 
-    if (!validMeds.length && !validChurans.length) {
-      showToast('Add at least one medicine or churan', 'error');
+    if (!validMeds.length && !validChurans.length && !recommendedTests.length) {
+      showToast('Add at least one medicine, churan, or lab test', 'error');
       return;
     }
 
@@ -519,6 +526,7 @@ export const PrescriptionEditor = ({
           totalQuantity: computeMedicineTotalQty(m.packQuantity, m.timing),
         })),
         churans: validChurans,
+        recommendedTests: recommendedTests.length ? recommendedTests : undefined,
       });
       if (data.res?.prescription) {
         clearDraftAfterSubmit(
@@ -526,7 +534,12 @@ export const PrescriptionEditor = ({
         );
         setSaved(data.res.prescription);
         onSaved?.(data.res.prescription);
-        showToast('Prescription saved', 'success');
+        showToast(
+          recommendedTests.length
+            ? 'Prescription saved — Lab notified for recommended tests'
+            : 'Prescription saved',
+          'success'
+        );
         pharmacyService
           .getBillingItems()
           .then((res) => setPharmacyItems(res.data.res?.items ?? []))
@@ -901,8 +914,53 @@ export const PrescriptionEditor = ({
             <Plus className="h-3.5 w-3.5" />
             Add another churan
           </Button>
+
+          <div className="mt-4 rounded-xl border border-border-sage bg-cream/40 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold text-ink">Recommended lab / PF tests</p>
+                <p className="text-[11px] text-ink-soft">
+                  {recommendedTests.length
+                    ? `${recommendedTests.length} test(s) selected`
+                    : 'Optional — notify Lab when prescription is saved'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                className="gap-1 text-xs"
+                onClick={() => setLabModalOpen(true)}
+                disabled={Boolean(saved)}
+              >
+                <FlaskConical className="h-3.5 w-3.5" />
+                {recommendedTests.length ? 'Edit tests' : 'PF / Lab report'}
+              </Button>
+            </div>
+            {recommendedTests.length > 0 ? (
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {recommendedTests.map((t) => (
+                  <li
+                    key={t.testCode}
+                    className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-ink ring-1 ring-border-sage"
+                  >
+                    {t.testName}
+                    {t.categoryName ? (
+                      <span className="text-ink-ghost"> · {t.categoryName}</span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
       </details>
+
+      <RecommendLabTestsModal
+        open={labModalOpen}
+        onClose={() => setLabModalOpen(false)}
+        selected={recommendedTests}
+        onSave={setRecommendedTests}
+      />
 
       <div className="grid gap-3">
         <label className="block">

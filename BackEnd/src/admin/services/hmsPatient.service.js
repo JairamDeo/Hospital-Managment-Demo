@@ -8,7 +8,7 @@ import {
   findHmsPatientMany,
   findHmsPatientOne,
 } from '../../utils/hmsPatientQuery.js';
-import { assertStaffCanAccessPatient, getStaffScopedPatientCodes } from '../../utils/staffPatientScope.util.js';
+import { assertStaffCanAccessPatient } from '../../utils/staffPatientScope.util.js';
 import { assertUniquePatientContact } from '../../utils/patientContact.util.js';
 import {
   formatClinicalProfile,
@@ -16,15 +16,7 @@ import {
 } from '../../utils/patientClinical.util.js';
 
 export const listPatients = async (req) => {
-  let filter = {};
-  if (req?.accountType === 'staff' && req.staff) {
-    const patientCodes = await getStaffScopedPatientCodes(req.staff);
-    if (patientCodes !== null) {
-      if (!patientCodes.length) return [];
-      filter = { patientCode: { $in: patientCodes } };
-    }
-  }
-  const patients = await findHmsPatientMany(filter).sort({ createdAt: -1 });
+  const patients = await findHmsPatientMany({}).sort({ createdAt: -1 });
   return patients.map(formatHmsPatient);
 };
 
