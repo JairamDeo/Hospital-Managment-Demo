@@ -5,6 +5,7 @@ import { PatientVitalsRow } from '@/components/patients/detail/PatientVitalsCard
 import { PatientActiveTreatmentCard } from '@/components/patients/detail/PatientActiveTreatmentCard';
 import { PatientDetailTabs } from '@/components/patients/detail/PatientDetailTabs';
 import { AddVitalsModal } from '@/components/patients/detail/AddVitalsModal';
+import { AiConsultationModal } from '@/components/patients/detail/AiConsultationModal';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { buildPatientDetail } from '@/utils/buildPatientDetail';
@@ -50,6 +51,7 @@ export const PatientDetailPage = () => {
   const [pkLoading, setPkLoading] = useState(true);
   const [vitalsHistory, setVitalsHistory] = useState<PatientVitalsEntry[]>([]);
   const [vitalsOpen, setVitalsOpen] = useState(false);
+  const [aiSummaryOpen, setAiSummaryOpen] = useState(false);
   const [vitalsSubmitting, setVitalsSubmitting] = useState(false);
   const [treatmentHistory, setTreatmentHistory] = useState<PatientTreatmentHistory | null>(null);
   const [treatmentHistoryLoading, setTreatmentHistoryLoading] = useState(false);
@@ -289,6 +291,7 @@ export const PatientDetailPage = () => {
             treatmentMasters={treatmentMasters.filter((m) => m.active !== false)}
             onProfileFormChange={setProfileForm}
             onBookAppt={() => showToast('Appointment booking — coming soon', 'success')}
+            onAiSummary={() => setAiSummaryOpen(true)}
             onStartEdit={startProfileEdit}
             onCancelEdit={cancelProfileEdit}
             onSaveProfile={handleSaveProfile}
@@ -379,6 +382,12 @@ export const PatientDetailPage = () => {
         submitting={vitalsSubmitting}
         onClose={() => !vitalsSubmitting && setVitalsOpen(false)}
         onSubmit={handleAddVitals}
+      />
+      <AiConsultationModal
+        open={aiSummaryOpen}
+        onClose={() => setAiSummaryOpen(false)}
+        patientCode={patient.id}
+        patientName={patient.name}
       />
     </div>
   );

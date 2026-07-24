@@ -238,6 +238,65 @@ class PatientAdminService {
       formToInsurancePayload(values)
     );
   }
+
+  listAiConsultationSamples() {
+    return axiosInstance.get<ApiResponse<{ samples: AiConsultationSample[] }>>(
+      '/admin/patients/ai-consultation/samples'
+    );
+  }
+
+  listAiConsultationSummaries(patientCode: string) {
+    return axiosInstance.get<ApiResponse<{ summaries: AiConsultationSummary[] }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/ai-consultation/summaries`
+    );
+  }
+
+  generateAiConsultation(
+    patientCode: string,
+    payload: { sampleId?: string; discussionText?: string; appointmentCode?: string }
+  ) {
+    return axiosInstance.post<ApiResponse<{ summary: AiConsultationSummary }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/ai-consultation`,
+      payload
+    );
+  }
+}
+
+export interface AiConsultationSample {
+  id: string;
+  title: string;
+  preview: string;
+  discussionText: string;
+}
+
+export interface AiConsultationSummary {
+  _id: string;
+  summaryCode: string;
+  patientCode: string;
+  discussionSource?: string;
+  sampleId?: string;
+  discussionText?: string;
+  model?: string;
+  clinicalSummary?: string;
+  chiefComplaint?: string;
+  assessment?: string;
+  historyConsidered?: string[];
+  suggestedTests?: Array<{ name?: string; reason?: string; priority?: string }>;
+  suggestedMedicines?: Array<{
+    name?: string;
+    type?: string;
+    rationale?: string;
+    caution?: string;
+  }>;
+  redFlags?: string[];
+  followUpAdvice?: string;
+  disclaimer?: string;
+  tokenUsage?: {
+    promptTokens?: number;
+    candidatesTokens?: number;
+    totalTokens?: number;
+  };
+  createdAt?: string;
 }
 
 export const patientAdminService = new PatientAdminService();

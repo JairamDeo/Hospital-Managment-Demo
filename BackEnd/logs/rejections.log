@@ -40,3 +40,40 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
     at async FindCursor.cursorInit (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:633:27)
     at async FindCursor.fetchBatch (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:667:13)
     at async FindCursor.next (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:347:17)
+2026-07-18 14:32:54 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: Cannot find module 'C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\models\hmsPatient.model.js' imported from C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\services\consultationAi.service.js
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\models\hmsPatient.model.js' imported from C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\src\admin\services\consultationAi.service.js
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at #link (node:internal/modules/esm/module_job:208:49)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-07-18 14:52:53 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: read ECONNRESET
+Error: read ECONNRESET
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:216:20)
+2026-07-18 23:03:18 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.mongodb.net
+    at Topology.selectServer (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\sdam\topology.js:321:38)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:569:9)
+    at process.processTimers (node:internal/timers:543:7)
+    at async tryOperation (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:192:22)
+    at async executeOperation (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
+    at async FindCursor._initialize (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\find_cursor.js:61:26)
+    at async FindCursor.cursorInit (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:633:27)
+    at async FindCursor.fetchBatch (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:667:13)
+    at async FindCursor.next (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:347:17)
+2026-07-19 15:38:27 [error] [_stream_transform.js:166 - Transform._read] unhandledRejection: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.mongodb.net
+MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.mongodb.net
+    at Topology.selectServer (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\sdam\topology.js:321:38)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:569:9)
+    at process.processTimers (node:internal/timers:543:7)
+    at async tryOperation (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:192:22)
+    at async executeOperation (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:75:16)
+    at async FindCursor._initialize (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\find_cursor.js:61:26)
+    at async FindCursor.cursorInit (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:633:27)
+    at async FindCursor.fetchBatch (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:667:13)
+    at async FindCursor.next (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:347:17)

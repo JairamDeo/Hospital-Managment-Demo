@@ -43,11 +43,18 @@ import {
   postStructuredPrescriptionWhatsApp,
   postUploadedPrescriptionWhatsApp,
 } from '../controllers/patientWhatsApp.controller.js';
+import {
+  getAiConsultationSamples,
+  getAiConsultationSummaries,
+  postAiConsultationSummary,
+} from '../controllers/consultationAi.controller.js';
 import { PATIENT_MESSAGES } from '../../utils/constants.js';
 
 const router = Router();
 
 router.use(portalAuth);
+
+router.get('/ai-consultation/samples', getAiConsultationSamples);
 
 router.get('/', getPatients);
 router.get('/stats/summary', getPatientsStats);
@@ -55,6 +62,8 @@ router.get('/insurance/list', getPatientInsuranceList);
 router.get('/insurance/stats/summary', getPatientInsuranceStatsSummary);
 router.get('/:patientCode/overview', getPatientOverviewHandler);
 router.get('/:patientCode/treatment-history', getPatientTreatmentHistoryHandler);
+router.get('/:patientCode/ai-consultation/summaries', getAiConsultationSummaries);
+router.post('/:patientCode/ai-consultation', postAiConsultationSummary);
 router.get('/:patientCode/clinical', getPatientClinical);
 router.patch(
   '/:patientCode/clinical',

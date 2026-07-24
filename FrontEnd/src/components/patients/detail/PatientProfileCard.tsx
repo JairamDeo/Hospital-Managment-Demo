@@ -7,6 +7,7 @@ import {
   MapPin,
   Phone,
   Save,
+  Sparkles,
   SquarePen,
   Wind,
   X,
@@ -28,6 +29,7 @@ interface Props {
   treatmentMasters: MasterItem[];
   onProfileFormChange: (values: PatientProfileFormValues) => void;
   onBookAppt: () => void;
+  onAiSummary?: () => void;
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveProfile: () => void | Promise<void>;
@@ -74,6 +76,7 @@ export const PatientProfileCard = ({
   treatmentMasters,
   onProfileFormChange,
   onBookAppt,
+  onAiSummary,
   onStartEdit,
   onCancelEdit,
   onSaveProfile,
@@ -253,6 +256,17 @@ export const PatientProfileCard = ({
             <CalendarPlus className="h-4 w-4 shrink-0" strokeWidth={2} />
             Book Appt.
           </Button>
+          {onAiSummary ? (
+            <Button
+              variant="secondary"
+              className="w-full gap-1.5 rounded-xl py-2.5 text-sm"
+              onClick={onAiSummary}
+              disabled={editing}
+            >
+              <Sparkles className="h-4 w-4 shrink-0" strokeWidth={2} />
+              AI summary
+            </Button>
+          ) : null}
           {editing ? (
             <>
               <Button
