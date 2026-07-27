@@ -46,7 +46,7 @@ export const exportPatientsPdf = (patients: Patient[]) => {
   const html = `<!DOCTYPE html>
 <html><head><title>Patient Registry</title>
 <style>
-  body { font-family: "DM Sans", system-ui, sans-serif; padding: 24px; color: #162820; }
+  body { font-family: "Plus Jakarta Sans", system-ui, sans-serif; padding: 24px; color: #162820; }
   h1 { color: #1e5c47; font-size: 20px; margin-bottom: 4px; }
   p { color: #587569; font-size: 12px; margin-bottom: 20px; }
   table { width: 100%; border-collapse: collapse; font-size: 11px; }

@@ -80,10 +80,10 @@ const NavItem = ({
     onClick={onNavigate}
     title={collapsed ? label : undefined}
     className={({ isActive }) =>
-      `flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+      `flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-[13px] font-medium tracking-[-0.01em] transition-[background-color,color,box-shadow] duration-150 ${
         isActive
           ? 'bg-sage-deep text-white shadow-sm'
-          : 'text-ink-soft hover:bg-sage-mist hover:text-ink'
+          : 'text-ink-soft hover:bg-sage-mist/80 hover:text-ink'
       } ${collapsed ? 'justify-center px-2' : ''}`
     }
   >

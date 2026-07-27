@@ -81,7 +81,7 @@ export const Header = ({ title, breadcrumbs }: HeaderProps) => {
   };
 
   return (
-    <header className="z-30 flex h-[60px] shrink-0 items-center justify-between border-b border-border-sage bg-white px-4 sm:px-5">
+    <header className="z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border-sage/80 bg-white/95 px-4 backdrop-blur-sm sm:px-5">
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"

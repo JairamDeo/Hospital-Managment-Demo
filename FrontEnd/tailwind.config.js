@@ -4,8 +4,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        // UI body: clear at small sizes — tables, forms, sidebar
+        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        // Headings: calm medical serif (not decorative like Playfair)
+        serif: ['Literata', 'Georgia', 'serif'],
       },
       colors: {
         sage: {

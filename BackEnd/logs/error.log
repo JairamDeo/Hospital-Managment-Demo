@@ -97,3 +97,34 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
     at async FindCursor.next (C:\Users\jaira\Desktop\Frelancing\HospitalMgmtSoft2025\BackEnd\node_modules\mongoose\node_modules\mongodb\lib\cursor\abstract_cursor.js:347:17)
 2026-07-24 17:26:34 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
 2026-07-24 17:26:34 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-25 17:53:30 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-25 17:53:30 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-25 18:13:32 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:35 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:38 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:41 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:44 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:46 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
+2026-07-25 18:13:47 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:48 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:
+2026-07-25 18:13:50 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:53 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:56 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:13:59 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:02 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:05 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:08 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:11 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:14 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:17 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:20 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:14:25 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:15:26 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:17:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:18:06 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:19:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:20:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:21:06 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:22:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:23:06 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-25 18:24:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token

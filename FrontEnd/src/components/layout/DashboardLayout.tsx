@@ -166,7 +166,9 @@ const LayoutContent = () => {
         <Header {...headerProps} />
         <main
           className={`flex min-h-0 flex-1 flex-col ${
-            isFixedHeightPage ? 'overflow-hidden px-4 pb-3 pt-5' : 'overflow-y-auto p-4 sm:p-6'
+            isFixedHeightPage
+              ? 'overflow-hidden px-4 pb-4 pt-5 sm:px-5'
+              : 'overflow-y-auto px-4 py-5 sm:px-6 sm:py-6'
           }`}
         >
           <div className={isFixedHeightPage ? 'flex min-h-0 flex-1 flex-col' : 'w-full'}>
