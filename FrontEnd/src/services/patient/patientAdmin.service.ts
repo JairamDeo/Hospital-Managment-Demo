@@ -253,11 +253,22 @@ class PatientAdminService {
 
   generateAiConsultation(
     patientCode: string,
-    payload: { sampleId?: string; discussionText?: string; appointmentCode?: string }
+    payload: {
+      sampleId?: string;
+      discussionText?: string;
+      appointmentCode?: string;
+      language?: 'en' | 'hi' | 'both';
+    }
   ) {
     return axiosInstance.post<ApiResponse<{ summary: AiConsultationSummary }>>(
       `/admin/patients/${encodeURIComponent(patientCode)}/ai-consultation`,
       payload
+    );
+  }
+
+  ensureAiConsultationHindi(patientCode: string, summaryCode: string) {
+    return axiosInstance.post<ApiResponse<{ summary: AiConsultationSummary }>>(
+      `/admin/patients/${encodeURIComponent(patientCode)}/ai-consultation/${encodeURIComponent(summaryCode)}/hindi`
     );
   }
 }
@@ -269,14 +280,7 @@ export interface AiConsultationSample {
   discussionText: string;
 }
 
-export interface AiConsultationSummary {
-  _id: string;
-  summaryCode: string;
-  patientCode: string;
-  discussionSource?: string;
-  sampleId?: string;
-  discussionText?: string;
-  model?: string;
+export interface AiConsultationLocalized {
   clinicalSummary?: string;
   chiefComplaint?: string;
   assessment?: string;
@@ -291,6 +295,20 @@ export interface AiConsultationSummary {
   redFlags?: string[];
   followUpAdvice?: string;
   disclaimer?: string;
+}
+
+export interface AiConsultationSummary extends AiConsultationLocalized {
+  _id: string;
+  summaryCode: string;
+  patientCode: string;
+  discussionSource?: string;
+  sampleId?: string;
+  discussionText?: string;
+  model?: string;
+  outputLanguage?: 'en' | 'hi' | 'both';
+  hasHindi?: boolean;
+  contentEn?: AiConsultationLocalized | null;
+  contentHi?: AiConsultationLocalized | null;
   tokenUsage?: {
     promptTokens?: number;
     candidatesTokens?: number;

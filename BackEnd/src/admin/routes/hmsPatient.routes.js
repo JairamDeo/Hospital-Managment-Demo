@@ -46,6 +46,7 @@ import {
 import {
   getAiConsultationSamples,
   getAiConsultationSummaries,
+  postAiConsultationHindi,
   postAiConsultationSummary,
 } from '../controllers/consultationAi.controller.js';
 import { PATIENT_MESSAGES } from '../../utils/constants.js';
@@ -64,6 +65,10 @@ router.get('/:patientCode/overview', getPatientOverviewHandler);
 router.get('/:patientCode/treatment-history', getPatientTreatmentHistoryHandler);
 router.get('/:patientCode/ai-consultation/summaries', getAiConsultationSummaries);
 router.post('/:patientCode/ai-consultation', postAiConsultationSummary);
+router.post(
+  '/:patientCode/ai-consultation/:summaryCode/hindi',
+  postAiConsultationHindi
+);
 router.get('/:patientCode/clinical', getPatientClinical);
 router.patch(
   '/:patientCode/clinical',

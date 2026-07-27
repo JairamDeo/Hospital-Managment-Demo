@@ -8,7 +8,7 @@ interface ModalProps {
   subtitle?: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   contentClassName?: string;
 }
 
@@ -17,6 +17,8 @@ const sizes = {
   md: 'max-w-lg',
   lg: 'max-w-2xl',
   xl: 'max-w-5xl',
+  '2xl': 'max-w-6xl',
+  full: 'max-w-[96vw]',
 };
 
 export const Modal = ({
@@ -53,7 +55,7 @@ export const Modal = ({
         aria-label="Close modal overlay"
       />
       <div
-        className={`relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-xl ${sizes[size]}`}
+        className={`relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-2xl border border-border-sage bg-white shadow-xl ${sizes[size]}`}
         role="dialog"
         aria-modal="true"
       >

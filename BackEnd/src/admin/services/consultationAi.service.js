@@ -6,6 +6,7 @@ import { getPatientOverview } from './hmsPatientOverview.service.js';
 import { listStructuredPrescriptions } from './hmsStructuredPrescription.service.js';
 import { listLabReports } from './hmsLab.service.js';
 import { getSampleDiscussion, SAMPLE_CONSULTATIONS } from '../../utils/sampleConsultations.js';
+import { translateSummaryToHindi } from '../../utils/translateSummary.util.js';
 import { ErrorMessages } from '../../utils/constants.js';
 import { logger } from '../../utils/logger.js';
 
@@ -13,10 +14,13 @@ export const AI_CONSULT_MESSAGES = {
   GENERATED: 'AI consultation summary generated',
   LIST_FETCHED: 'AI consultation summaries fetched',
   SAMPLES_FETCHED: 'Sample discussions fetched',
+  HINDI_READY: 'Hindi summary ready',
   NOT_CONFIGURED:
     'Gemini is not configured. Add GEMINI_API_KEY to BackEnd/.env — see BackEnd/docs/GEMINI_AI_CONSULTATION.md',
   DISCUSSION_REQUIRED: 'Discussion text is required',
   GENERATION_FAILED: 'AI summary generation failed. Please try again.',
+  TRANSLATE_FAILED: 'Hindi translation failed. Please try again.',
+  SUMMARY_NOT_FOUND: 'AI consultation summary not found',
 };
 
 const nextSummaryCode = async () => {
@@ -110,12 +114,13 @@ const SYSTEM_INSTRUCTION = `You are a clinical decision-support assistant for an
 You help the doctor with a structured consultation summary. You are NOT a licensed physician and must NEVER claim to prescribe.
 
 Rules:
-1. Use proper medical / Ayurvedic terminology (e.g. Madhumeha, Amlapitta, Sandhivata, Agni, Ama) where appropriate, plus clear English.
-2. Base suggestions on BOTH the discussion transcript AND the patient's existing EHR (labs, prescriptions, vitals, clinical history).
-3. Prefer suggesting lab tests that fit the case (FBS, PPBS, HbA1c, TSH, CBC, Lipid, etc.) and note if a similar test already exists in EHR.
-4. Medicine suggestions must be SUGGESTIONS only (Ayurvedic formulations or classes preferred); include caution notes. Do not invent exact illegal doses.
-5. Flag red flags that need urgent attention.
-6. Reply with ONLY valid JSON matching the schema — no markdown fences.`;
+1. Write the JSON values in clear English medical / Ayurvedic terms (e.g. Madhumeha, Amlapitta, Sandhivata, Agni, Ama). Hindi translation is applied separately.
+2. The discussion transcript may be in English, Hindi, or mixed — understand both.
+3. Base suggestions on BOTH the discussion transcript AND the patient's existing EHR (labs, prescriptions, vitals, clinical history).
+4. Prefer suggesting lab tests that fit the case (FBS, PPBS, HbA1c, TSH, CBC, Lipid, etc.) and note if a similar test already exists in EHR.
+5. Medicine suggestions must be SUGGESTIONS only (Ayurvedic formulations or classes preferred); include caution notes. Do not invent exact illegal doses.
+6. Flag red flags that need urgent attention.
+7. Reply with ONLY valid JSON matching the schema — no markdown fences.`;
 
 const buildUserPrompt = (discussionText, patientContext) => `Patient EHR (JSON):
 ${JSON.stringify(patientContext, null, 2)}
@@ -202,29 +207,64 @@ const callGemini = async (discussionText, patientContext) => {
   };
 };
 
-const formatSummary = (doc) => ({
-  _id: String(doc._id),
-  summaryCode: doc.summaryCode,
-  patientCode: doc.patientCode,
-  appointmentCode: doc.appointmentCode || '',
-  doctorStaffCode: doc.doctorStaffCode || '',
-  doctorName: doc.doctorName || '',
-  discussionSource: doc.discussionSource,
-  sampleId: doc.sampleId || '',
-  discussionText: doc.discussionText,
-  model: doc.model,
-  clinicalSummary: doc.clinicalSummary,
-  chiefComplaint: doc.chiefComplaint,
-  assessment: doc.assessment,
-  historyConsidered: doc.historyConsidered || [],
-  suggestedTests: doc.suggestedTests || [],
-  suggestedMedicines: doc.suggestedMedicines || [],
-  redFlags: doc.redFlags || [],
-  followUpAdvice: doc.followUpAdvice || '',
-  disclaimer: doc.disclaimer || '',
-  tokenUsage: doc.tokenUsage || {},
-  createdAt: doc.createdAt,
-});
+const pickLocalized = (doc, lang = 'en') => {
+  const hi = doc.contentHi || {};
+  const useHi = lang === 'hi' && (hi.clinicalSummary || hi.chiefComplaint);
+  if (!useHi) {
+    return {
+      clinicalSummary: doc.clinicalSummary || '',
+      chiefComplaint: doc.chiefComplaint || '',
+      assessment: doc.assessment || '',
+      historyConsidered: doc.historyConsidered || [],
+      suggestedTests: doc.suggestedTests || [],
+      suggestedMedicines: doc.suggestedMedicines || [],
+      redFlags: doc.redFlags || [],
+      followUpAdvice: doc.followUpAdvice || '',
+      disclaimer: doc.disclaimer || '',
+    };
+  }
+  return {
+    clinicalSummary: hi.clinicalSummary || doc.clinicalSummary || '',
+    chiefComplaint: hi.chiefComplaint || doc.chiefComplaint || '',
+    assessment: hi.assessment || doc.assessment || '',
+    historyConsidered: hi.historyConsidered?.length
+      ? hi.historyConsidered
+      : doc.historyConsidered || [],
+    suggestedTests: hi.suggestedTests?.length ? hi.suggestedTests : doc.suggestedTests || [],
+    suggestedMedicines: hi.suggestedMedicines?.length
+      ? hi.suggestedMedicines
+      : doc.suggestedMedicines || [],
+    redFlags: hi.redFlags?.length ? hi.redFlags : doc.redFlags || [],
+    followUpAdvice: hi.followUpAdvice || doc.followUpAdvice || '',
+    disclaimer: hi.disclaimer || doc.disclaimer || '',
+  };
+};
+
+const formatSummary = (doc) => {
+  const hasHindi = Boolean(
+    doc.contentHi?.clinicalSummary || doc.contentHi?.chiefComplaint || doc.contentHi?.assessment
+  );
+  return {
+    _id: String(doc._id),
+    summaryCode: doc.summaryCode,
+    patientCode: doc.patientCode,
+    appointmentCode: doc.appointmentCode || '',
+    doctorStaffCode: doc.doctorStaffCode || '',
+    doctorName: doc.doctorName || '',
+    discussionSource: doc.discussionSource,
+    sampleId: doc.sampleId || '',
+    discussionText: doc.discussionText,
+    model: doc.model,
+    outputLanguage: doc.outputLanguage || (hasHindi ? 'both' : 'en'),
+    hasHindi,
+    // Default English flat fields (backward compatible)
+    ...pickLocalized(doc, 'en'),
+    contentEn: pickLocalized(doc, 'en'),
+    contentHi: hasHindi ? pickLocalized(doc, 'hi') : null,
+    tokenUsage: doc.tokenUsage || {},
+    createdAt: doc.createdAt,
+  };
+};
 
 export const listSampleConsultations = () =>
   SAMPLE_CONSULTATIONS.map(({ id, title, discussionText }) => ({
@@ -291,17 +331,10 @@ export const generateConsultationSummary = async (patientCode, payload, req) => 
   const { parsed, model, tokenUsage } = geminiResult;
   const actor = performerFromReq(req);
 
-  const row = await ConsultationAiSummary.create({
-    summaryCode: await nextSummaryCode(),
-    patientCode,
-    patient: patient._id,
-    appointmentCode: payload.appointmentCode || '',
-    doctorStaffCode: req.staff?.staffCode || '',
-    doctorName: req.staff?.name || actor.name,
-    discussionSource,
-    sampleId,
-    discussionText,
-    model,
+  const langRaw = String(payload.language || payload.outputLanguage || 'both').toLowerCase();
+  const outputLanguage = ['en', 'hi', 'both'].includes(langRaw) ? langRaw : 'both';
+
+  const enContent = {
     clinicalSummary: parsed.clinicalSummary || '',
     chiefComplaint: parsed.chiefComplaint || '',
     assessment: parsed.assessment || '',
@@ -317,10 +350,73 @@ export const generateConsultationSummary = async (patientCode, payload, req) => 
     disclaimer:
       parsed.disclaimer ||
       'AI assist only — doctor must review before any prescription or lab order.',
+  };
+
+  // Always store Hindi so the EN/HI view toggle works (language picker is preference only).
+  let contentHi = null;
+  try {
+    contentHi = await translateSummaryToHindi(enContent);
+  } catch (err) {
+    logger.warn(`Hindi translation skipped on generate: ${err.message}`);
+    contentHi = null;
+  }
+
+  const row = await ConsultationAiSummary.create({
+    summaryCode: await nextSummaryCode(),
+    patientCode,
+    patient: patient._id,
+    appointmentCode: payload.appointmentCode || '',
+    doctorStaffCode: req.staff?.staffCode || '',
+    doctorName: req.staff?.name || actor.name,
+    discussionSource,
+    sampleId,
+    discussionText,
+    model,
+    outputLanguage: contentHi ? (outputLanguage === 'en' ? 'both' : outputLanguage) : outputLanguage,
+    ...enContent,
+    contentHi: contentHi || undefined,
     rawJson: parsed,
     tokenUsage,
     createdBy: actor,
   });
 
   return formatSummary(row);
+};
+
+/** Build flat English content from a stored summary document. */
+const enFromDoc = (doc) => ({
+  clinicalSummary: doc.clinicalSummary || '',
+  chiefComplaint: doc.chiefComplaint || '',
+  assessment: doc.assessment || '',
+  historyConsidered: doc.historyConsidered || [],
+  suggestedTests: doc.suggestedTests || [],
+  suggestedMedicines: doc.suggestedMedicines || [],
+  redFlags: doc.redFlags || [],
+  followUpAdvice: doc.followUpAdvice || '',
+  disclaimer: doc.disclaimer || '',
+});
+
+/**
+ * Ensure Hindi exists for an existing summary (on-demand for older EN-only rows).
+ */
+export const ensureHindiConsultationSummary = async (patientCode, summaryCode) => {
+  const row = await ConsultationAiSummary.findOne({ patientCode, summaryCode });
+  if (!row) throw new Error(AI_CONSULT_MESSAGES.SUMMARY_NOT_FOUND);
+
+  const already =
+    row.contentHi?.clinicalSummary ||
+    row.contentHi?.chiefComplaint ||
+    row.contentHi?.assessment;
+  if (already) return formatSummary(row);
+
+  try {
+    const contentHi = await translateSummaryToHindi(enFromDoc(row));
+    row.contentHi = contentHi;
+    if (row.outputLanguage === 'en') row.outputLanguage = 'both';
+    await row.save();
+    return formatSummary(row);
+  } catch (err) {
+    logger.error(`ensureHindi failed: ${err.message}`);
+    throw new Error(AI_CONSULT_MESSAGES.TRANSLATE_FAILED);
+  }
 };

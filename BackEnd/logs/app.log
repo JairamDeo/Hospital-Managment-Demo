@@ -1369,3 +1369,94 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
 2026-07-25 18:22:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-07-25 18:23:06 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
 2026-07-25 18:24:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
+2026-07-27 22:05:14 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:05:37 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-07-27 22:19:30 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:19:40 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:20:03 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:20:17 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-07-27 22:22:26 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:22:33 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-07-27 22:23:01 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-27 22:23:01 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-07-27 22:23:25 [info] [_stream_transform.js:166 - Transform._read] Admin logged in: doctor1@ayurvedahealth.com
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:30 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:32 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:33 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:34 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:36 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:37 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:23:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:24:39 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:25:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:26:19 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:26:25 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-07-27 22:26:27 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:00 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:27:07 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:27:13 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:21 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:22 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:26 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
+2026-07-27 22:27:57 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-07-27 22:28:02 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms

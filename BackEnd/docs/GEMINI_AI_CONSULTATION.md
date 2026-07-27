@@ -11,6 +11,14 @@ Phase 1: generate a **doctor-facing clinical summary + test/medicine suggestions
 
 > **Disclaimer:** Output is **decision support only**. It is not a prescription. The doctor must review before ordering labs or medicines.
 
+## Languages (English / हिंदी)
+
+- Choose **English**, **हिंदी**, or **Both** when generating.
+- Gemini drafts the medical summary in English (discussion may be EN/HI/mixed).
+- Hindi text is produced with **`@vitalets/google-translate-api`** (Node library, no extra API key).
+- UI toggle switches the displayed summary between English and हिंदी.
+- Previous summaries list shows each saved run; open any to re-view.
+
 ---
 
 ## What 1 token means (characters / words)

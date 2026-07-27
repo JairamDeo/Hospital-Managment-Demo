@@ -19,6 +19,21 @@ const medicineSuggestionSchema = new Schema(
   { _id: false }
 );
 
+const localizedContentSchema = new Schema(
+  {
+    clinicalSummary: { type: String, default: '' },
+    chiefComplaint: { type: String, default: '' },
+    assessment: { type: String, default: '' },
+    historyConsidered: { type: [String], default: [] },
+    suggestedTests: { type: [suggestionSchema], default: [] },
+    suggestedMedicines: { type: [medicineSuggestionSchema], default: [] },
+    redFlags: { type: [String], default: [] },
+    followUpAdvice: { type: String, default: '' },
+    disclaimer: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const consultationAiSummarySchema = new Schema(
   {
     summaryCode: { type: String, required: true, unique: true, index: true },
@@ -35,6 +50,13 @@ const consultationAiSummarySchema = new Schema(
     sampleId: { type: String, default: '' },
     discussionText: { type: String, required: true },
     model: { type: String, default: '' },
+    /** en | hi | both — what the doctor requested */
+    outputLanguage: {
+      type: String,
+      enum: ['en', 'hi', 'both'],
+      default: 'both',
+    },
+    // English (primary / backward compatible flat fields)
     clinicalSummary: { type: String, default: '' },
     chiefComplaint: { type: String, default: '' },
     assessment: { type: String, default: '' },
@@ -44,6 +66,8 @@ const consultationAiSummarySchema = new Schema(
     redFlags: { type: [String], default: [] },
     followUpAdvice: { type: String, default: '' },
     disclaimer: { type: String, default: '' },
+    /** Hindi pack from @vitalets/google-translate-api */
+    contentHi: { type: localizedContentSchema, default: () => ({}) },
     rawJson: { type: Schema.Types.Mixed, default: {} },
     tokenUsage: {
       promptTokens: { type: Number, default: 0 },

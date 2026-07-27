@@ -4,6 +4,7 @@ import { logger } from '../../utils/logger.js';
 import { resolveApiErrorMessage } from '../../utils/resolveApiErrorMessage.js';
 import {
   AI_CONSULT_MESSAGES,
+  ensureHindiConsultationSummary,
   generateConsultationSummary,
   listConsultationSummaries,
   listSampleConsultations,
@@ -55,6 +56,26 @@ export const postAiConsultationSummary = async (req, res) => {
       return customResponse(res, msg, status);
     }
     logger.error('AI consultation generate error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const postAiConsultationHindi = async (req, res) => {
+  try {
+    const summary = await ensureHindiConsultationSummary(
+      req.params.patientCode,
+      req.params.summaryCode
+    );
+    return customResponse(res, AI_CONSULT_MESSAGES.HINDI_READY, 200, { summary });
+  } catch (error) {
+    const msg = String(error.message || '');
+    if (
+      msg === AI_CONSULT_MESSAGES.SUMMARY_NOT_FOUND ||
+      msg === AI_CONSULT_MESSAGES.TRANSLATE_FAILED
+    ) {
+      return customResponse(res, msg, msg === AI_CONSULT_MESSAGES.SUMMARY_NOT_FOUND ? 404 : 400);
+    }
+    logger.error('AI consultation Hindi ensure error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };
