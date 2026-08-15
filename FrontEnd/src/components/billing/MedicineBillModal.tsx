@@ -16,7 +16,7 @@ import {
   PHARMACY_SEARCH_MIN_CHARS,
   searchPharmacyItems,
 } from '@/utils/pharmacySearch.util';
-import { formatRupee, OFFLINE_PAYMENT_METHOD_OPTIONS, type PaymentMethodType, type OfflinePaymentMethodType } from '@/types/billing.types';
+import { formatRupee, OFFLINE_PAYMENT_METHOD_OPTIONS, type OfflinePaymentMethodType } from '@/types/billing.types';
 import type { HmsPatient } from '@/types/api.types';
 import type { PharmacyItemApi, SaleUnit } from '@/types/pharmacy.types';
 import {

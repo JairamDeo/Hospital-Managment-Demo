@@ -16,6 +16,7 @@ import hmsBillingRoutes from './admin/routes/hmsBilling.routes.js';
 import { postRazorpayWebhook } from './admin/controllers/hmsBilling.controller.js';
 import hmsIpdRoutes from './admin/routes/hmsIpd.routes.js';
 import hmsLabRoutes from './admin/routes/hmsLab.routes.js';
+import connectDB from './config/db.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
 
@@ -23,18 +24,40 @@ config();
 
 const app = express();
 
+const vercelUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : null;
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
+  vercelUrl,
   'http://localhost:5173',
+  'http://localhost:3000',
 ].filter(Boolean);
 
 const isDev = process.env.NODE_ENV !== 'production';
+const isVercelOrigin = (origin) =>
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+// On Vercel, connect Mongo once per warm instance before handling requests.
+if (process.env.VERCEL) {
+  app.use(async (_req, res, next) => {
+    try {
+      await connectDB();
+      next();
+    } catch (error) {
+      logger.error(`DB middleware failed: ${error.message}`);
+      return customResponse(res, 'Database unavailable', 503);
+    }
+  });
+}
 
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
+      if (isVercelOrigin(origin)) return callback(null, true);
       if (
         isDev &&
         /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)

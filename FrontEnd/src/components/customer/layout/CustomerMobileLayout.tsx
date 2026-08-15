@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, FileText, Home, Leaf, UserRound } from 'lucide-react';
+import { CalendarDays, FileText, Home, UserRound } from 'lucide-react';
 import { usePatientPortalAuth } from '@/hooks/usePatientPortalAuth';
 import { ROUTES } from '@/constants/routes';
 import { APP_NAME } from '@/constants/constants';
@@ -9,7 +9,7 @@ const navItems = [
   { to: ROUTES.CUSTOMER_APPOINTMENTS, label: 'Appointments', icon: CalendarDays },
   { to: ROUTES.CUSTOMER_REPORTS, label: 'Reports', icon: FileText },
   { to: ROUTES.CUSTOMER_PROFILE, label: 'Profile', icon: UserRound },
-];
+] as const;
 
 export const CustomerMobileLayout = () => {
   const { patient } = usePatientPortalAuth();
@@ -36,27 +36,24 @@ export const CustomerMobileLayout = () => {
 
       <nav className="sticky bottom-0 z-20 border-t border-border-sage bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 sm:px-4">
         <div className="mx-auto flex max-w-md items-center justify-around">
-          {navItems.map(({ to, label, icon: Icon, disabled }) => {
-            const active = !disabled && pathname === to;
+          {navItems.map(({ to, label, icon: Icon }) => {
+            const active = pathname === to;
             return (
-            <button
-              key={label}
-              type="button"
-              disabled={disabled}
-              onClick={() => !disabled && navigate(to)}
-              className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-[10px] font-semibold transition-colors ${
-                disabled
-                  ? 'cursor-not-allowed text-ink-ghost/60'
-                  : active
+              <button
+                key={label}
+                type="button"
+                onClick={() => navigate(to)}
+                className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-[10px] font-semibold transition-colors ${
+                  active
                     ? 'cursor-pointer bg-sage-mist text-sage-deep'
                     : 'cursor-pointer text-ink-soft hover:bg-sage-mist hover:text-sage-deep'
-              }`}
-              aria-label={label}
-            >
-              <Icon className="h-5 w-5" strokeWidth={1.75} />
-              {label}
-            </button>
-          );
+                }`}
+                aria-label={label}
+              >
+                <Icon className="h-5 w-5" strokeWidth={1.75} />
+                {label}
+              </button>
+            );
           })}
         </div>
       </nav>

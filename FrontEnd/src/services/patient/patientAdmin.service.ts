@@ -218,7 +218,12 @@ class PatientAdminService {
 
   sendStructuredPrescriptionWhatsApp(patientCode: string, prescriptionCode: string) {
     return axiosInstance.post<
-      ApiResponse<{ sent: boolean; patientMobileMasked: string; prescriptionCode: string }>
+      ApiResponse<{
+        whatsappSent?: boolean;
+        emailSent?: boolean;
+        whatsapp?: { skipped?: boolean; reason?: string; sent?: boolean; patientMobileMasked?: string; prescriptionCode?: string };
+        email?: { skipped?: boolean; reason?: string };
+      }>
     >(
       `/admin/patients/${encodeURIComponent(patientCode)}/structured-prescriptions/${encodeURIComponent(prescriptionCode)}/whatsapp`
     );
@@ -226,7 +231,12 @@ class PatientAdminService {
 
   sendUploadedPrescriptionWhatsApp(patientCode: string, prescriptionId: string) {
     return axiosInstance.post<
-      ApiResponse<{ sent: boolean; patientMobileMasked: string; prescriptionId: string }>
+      ApiResponse<{
+        whatsappSent?: boolean;
+        emailSent?: boolean;
+        whatsapp?: { skipped?: boolean; reason?: string; sent?: boolean; patientMobileMasked?: string; prescriptionId?: string };
+        email?: { skipped?: boolean; reason?: string };
+      }>
     >(
       `/admin/patients/${encodeURIComponent(patientCode)}/prescriptions/${encodeURIComponent(prescriptionId)}/whatsapp`
     );

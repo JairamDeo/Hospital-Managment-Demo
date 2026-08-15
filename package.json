@@ -1,0 +1,11 @@
+{
+  "name": "hospital-mgmt-soft",
+  "private": true,
+  "description": "HMS monorepo — Vite frontend + Express API (Vercel Services)",
+  "scripts": {
+    "dev:frontend": "npm run dev --prefix FrontEnd",
+    "dev:backend": "npm run dev --prefix BackEnd",
+    "build:frontend": "npm run build --prefix FrontEnd",
+    "start:backend": "npm start --prefix BackEnd"
+  }
+}

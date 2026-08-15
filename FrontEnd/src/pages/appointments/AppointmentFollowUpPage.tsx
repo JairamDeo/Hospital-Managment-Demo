@@ -391,8 +391,8 @@ export const AppointmentFollowUpPage = () => {
             <p className="mt-2 text-xs text-ink-soft">
               Patient receives an SMS/WhatsApp reminder 1 hour before the slot.
             </p>
-            {followUpDate ? (
-              <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
+              {followUpDate ? (
                 <Button
                   type="button"
                   variant="secondary"
@@ -401,8 +401,23 @@ export const AppointmentFollowUpPage = () => {
                 >
                   Save follow-up date
                 </Button>
-              </div>
-            ) : null}
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  followUpDraft.saveDraft(followUpDraftPayload(), {
+                    contextKey: appointmentId
+                      ? draftContextKeys.appointment(appointmentId)
+                      : 'unsaved',
+                  });
+                  showToast('Follow-up draft saved', 'success');
+                }}
+                disabled={submitting}
+              >
+                Save as draft
+              </Button>
+            </div>
           </div>
 
           <Button

@@ -1,6 +1,7 @@
 /**
  * Must include `/api` suffix, e.g. `http://localhost:6060/api`
- * Dev fallback: `/api` (Vite proxy → backend)
+ * Default `/api` works for Vite proxy (dev) and same-origin Vercel rewrites (prod).
+ * On Vercel, leave VITE_BACKEND_URL unset or set it to `/api`.
  */
 const rawBase = (import.meta.env.VITE_BACKEND_URL ?? '/api').replace(/\/$/, '');
 export const API_BASE_URL = rawBase.endsWith('/api') ? rawBase : `${rawBase}/api`;
