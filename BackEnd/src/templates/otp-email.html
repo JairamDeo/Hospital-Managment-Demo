@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f9f9f9;
+      }
+
+      .email-wrapper {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 40px 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      }
+
+      .header {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+        color: #2b6cb0;
+        margin-bottom: 30px;
+      }
+
+      .message {
+        font-size: 16px;
+        color: #4a5568;
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+
+      .otp-box {
+        text-align: center;
+        background-color: #edf2f7;
+        padding: 20px;
+        border-radius: 8px;
+        font-size: 36px;
+        font-weight: bold;
+        letter-spacing: 8px;
+        color: #2f855a;
+        margin: 20px 0;
+      }
+
+      .footer {
+        font-size: 14px;
+        color: #a0aec0;
+        margin-top: 40px;
+        text-align: center;
+      }
+
+      @media (max-width: 600px) {
+        .email-wrapper {
+          padding: 20px;
+        }
+
+        .otp-box {
+          font-size: 28px;
+          letter-spacing: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="header">Verify Your Email</div>
+      <div class="message">
+        Hi <strong>{{name}}</strong>,<br /><br />
+        Use the following OTP to {{purpose}}.<br />
+        This code is valid for <strong>10 minutes</strong> only.
+      </div>
+      <div class="otp-box">{{otp}}</div>
+      <div class="message">
+        If you didn’t request this, you can safely ignore this email.<br />
+        Need help? Contact our support team anytime.
+      </div>
+      <div class="footer">
+        &mdash; The {{appName}} Team
+      </div>
+    </div>
+  </body>
+</html>

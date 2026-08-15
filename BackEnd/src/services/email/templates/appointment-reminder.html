@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointment reminder</title>
+  <style>
+    body { margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#f4f7f4; }
+    .wrap { max-width:600px; margin:24px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .head { background:#3d6b4f; color:#fff; padding:24px 28px; font-size:22px; font-weight:700; }
+    .body { padding:28px; color:#334155; line-height:1.65; font-size:15px; }
+    .card { background:#eef5ef; border-radius:10px; padding:20px; margin:20px 0; }
+    .row { margin:8px 0; }
+    .label { color:#64748b; font-size:13px; }
+    .value { font-weight:600; color:#1e293b; }
+    .foot { padding:0 28px 28px; font-size:13px; color:#94a3b8; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">Appointment reminder</div>
+    <div class="body">
+      <p>Hi <strong>{{patientName}}</strong>,</p>
+      <p>This is a friendly reminder for your upcoming visit at <strong>{{hospitalName}}</strong>.</p>
+      <div class="card">
+        <div class="row"><span class="label">Doctor</span><br /><span class="value">Dr. {{doctorName}}</span></div>
+        <div class="row"><span class="label">Date</span><br /><span class="value">{{date}}</span></div>
+        <div class="row"><span class="label">Time</span><br /><span class="value">{{time}}</span></div>
+      </div>
+      <p>Please arrive a few minutes early. Contact us if you need to reschedule.</p>
+    </div>
+    <div class="foot">&copy; {{year}} {{hospitalName}}</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "watch": ["src"],
+  "ext": "js",
+  "ignore": [
+    "src/logs/**",
+    "logs/**",
+    "node_modules/**",
+    "uploads/**",
+    "assets/**"
+  ],
+  "delay": 2000,
+  "exec": "node src/server.js",
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
+  

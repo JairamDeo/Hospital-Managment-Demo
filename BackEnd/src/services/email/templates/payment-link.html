@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment link</title>
+  <style>
+    body { margin:0; padding:0; font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:#f4f7f4; }
+    .wrap { max-width:600px; margin:24px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .head { background:#3d6b4f; color:#fff; padding:24px 28px; font-size:22px; font-weight:700; }
+    .body { padding:28px; color:#334155; line-height:1.65; font-size:15px; }
+    .card { background:#eef5ef; border-radius:10px; padding:20px; margin:20px 0; }
+    .amount { font-size:28px; font-weight:700; color:#2d5a3d; }
+    .btn { display:inline-block; margin-top:20px; padding:14px 28px; background:#3d6b4f; color:#fff !important; text-decoration:none; border-radius:8px; font-weight:600; }
+    .foot { padding:0 28px 28px; font-size:13px; color:#94a3b8; text-align:center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">Payment request</div>
+    <div class="body">
+      <p>Hi <strong>{{patientName}}</strong>,</p>
+      <p>Please complete payment for your invoice at <strong>{{hospitalName}}</strong>.</p>
+      <div class="card">
+        <p style="margin:0 0 8px; color:#64748b; font-size:13px;">Invoice</p>
+        <p style="margin:0 0 16px; font-weight:600;">{{invoiceCode}}</p>
+        <p class="amount">₹{{amount}}</p>
+      </div>
+      <a class="btn" href="{{paymentLink}}">Pay now</a>
+      <p style="margin-top:20px; font-size:13px; color:#64748b;">Or copy this link:<br />{{paymentLink}}</p>
+    </div>
+    <div class="foot">&copy; {{year}} {{hospitalName}}</div>
+  </div>
+</body>
+</html>

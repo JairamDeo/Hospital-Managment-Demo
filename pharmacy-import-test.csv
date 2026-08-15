@@ -1,0 +1,56 @@
+Item Code,Item Name,Company,Category,Item Type,Units Per Pack,Pack Unit,Stock,Manufacturing Date,Expiry Date,Best Before Months,Monthly Usage %,Sale Price
+,Brahmi Oil,Dabur India,Medicated Oil,Single item,200,ml,145,2025-01-15,2027-01-15,,84,440
+,Ashwagandha Powder,Himalaya Wellness,Adaptogen,Powder / Churan,500,g,188,2025-01-15,,36,90,450
+,Triphala Churna,Baidyanath,Herbal Formula,Powder / Churan,250,g,410,2025-01-15,,24,92,225
+,Chyawanprash,Dabur India,Rasayana,Powder / Churan,500,g,310,2025-01-15,2026-07-15,,70,450
+,Shatavari,Patanjali Ayurved,Herbal Extract,Powder / Churan,100,g,75,2025-01-15,,24,78,120
+,Amla Juice,Patanjali Ayurved,Health Tonic,Single item,1,L,110,2025-01-15,,12,80,99
+,Ashwagandha Powder,Zandu Pharmaceutical,Adaptogen,Powder / Churan,250,g,265,2025-01-15,2028-01-15,,85,225
+,Ashwagandha Powder,Organic India,Adaptogen,Powder / Churan,100,g,190,2025-01-15,,24,72,120
+,Brahmi Oil,Patanjali Ayurved,Medicated Oil,Single item,100,ml,220,2025-01-15,,18,68,220
+,Brahmi Oil,Himalaya Wellness,Medicated Oil,Single item,200,ml,95,2025-01-15,2027-01-15,,70,440
+,Triphala Churna,Dabur India,Herbal Formula,Powder / Churan,500,g,155,2025-01-15,,24,88,450
+,Shatavari,Himalaya Wellness,Herbal Extract,Powder / Churan,50,g,140,2025-01-15,,18,65,120
+,Amla Juice,Dabur India,Health Tonic,Single item,500,ml,88,2025-01-15,2028-01-15,,74,1100
+,Shatavari,Baidyanath,Herbal Extract,Powder / Churan,200,g,102,2025-01-15,,12,71,180
+,Giloy Ghan Vati,Patanjali Ayurved,Herbal Formula,Strip,60,tablet,420,2025-01-15,,24,76,180
+,Tulsi Drops,Dabur India,Health Tonic,Single item,30,ml,185,2025-01-15,2027-01-15,,82,99
+,Neem Capsules,Himalaya Wellness,Herbal Extract,Strip,60,capsule,310,2025-01-15,,36,69,180
+,Arjuna Bark Powder,Baidyanath,Herbal Formula,Powder / Churan,100,g,95,2025-01-15,,24,58,120
+,Mahanarayan Oil,Baidyanath,Medicated Oil,Single item,200,ml,72,2025-01-15,2026-07-15,,77,440
+,Haridra Capsules,Himalaya Wellness,Herbal Extract,Strip,60,capsule,240,2025-01-15,,24,64,180
+,Licorice Root Powder,Organic India,Adaptogen,Powder / Churan,100,g,118,2025-01-15,,36,55,120
+,Guggul Tablets,Zandu Pharmaceutical,Herbal Formula,Strip,80,tablet,195,2025-01-15,2027-01-15,,61,240
+,Punarnava Mandur,Dabur India,Rasayana,Strip,40,tablet,88,2025-01-15,,18,52,120
+,Shilajit Resin,Patanjali Ayurved,Adaptogen,Powder / Churan,20,g,45,2025-01-15,,12,91,120
+,Wheatgrass Juice,Organic India,Health Tonic,Single item,500,ml,62,2025-01-15,2027-01-15,,48,1100
+,Mulethi Powder,Baidyanath,Herbal Formula,Powder / Churan,100,g,205,2025-01-15,,24,57,120
+,Kumkumadi Tail,Kama Ayurveda,Medicated Oil,Single item,12,ml,38,2025-01-15,,36,93,99
+,Dashmool Kwath,Zandu Pharmaceutical,Herbal Formula,Single item,450,ml,55,2025-01-15,2027-01-15,,44,990
+,Boswellia Capsules,Himalaya Wellness,Herbal Extract,Strip,60,capsule,175,2025-01-15,,18,66,180
+,Manjistha Powder,Organic India,Herbal Extract,Powder / Churan,100,g,132,2025-01-15,,24,59,120
+,Yashtimadhu Syrup,Dabur India,Health Tonic,Single item,200,ml,98,2025-01-15,2028-01-15,,63,440
+,Avipattikar Churna,Baidyanath,Herbal Formula,Powder / Churan,100,g,167,2025-01-15,,24,54,120
+,Safed Musli Powder,Zandu Pharmaceutical,Adaptogen,Powder / Churan,100,g,84,2025-01-15,,18,67,120
+,Vidanga Churna,Patanjali Ayurved,Herbal Formula,Powder / Churan,50,g,76,2025-01-15,2027-01-15,,46,120
+,Parijat Leaves Powder,Organic India,Herbal Extract,Powder / Churan,50,g,41,2025-01-15,,12,42,120
+,Jatamansi Oil,Kama Ayurveda,Medicated Oil,Single item,10,ml,29,2025-01-15,,24,88,99
+,Trikatu Churna,Baidyanath,Herbal Formula,Powder / Churan,50,g,189,2025-01-15,2028-01-15,,51,120
+,Arishtha Abhayarishta,Dabur India,Health Tonic,Single item,450,ml,64,2025-01-15,,24,49,990
+,Gokshura Tablets,Himalaya Wellness,Herbal Formula,Strip,60,tablet,228,2025-01-15,,18,56,180
+,Bhringraj Oil,Patanjali Ayurved,Medicated Oil,Single item,200,ml,156,2025-01-15,2027-01-15,,79,440
+,Kutki Powder,Organic India,Herbal Extract,Powder / Churan,25,g,33,2025-01-15,,36,45,120
+,Shankhpushpi Syrup,Zandu Pharmaceutical,Health Tonic,Single item,200,ml,91,2025-01-15,,24,73,440
+,Vacha Churna,Baidyanath,Herbal Formula,Powder / Churan,50,g,67,2025-01-15,2026-07-15,,40,120
+,Arjunarishta,Dabur India,Health Tonic,Single item,450,ml,52,2025-01-15,,24,47,990
+,Amalaki Rasayana,Himalaya Wellness,Rasayana,Powder / Churan,250,g,143,2025-01-15,,36,62,225
+,Nasya Oil,Kama Ayurveda,Medicated Oil,Single item,10,ml,24,2025-01-15,2027-01-15,,81,99
+,Pippali Powder,Organic India,Herbal Formula,Powder / Churan,50,g,158,2025-01-15,,18,43,120
+,Chandraprabha Vati,Baidyanath,Herbal Formula,Strip,80,tablet,201,2025-01-15,,24,50,240
+,Khadirarishta,Dabur India,Health Tonic,Single item,450,ml,48,2025-01-15,2028-01-15,,41,990
+,Lavan Bhaskar Churna,Zandu Pharmaceutical,Herbal Formula,Powder / Churan,100,g,124,2025-01-15,,24,38,120
+,Sitopaladi Churna,Patanjali Ayurved,Herbal Formula,Powder / Churan,100,g,276,2025-01-15,,18,60,120
+,Kumaryasava,Baidyanath,Health Tonic,Single item,450,ml,57,2025-01-15,2027-01-15,,46,990
+,Drakshasava,Dabur India,Health Tonic,Single item,450,ml,61,2025-01-15,,36,45,990
+,Swarna Bhasma Tablets,Baidyanath,Rasayana,Strip,10,tablet,12,2025-01-15,,24,35,80
+,Kaishore Guggulu,Himalaya Wellness,Herbal Formula,Strip,80,tablet,134,2025-01-15,2026-07-15,,53,240
