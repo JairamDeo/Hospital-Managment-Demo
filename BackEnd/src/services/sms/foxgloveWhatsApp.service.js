@@ -1,13 +1,17 @@
 import axios from 'axios';
 import { logger } from '../../utils/logger.js';
 import { formatIndianMobile } from './msg91.service.js';
+import { isConfiguredSecret } from '../../utils/envCredential.util.js';
 
 const DEFAULT_BASE = 'https://partnersv1.pinbot.ai/v3';
 
 const isWaGloballyEnabled = () => process.env.FOXGLOVE_WA_ENABLED !== 'false';
 
 const waBaseConfigured = () =>
-  Boolean(process.env.FOXGLOVE_WA_API_KEY && process.env.FOXGLOVE_WA_PHONE_NUMBER_ID);
+  Boolean(
+    isConfiguredSecret(process.env.FOXGLOVE_WA_API_KEY) &&
+      isConfiguredSecret(process.env.FOXGLOVE_WA_PHONE_NUMBER_ID)
+  );
 
 /** Read Foxglove env with fallback to legacy MSG91 WhatsApp template names during migration. */
 const waEnv = (foxKey, legacyKey) => process.env[foxKey] || process.env[legacyKey];

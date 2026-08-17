@@ -1,8 +1,12 @@
 /** SMTP / Nodemailer configuration from environment. */
+import { isConfiguredSecret } from '../../utils/envCredential.util.js';
+
 export const isMailConfigured = () => {
   if (process.env.MAIL_ENABLED === 'false') return false;
   return Boolean(
-    process.env.MAIL_HOST && process.env.MAIL_USER && (process.env.MAIL_PASSWORD || process.env.EMAIL_PASSWORD)
+    isConfiguredSecret(process.env.MAIL_HOST) &&
+      isConfiguredSecret(process.env.MAIL_USER) &&
+      isConfiguredSecret(process.env.MAIL_PASSWORD || process.env.EMAIL_PASSWORD)
   );
 };
 
