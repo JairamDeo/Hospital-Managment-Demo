@@ -1,0 +1,26 @@
+Admin login URL: /admin-login
+(Login with email + password — Admin and Staff only)
+
+================================================================================
+ADMIN
+================================================================================
+Name       | Role  | Email                        | Password
+-----------|-------|------------------------------|----------
+Admin 1    | Admin | admin@ayurvedahealth.com     | Admin@123
+
+
+================================================================================
+STAFF - same login form Admin login URL: /admin-login
+================================================================================
+Name               | Role       | Staff code | Email                              | Password
+-------------------|------------|------------|------------------------------------|----------
+Dr. Ananya Sharma  | Doctor     | STF-001    | ananya.sharma@ayurvedahealth.com   | Admin@1234
+Dr. Kavita Rao     | Therapist  | STF-004    | kavita.rao@ayurvedahealth.com      | Admin@1234
+Amit Verma         | Support    | STF-006    | amit.verma@ayurvedahealth.com      | Admin@1234
+Lab User One       | Lab        | STF-010    | lab1@ayurvedahealth.com            | Admin@123
+
+================================================================================
+NOTES
+================================================================================
+- Use /admin-login (not /login — that is for patients).
+- Staff password is Admin@1234; Lab and Admin use Admin@123. if Admin@123 failed try Admin@1234

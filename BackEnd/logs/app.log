@@ -1460,3 +1460,11 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
 2026-07-27 22:27:28 [info] [_stream_transform.js:166 - Transform._read] Token Provied
 2026-07-27 22:27:57 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
 2026-07-27 22:28:02 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-08-17 12:47:33 [info] [_stream_transform.js:166 - Transform._read] MongoDB connected successfully
+2026-08-17 12:47:34 [info] [_stream_transform.js:166 - Transform._read] Reminder job started (SMS + WhatsApp + Email) — 60 min before visit, poll every 60000ms
+2026-08-17 12:47:59 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
+2026-08-17 12:47:59 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP queued for 918830973046
+2026-08-17 12:48:00 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:
+2026-08-17 12:54:36 [info] [_stream_transform.js:166 - Transform._read] MSG91 OTP queued for 918830973046
+2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
+2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:

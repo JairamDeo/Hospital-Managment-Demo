@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { logger } from '../../utils/logger.js';
+import { isConfiguredSecret } from '../../utils/envCredential.util.js';
 
 export const formatIndianMobile = (mobileNumber) => {
   const digits = String(mobileNumber).replace(/\D/g, '');
@@ -12,22 +13,34 @@ const isMsg91GloballyEnabled = () => process.env.MSG91_ENABLED !== 'false';
 
 export const isMsg91Enabled = () => {
   if (!isMsg91GloballyEnabled()) return false;
-  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID);
+  return Boolean(
+    isConfiguredSecret(process.env.MSG91_AUTH_KEY) &&
+      isConfiguredSecret(process.env.MSG91_TEMPLATE_ID)
+  );
 };
 
 export const isAppointmentReminderSmsEnabled = () => {
   if (!isMsg91GloballyEnabled()) return false;
-  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_APPOINTMENT_TEMPLATE_ID);
+  return Boolean(
+    isConfiguredSecret(process.env.MSG91_AUTH_KEY) &&
+      isConfiguredSecret(process.env.MSG91_APPOINTMENT_TEMPLATE_ID)
+  );
 };
 
 export const isFollowUpReminderSmsEnabled = () => {
   if (!isMsg91GloballyEnabled()) return false;
-  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_FOLLOWUP_TEMPLATE_ID);
+  return Boolean(
+    isConfiguredSecret(process.env.MSG91_AUTH_KEY) &&
+      isConfiguredSecret(process.env.MSG91_FOLLOWUP_TEMPLATE_ID)
+  );
 };
 
 export const isPaymentLinkSmsEnabled = () => {
   if (!isMsg91GloballyEnabled()) return false;
-  return Boolean(process.env.MSG91_AUTH_KEY && process.env.MSG91_PAYMENT_LINK_TEMPLATE_ID);
+  return Boolean(
+    isConfiguredSecret(process.env.MSG91_AUTH_KEY) &&
+      isConfiguredSecret(process.env.MSG91_PAYMENT_LINK_TEMPLATE_ID)
+  );
 };
 
 /**

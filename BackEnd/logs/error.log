@@ -130,3 +130,7 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
 2026-07-25 18:24:07 [error] [_stream_transform.js:166 - Transform._read] Access denied or No token
 2026-07-27 22:23:01 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
 2026-07-27 22:23:01 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-08-17 12:47:59 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
+2026-08-17 12:48:00 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:
+2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
+2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:

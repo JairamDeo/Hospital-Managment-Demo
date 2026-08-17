@@ -1,4 +1,5 @@
 import { logger } from '../../utils/logger.js';
+import { getOtpConfig } from '../../config/otp.config.js';
 import {
   isMsg91Enabled,
   sendOtpSms,
@@ -68,6 +69,15 @@ export const sendOtpNotification = async (mobileNumber, otp, { email, name, purp
   if (smsResult.status === 'rejected') parts.push(`SMS: ${smsResult.reason?.message}`);
   if (waResult.status === 'rejected') parts.push(`WhatsApp: ${waResult.reason?.message}`);
   if (emailResult.status === 'rejected') parts.push(`Email: ${emailResult.reason?.message}`);
+
+  const { staticOtp } = getOtpConfig();
+  if (staticOtp) {
+    logger.warn(
+      `OTP delivery failed for ${mobileNumber} (${parts.join(' | ') || 'no channel'}); STATIC_OTP is set — use ${staticOtp} to verify`
+    );
+    return { success: true, bypass: true, staticOtpMode: true };
+  }
+
   throw new Error(parts.join(' | ') || 'OTP delivery failed');
 };
 
