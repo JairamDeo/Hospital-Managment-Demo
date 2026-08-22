@@ -21,9 +21,11 @@ const readToken = (key: string) => {
 const isPublicAuthRequest = (url: string) =>
   url.includes('/admin/login') ||
   url.includes('/admin/forgot-password') ||
-  url.includes('/patient-portal/login') ||
-  url.includes('/patient-portal/register') ||
-  url.includes('/patient-portal/verify-otp');
+  url.includes('/patient-portal/auth/send-otp') ||
+  url.includes('/patient-portal/auth/resend-otp') ||
+  url.includes('/patient-portal/auth/verify-otp') ||
+  url.includes('/patient-portal/auth/register') ||
+  url.includes('/patient-portal/register');
 
 axiosInstance.interceptors.request.use((config) => {
   const url = config.url ?? '';

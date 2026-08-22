@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAdminPatientsList } from '@/hooks/useAdminPatientsList';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { billingAdminService } from '@/services/billing/billingAdmin.service';
+import { staffAdminService } from '@/services/staff/staffAdmin.service';
 import { hmsToAppointment } from '@/utils/appointmentHelpers';
 import type { Appointment } from '@/types/appointment.types';
 import type { Invoice } from '@/types/billing.types';
+import type { HmsStaff } from '@/types/api.types';
 import {
   QUICK_LINKS,
   TYPE_CONFIG,
@@ -26,6 +28,7 @@ export const GlobalSearchModal = ({ open, onClose }: Props) => {
   const { patients } = useAdminPatientsList();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [staff, setStaff] = useState<HmsStaff[]>([]);
 
   useEffect(() => {
     if (!open) return;
@@ -37,11 +40,15 @@ export const GlobalSearchModal = ({ open, onClose }: Props) => {
       .list()
       .then(({ data }) => setInvoices(data.res?.invoices ?? []))
       .catch(() => setInvoices([]));
+    staffAdminService
+      .list()
+      .then(({ data }) => setStaff(data.res?.staff ?? []))
+      .catch(() => setStaff([]));
   }, [open]);
 
   const results = useMemo(
-    () => searchGlobal(query, patients, appointments, invoices),
-    [query, patients, appointments, invoices]
+    () => searchGlobal(query, patients, appointments, invoices, staff),
+    [query, patients, appointments, invoices, staff]
   );
 
   useEffect(() => {

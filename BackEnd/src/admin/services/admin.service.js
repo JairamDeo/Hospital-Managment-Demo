@@ -145,6 +145,9 @@ export const sendForgotPasswordOtp = async (mobileNumber) => {
       purpose: 'reset your password',
     });
   } catch (error) {
+    logger.error(
+      `Admin OTP delivery failed for ${mobileNumber}: ${error?.message || error}`
+    );
     user.otp = undefined;
     user.otpExpiresAt = undefined;
     await user.save();

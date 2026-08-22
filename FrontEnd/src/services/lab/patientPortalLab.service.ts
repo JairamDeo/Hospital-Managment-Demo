@@ -29,7 +29,8 @@ class PatientPortalLabService {
     return axiosInstance.post<ApiResponse<{ report: LabReportItem }>>(
       '/patient-portal/lab/reports/upload',
       formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      // Let the browser set multipart boundary (do not force Content-Type).
+      { headers: { 'Content-Type': undefined } }
     );
   }
 }

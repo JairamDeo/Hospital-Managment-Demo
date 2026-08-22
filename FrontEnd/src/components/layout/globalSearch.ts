@@ -11,7 +11,7 @@ import {
 import type { Appointment } from '@/types/appointment.types';
 import type { Invoice } from '@/types/billing.types';
 import type { Patient } from '@/types/patient.types';
-import { MOCK_STAFF } from '@/pages/staff/data/mockStaff';
+import type { HmsStaff } from '@/types/api.types';
 import {
   ROUTES,
   invoiceDetailPath,
@@ -58,7 +58,8 @@ export const TYPE_CONFIG: Record<SearchResultType, { label: string; icon: Lucide
 export const buildSearchIndex = (
   patients: Patient[] = [],
   appointments: Appointment[] = [],
-  invoices: Invoice[] = []
+  invoices: Invoice[] = [],
+  staff: HmsStaff[] = []
 ): SearchResult[] => [
   ...PAGE_RESULTS,
   ...patients.map((p) => ({
@@ -68,13 +69,16 @@ export const buildSearchIndex = (
     subtitle: `#${p.id} · ${p.treatment}`,
     href: patientDetailPath(p.id),
   })),
-  ...MOCK_STAFF.map((s) => ({
-    id: `staff-${s.id}`,
-    type: 'staff' as const,
-    title: s.name,
-    subtitle: `${s.role} · ${s.title}`,
-    href: staffDetailPath(s.id),
-  })),
+  ...staff.map((s) => {
+    const code = s.staffCode || s.id;
+    return {
+      id: `staff-${code}`,
+      type: 'staff' as const,
+      title: s.name,
+      subtitle: `${s.role} · ${s.title || code}`,
+      href: staffDetailPath(code),
+    };
+  }),
   ...invoices.map((inv) => ({
     id: `invoice-${inv.id}`,
     type: 'invoice' as const,
@@ -96,9 +100,10 @@ export const searchGlobal = (
   patients: Patient[] = [],
   appointments: Appointment[] = [],
   invoices: Invoice[] = [],
+  staff: HmsStaff[] = [],
   limit = 12
 ): SearchResult[] => {
-  const index = buildSearchIndex(patients, appointments, invoices);
+  const index = buildSearchIndex(patients, appointments, invoices, staff);
   const q = query.trim().toLowerCase();
   if (!q) return PAGE_RESULTS.slice(0, 6);
 

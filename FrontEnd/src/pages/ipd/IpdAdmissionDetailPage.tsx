@@ -265,10 +265,10 @@ export const IpdAdmissionDetailPage = () => {
           <div className="rounded-xl border border-border-sage bg-white">
             <div className="flex items-center justify-between border-b border-border-sage px-4 py-3">
               <h2 className="text-sm font-semibold text-ink">Daily treatment record</h2>
-              <span className="text-xs text-ink-soft">{admission.caseNotes.length} entries</span>
+              <span className="text-xs text-ink-soft">{(admission.caseNotes ?? []).length} entries</span>
             </div>
             <div className="p-4">
-              {admission.caseNotes.length === 0 ? (
+              {(admission.caseNotes ?? []).length === 0 ? (
                 <p className="py-6 text-center text-sm text-ink-soft">
                   No daily records yet. Add medicines, therapies and observations below.
                 </p>
@@ -287,7 +287,7 @@ export const IpdAdmissionDetailPage = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {[...admission.caseNotes].reverse().map((n) => (
+                      {[...(admission.caseNotes ?? [])].reverse().map((n) => (
                         <tr key={n.id} className="border-b border-border-sage/60 align-top last:border-0">
                           <td className="whitespace-nowrap px-3 py-2 text-xs text-ink-soft">
                             {formatIpdDateTime(n.noteDate)}

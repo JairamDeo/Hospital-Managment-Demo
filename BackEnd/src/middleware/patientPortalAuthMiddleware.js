@@ -13,6 +13,7 @@ export const requirePatientPortal = async (req, res, next) => {
       return customResponse(res, ErrorMessages.ACCESS_DENIED, 403);
     }
     req.patient = patient;
+    req.accountType = 'patient';
     next();
   } catch {
     return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
