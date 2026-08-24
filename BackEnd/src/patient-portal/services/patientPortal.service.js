@@ -44,7 +44,10 @@ const assignAndSendOtp = async (patient) => {
       name: patient.name,
       purpose: 'verify your account',
     });
-  } catch {
+  } catch (error) {
+    logger.error(
+      `Patient OTP delivery failed for ${patient.mobileNumber}: ${error?.message || error}`
+    );
     patient.otp = undefined;
     patient.otpExpiresAt = undefined;
     await patient.save();

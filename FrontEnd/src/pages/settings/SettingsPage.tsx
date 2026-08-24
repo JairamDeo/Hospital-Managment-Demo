@@ -9,6 +9,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { RbacSettingsPanel } from '@/components/settings/RbacSettingsPanel';
 import { useToast } from '@/hooks/useToast';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
+import { ROUTES } from '@/constants/routes';
 import {
   DEFAULT_SETTINGS,
   SLOT_OPTIONS,
@@ -476,7 +477,7 @@ export const SettingsPage = () => {
               </div>
               <p className="mt-4 rounded-lg bg-cream/80 px-3 py-2 text-xs text-ink-soft">
                 Forgot your password? Use the{' '}
-                <a href="/forgot-password" className="font-medium text-sage-deep hover:underline">
+                <a href={ROUTES.ADMIN_FORGOT_PASSWORD} className="font-medium text-sage-deep hover:underline">
                   reset password
                 </a>{' '}
                 flow from the login page.
