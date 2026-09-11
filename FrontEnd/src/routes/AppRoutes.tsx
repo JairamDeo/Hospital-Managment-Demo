@@ -1,8 +1,9 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { PageLoader } from '@/components/ui/Loader';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { CustomerMobileLayout } from '@/components/customer/layout/CustomerMobileLayout';
+import { DeviceMockup } from '@/components/ui/DeviceMockup';
 import {
   AdminProtectedRoute,
   AdminPublicOnlyRoute,
@@ -54,56 +55,64 @@ const withSuspense = (el: React.ReactNode) => (
   <Suspense fallback={<PageLoader />}>{el}</Suspense>
 );
 
+const CustomerMockupLayout = () => (
+  <DeviceMockup>
+    <Outlet />
+  </DeviceMockup>
+);
+
 export const AppRoutes = () => (
   <Routes>
     {/* Customer portal */}
-    <Route
-      path={ROUTES.CUSTOMER_WELCOME}
-      element={withSuspense(
-        <CustomerPublicOnlyRoute>
-          <WelcomePage />
-        </CustomerPublicOnlyRoute>
-      )}
-    />
-    <Route
-      path={ROUTES.CUSTOMER_LOGIN}
-      element={withSuspense(
-        <CustomerPublicOnlyRoute>
-          <CustomerLoginPage />
-        </CustomerPublicOnlyRoute>
-      )}
-    />
-    <Route
-      path={ROUTES.CUSTOMER_REGISTER}
-      element={withSuspense(
-        <CustomerPublicOnlyRoute>
-          <CustomerRegisterPage />
-        </CustomerPublicOnlyRoute>
-      )}
-    />
-    <Route
-      path={ROUTES.CUSTOMER_VERIFY_OTP}
-      element={withSuspense(
-        <CustomerPublicOnlyRoute>
-          <CustomerVerifyOtpPage />
-        </CustomerPublicOnlyRoute>
-      )}
-    />
-
-    <Route
-      element={
-        <CustomerProtectedRoute>
-          <CustomerMobileLayout />
-        </CustomerProtectedRoute>
-      }
-    >
-      <Route path={ROUTES.CUSTOMER_HOME} element={withSuspense(<CustomerHomePage />)} />
+    <Route element={<CustomerMockupLayout />}>
       <Route
-        path={ROUTES.CUSTOMER_APPOINTMENTS}
-        element={withSuspense(<CustomerAppointmentsPage />)}
+        path={ROUTES.CUSTOMER_WELCOME}
+        element={withSuspense(
+          <CustomerPublicOnlyRoute>
+            <WelcomePage />
+          </CustomerPublicOnlyRoute>
+        )}
       />
-      <Route path={ROUTES.CUSTOMER_REPORTS} element={withSuspense(<CustomerReportsPage />)} />
-      <Route path={ROUTES.CUSTOMER_PROFILE} element={withSuspense(<CustomerProfilePage />)} />
+      <Route
+        path={ROUTES.CUSTOMER_LOGIN}
+        element={withSuspense(
+          <CustomerPublicOnlyRoute>
+            <CustomerLoginPage />
+          </CustomerPublicOnlyRoute>
+        )}
+      />
+      <Route
+        path={ROUTES.CUSTOMER_REGISTER}
+        element={withSuspense(
+          <CustomerPublicOnlyRoute>
+            <CustomerRegisterPage />
+          </CustomerPublicOnlyRoute>
+        )}
+      />
+      <Route
+        path={ROUTES.CUSTOMER_VERIFY_OTP}
+        element={withSuspense(
+          <CustomerPublicOnlyRoute>
+            <CustomerVerifyOtpPage />
+          </CustomerPublicOnlyRoute>
+        )}
+      />
+
+      <Route
+        element={
+          <CustomerProtectedRoute>
+            <CustomerMobileLayout />
+          </CustomerProtectedRoute>
+        }
+      >
+        <Route path={ROUTES.CUSTOMER_HOME} element={withSuspense(<CustomerHomePage />)} />
+        <Route
+          path={ROUTES.CUSTOMER_APPOINTMENTS}
+          element={withSuspense(<CustomerAppointmentsPage />)}
+        />
+        <Route path={ROUTES.CUSTOMER_REPORTS} element={withSuspense(<CustomerReportsPage />)} />
+        <Route path={ROUTES.CUSTOMER_PROFILE} element={withSuspense(<CustomerProfilePage />)} />
+      </Route>
     </Route>
 
     {/* Admin auth */}

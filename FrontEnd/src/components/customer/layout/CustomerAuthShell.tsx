@@ -19,7 +19,7 @@ export const CustomerAuthShell = ({
   children,
 }: Props) => (
   <div className="flex min-h-screen flex-col bg-cream">
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-6 sm:max-w-md sm:px-6 lg:max-w-lg">
+    <div className="mx-auto flex w-full flex-1 flex-col px-4 py-6">
       <div className="mb-6 flex items-center gap-3">
         {showBack ? (
           <Link

@@ -17,8 +17,8 @@ export const CustomerMobileLayout = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-cream lg:max-w-2xl xl:max-w-4xl">
-      <header className="sticky top-0 z-20 border-b border-border-sage bg-white/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+    <div className="mx-auto flex min-h-screen w-full flex-col bg-cream">
+      <header className="sticky top-0 z-20 border-b border-border-sage bg-white/95 px-4 py-4 backdrop-blur-sm">
         <p className="text-[10px] font-bold uppercase tracking-widest text-ink-ghost">
           Welcome to {APP_NAME}
         </p>
@@ -30,7 +30,7 @@ export const CustomerMobileLayout = () => {
         </p>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
+      <main className="flex-1 overflow-y-auto no-scrollbar px-4 py-5">
         <Outlet />
       </main>
 
