@@ -47,7 +47,15 @@ export const CustomerAuthShell = ({
       <div className="flex-1">{children}</div>
 
       <p className="mt-8 text-center text-[11px] text-ink-ghost">
-        Holistic Ayurveda care · Secure OTP login
+        Designed and Developed by{' '}
+        <a 
+          href="https://infynix360.com/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sage-deep hover:underline font-medium"
+        >
+          Infynix360 Technologies
+        </a>
       </p>
     </div>
   </div>

@@ -26,6 +26,10 @@ import {
   listLabTests,
   createLabTest,
   updateLabTest,
+  listAppointmentSlots,
+  createAppointmentSlot,
+  updateAppointmentSlot,
+  destroyAppointmentSlot,
 } from '../services/master.service.js';
 
 export const getPrakritiList = async (_req, res) => {
@@ -311,6 +315,51 @@ export const patchLabTest = async (req, res) => {
   try {
     const item = await updateLabTest(req.params.id, req.body);
     return customResponse(res, MASTER_MESSAGES.LAB_TEST_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const getAppointmentSlotList = async (_req, res) => {
+  try {
+    const items = await listAppointmentSlots(false);
+    return customResponse(res, 'Appointment slot list fetched successfully', 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postAppointmentSlot = async (req, res) => {
+  try {
+    const item = await createAppointmentSlot(req.body.time);
+    return customResponse(res, 'Appointment slot created successfully', 201, { item });
+  } catch (error) {
+    if (error.message === 'Appointment slot already exists') {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const patchAppointmentSlot = async (req, res) => {
+  try {
+    const item = await updateAppointmentSlot(req.params.id, req.body);
+    return customResponse(res, 'Appointment slot updated successfully', 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const deleteAppointmentSlot = async (req, res) => {
+  try {
+    const item = await destroyAppointmentSlot(req.params.id);
+    return customResponse(res, 'Appointment slot deleted successfully', 200, { item });
   } catch (error) {
     if (error.message === MASTER_MESSAGES.NOT_FOUND) {
       return customResponse(res, error.message, 404);

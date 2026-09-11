@@ -43,7 +43,12 @@ export const appointmentsToStaffAssignments = (
   }));
 
 export const formatTimeLabel = (time: string) => {
+  if (!time) return '';
+  if (time.toLowerCase().includes('am') || time.toLowerCase().includes('pm')) {
+    return time;
+  }
   const [h, m] = time.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return time;
   const period = h >= 12 ? 'PM' : 'AM';
   const hour = h % 12 || 12;
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;

@@ -6,6 +6,7 @@ import PharmacySpoonMaster from '../../models/pharmacySpoonMaster.model.js';
 import RoomMaster from '../../models/roomMaster.model.js';
 import LabTestCategoryMaster from '../../models/labTestCategoryMaster.model.js';
 import LabTestMaster from '../../models/labTestMaster.model.js';
+import AppointmentSlotMaster from '../../models/appointmentSlotMaster.model.js';
 import { MASTER_MESSAGES } from '../../utils/constants.js';
 
 const nextPrakritiCode = async () => {
@@ -314,5 +315,34 @@ export const updateLabTest = async (id, payload) => {
   if (payload.name !== undefined) item.name = payload.name.trim();
   if (payload.active !== undefined) item.active = payload.active;
   await item.save();
+  return item;
+};
+
+export const listAppointmentSlots = async (activeOnly = false) => {
+  const filter = activeOnly ? { active: true } : {};
+  // Sort by time chronologically is ideal, but for string HH:MM AM/PM, string sort works for 24h format. 
+  // We'll just rely on string sort or insertion order depending on how it's saved.
+  return AppointmentSlotMaster.find(filter).sort({ time: 1 }).lean();
+};
+
+export const createAppointmentSlot = async (time) => {
+  const trimmed = time.trim();
+  const exists = await AppointmentSlotMaster.findOne({ time: new RegExp(`^${trimmed}$`, 'i') });
+  if (exists) throw new Error('Appointment slot already exists');
+  return AppointmentSlotMaster.create({ time: trimmed });
+};
+
+export const updateAppointmentSlot = async (id, payload) => {
+  const item = await AppointmentSlotMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+  if (payload.time !== undefined) item.time = payload.time.trim();
+  if (payload.active !== undefined) item.active = payload.active;
+  await item.save();
+  return item;
+};
+
+export const destroyAppointmentSlot = async (id) => {
+  const item = await AppointmentSlotMaster.findByIdAndDelete(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
   return item;
 };

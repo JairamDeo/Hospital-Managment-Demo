@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomerAuthShell } from '@/components/customer/layout/CustomerAuthShell';
 import { Input } from '@/components/ui/Input';
-import { FormSelect } from '@/components/ui/FormSelect';
 import { Button } from '@/components/ui/Button';
 import { patientPortalAuthService } from '@/services/auth/patientPortalAuth.service';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { getApiErrorMessage } from '@/utils/helpers';
 import type { PatientRegisterPayload } from '@/types/api.types';
-import type { MasterItem } from '@/types/api.types';
 
 const GENDERS: PatientRegisterPayload['gender'][] = ['Male', 'Female', 'Other'];
 
@@ -24,25 +22,11 @@ export const CustomerRegisterPage = () => {
     mobileNumber: '',
     age: '',
     gender: 'Male',
-    prakritiId: '',
-    treatmentId: '',
   });
-  const [prakritiList, setPrakritiList] = useState<MasterItem[]>([]);
-  const [treatmentList, setTreatmentList] = useState<MasterItem[]>([]);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    patientPortalAuthService
-      .getMasters()
-      .then(({ data }) => {
-        setPrakritiList(data.res?.prakriti ?? []);
-        setTreatmentList(data.res?.treatments ?? []);
-      })
-      .catch(() => {});
-  }, []);
 
   const set = <K extends keyof RegisterForm>(key: K, value: RegisterForm[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -70,8 +54,6 @@ export const CustomerRegisterPage = () => {
         age: form.age,
         gender: form.gender,
         email: form.email?.trim() || undefined,
-        prakritiId: form.prakritiId || undefined,
-        treatmentId: form.treatmentId || undefined,
       });
       showToast(data.message, 'success');
       navigate(ROUTES.CUSTOMER_VERIFY_OTP, {
@@ -159,20 +141,6 @@ export const CustomerRegisterPage = () => {
             ))}
           </div>
         </div>
-        <FormSelect
-          label="Prakriti (optional)"
-          value={form.prakritiId ?? ''}
-          onChange={(v) => set('prakritiId', v)}
-          placeholder="Select prakriti"
-          options={prakritiList.map((p) => ({ value: p._id, label: p.name }))}
-        />
-        <FormSelect
-          label="Treatment interest (optional)"
-          value={form.treatmentId ?? ''}
-          onChange={(v) => set('treatmentId', v)}
-          placeholder="Select treatment"
-          options={treatmentList.map((t) => ({ value: t._id, label: t.name }))}
-        />
         <Button type="submit" className="w-full" isLoading={loading}>
           Register & Send OTP
         </Button>

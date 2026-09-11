@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { APPOINTMENT_TIME_SLOTS, APPOINTMENT_TYPES } from '../../utils/appointment.util.js';
 
 const appointmentType = Joi.string().valid(...APPOINTMENT_TYPES);
-const timeSlot = Joi.string().valid(...APPOINTMENT_TIME_SLOTS);
+const timeSlot = Joi.string().pattern(/^(1[0-2]|0?[1-9]):[0-5][0-9] (AM|PM)$/i);
 
 export const createAppointmentSchema = Joi.object({
   patientCode: Joi.string().min(3).max(40).required(),

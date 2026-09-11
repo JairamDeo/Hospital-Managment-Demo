@@ -3,6 +3,7 @@ import { CalendarPlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { AppointmentPayButton } from '@/components/customer/AppointmentPayButton';
+import { ConfirmActionModal } from '@/components/staff/detail/ConfirmActionModal';
 import { usePatientPortalAuth } from '@/hooks/usePatientPortalAuth';
 import { useToast } from '@/hooks/useToast';
 import {
@@ -11,9 +12,9 @@ import {
 } from '@/services/appointment/patientPortalAppointment.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import {
-  TIME_SLOTS,
   type AppointmentDoctor,
 } from '@/types/appointment.types';
+import { masterService } from '@/services/master/master.service';
 import type { HmsAppointment } from '@/types/api.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
 
@@ -34,15 +35,19 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [lastBooked, setLastBooked] = useState<HmsAppointment | null>(null);
   const [razorpayEnabled, setRazorpayEnabled] = useState(false);
+  const [allSlots, setAllSlots] = useState<string[]>([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const loadDoctorsAndMine = async () => {
     try {
-      const [doctorsRes, configRes] = await Promise.all([
+      const [doctorsRes, configRes, mastersRes] = await Promise.all([
         patientPortalAppointmentService.listDoctors(),
         patientPortalAppointmentService.getRazorpayConfig().catch(() => null),
+        masterService.portalMasters(),
       ]);
       setDoctors(doctorsRes.data.res?.doctors ?? []);
       setRazorpayEnabled(Boolean(configRes?.data.res?.razorpay?.enabled));
+      setAllSlots(mastersRes.data.res?.appointmentSlots?.map(s => s.time) ?? []);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     }
@@ -78,8 +83,8 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   }, [staffCode, date]);
 
   const availableSlots = useMemo(
-    () => TIME_SLOTS.filter((slot) => !bookedSlots.includes(slot)),
-    [bookedSlots]
+    () => allSlots.filter((slot) => !bookedSlots.includes(slot)),
+    [allSlots, bookedSlots]
   );
 
   useEffect(() => {
@@ -109,6 +114,11 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
       return;
     }
 
+    if (!payNow && !confirmOpen) {
+      setConfirmOpen(true);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { data } = await patientPortalAppointmentService.book({
@@ -124,6 +134,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
         }
         showToast('Your appointment has been scheduled successfully', 'success');
         setNotes('');
+        setConfirmOpen(false);
         await loadDoctorsAndMine();
         onBooked?.();
 
@@ -213,12 +224,12 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
           </div>
 
           <div>
-            <label className={formLabelClass}>Notes</label>
+            <label className={formLabelClass}>Reason</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Optional notes for your visit"
+              placeholder="Optional reason for your visit"
               className={`${formInputClass} resize-none`}
             />
           </div>
@@ -242,11 +253,11 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
             />
           ) : null}
 
-          <div className={consultationFee > 0 && razorpayEnabled ? 'grid gap-2 sm:grid-cols-2' : ''}>
+          <div className={consultationFee > 0 && razorpayEnabled ? 'grid gap-2 grid-cols-2' : ''}>
             {consultationFee > 0 && razorpayEnabled ? (
               <>
                 <Button
-                  className="w-full"
+                  className="w-full whitespace-nowrap px-2 text-sm"
                   variant="secondary"
                   onClick={() => void handleBook(false)}
                   disabled={submitting || loadingSlots || !staffCode || !timeSlot}
@@ -254,7 +265,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
                   {submitting ? 'Booking…' : 'Book only'}
                 </Button>
                 <Button
-                  className="w-full"
+                  className="w-full whitespace-nowrap px-2 text-sm"
                   onClick={() => void handleBook(true)}
                   disabled={submitting || loadingSlots || !staffCode || !timeSlot}
                 >
@@ -264,7 +275,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
             ) : (
               <Button
                 className="w-full"
-                onClick={() => void handleBook(false)}
+                onClick={() => handleBook(false)}
                 disabled={submitting || loadingSlots || !staffCode || !timeSlot}
               >
                 {submitting ? 'Booking…' : 'Book appointment'}
@@ -272,6 +283,16 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
             )}
           </div>
         </div>
+
+        <ConfirmActionModal
+          open={confirmOpen}
+          title="Confirm Appointment"
+          message={`Are you sure you want to book an appointment with ${selectedDoctor?.name || 'this doctor'} on ${date} at ${formatTimeLabel(timeSlot)}?`}
+          confirmLabel="Yes, book now"
+          onConfirm={() => void handleBook(false)}
+          onClose={() => setConfirmOpen(false)}
+          loading={submitting}
+        />
       </div>
   );
 };

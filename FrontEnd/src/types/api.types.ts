@@ -55,6 +55,12 @@ export interface MasterItem {
   active?: boolean;
 }
 
+export interface AppointmentSlotItem {
+  _id: string;
+  time: string;
+  active?: boolean;
+}
+
 export interface RoomMasterItem extends MasterItem {
   roomNumber: string;
   roomType: 'IPD' | 'Panchakarma';

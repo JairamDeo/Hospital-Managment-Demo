@@ -251,6 +251,17 @@ export const createAppointment = async (payload, createdBy) => {
     throw new Error(APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE);
   }
 
+  const patientConflict = await HmsAppointment.findOne({
+    patientCode: payload.patientCode,
+    appointmentDate: normalizeAppointmentDate(payload.date),
+    timeSlot: payload.timeSlot,
+    status: { $ne: 'Cancelled' },
+  });
+
+  if (patientConflict) {
+    throw new Error('You already have an appointment scheduled at this time.');
+  }
+
   const appointment = await HmsAppointment.create({
     appointmentCode: await generateAppointmentCode(),
     patientCode: patient.patientCode,

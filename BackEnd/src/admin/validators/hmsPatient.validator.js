@@ -35,3 +35,12 @@ export const masterUpdateSchema = Joi.object({
   name: Joi.string().min(2).max(60),
   active: Joi.boolean(),
 }).min(1);
+
+export const masterTimeSchema = Joi.object({
+  time: Joi.string().min(2).max(60).required(),
+});
+
+export const masterTimeUpdateSchema = Joi.object({
+  time: Joi.string().min(2).max(60),
+  active: Joi.boolean(),
+}).min(1);

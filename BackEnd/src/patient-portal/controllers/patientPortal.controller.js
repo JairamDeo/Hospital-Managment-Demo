@@ -9,7 +9,7 @@ import {
   getPatientProfile,
   updatePatientProfile,
 } from '../services/patientPortal.service.js';
-import { listPrakriti, listTreatments } from '../../admin/services/master.service.js';
+import { listPrakriti, listTreatments, listAppointmentSlots } from '../../admin/services/master.service.js';
 import { resolveApiErrorMessage } from '../../utils/resolveApiErrorMessage.js';
 import { isMongoDuplicateKeyError } from '../../utils/patientContact.util.js';
 import { PATIENT_MESSAGES } from '../../utils/constants.js';
@@ -141,11 +141,12 @@ export const patientUpdateMe = async (req, res) => {
 
 export const patientMasters = async (_req, res) => {
   try {
-    const [prakriti, treatments] = await Promise.all([
+    const [prakriti, treatments, appointmentSlots] = await Promise.all([
       listPrakriti(true),
       listTreatments(true),
+      listAppointmentSlots(true),
     ]);
-    return customResponse(res, 'Master data fetched', 200, { prakriti, treatments });
+    return customResponse(res, 'Master data fetched', 200, { prakriti, treatments, appointmentSlots });
   } catch (error) {
     logger.error('Patient masters error:', error);
     return customResponse(res, ErrorMessages.SERVER_ERROR, 500);

@@ -5,8 +5,8 @@ import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import type { Patient } from '@/types/patient.types';
 import type { AppointmentDoctor, AppointmentFormValues } from '@/types/appointment.types';
-import { TIME_SLOTS } from '@/types/appointment.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
+import { masterService } from '@/services/master/master.service';
 
 interface Props {
   open: boolean;
@@ -34,8 +34,15 @@ export const NewAppointmentModal = ({
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
+  const [allSlots, setAllSlots] = useState<string[]>([]);
+
   useEffect(() => {
-    if (open) setForm(initial);
+    if (open) {
+      setForm(initial);
+      masterService.listAppointmentSlots(true)
+        .then(res => setAllSlots(res.data.res?.items?.map(i => i.time) ?? []))
+        .catch(() => setAllSlots([]));
+    }
   }, [open, initial]);
 
   useEffect(() => {
@@ -64,8 +71,8 @@ export const NewAppointmentModal = ({
   }, [open, form.staffCode, form.date]);
 
   const availableSlots = useMemo(
-    () => TIME_SLOTS.filter((slot) => !bookedSlots.includes(slot)),
-    [bookedSlots]
+    () => allSlots.filter((slot) => !bookedSlots.includes(slot)),
+    [allSlots, bookedSlots]
   );
 
   useEffect(() => {

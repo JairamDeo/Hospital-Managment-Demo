@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { DoorOpen, FlaskConical, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
+import { CalendarPlus, DoorOpen, FlaskConical, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
@@ -11,11 +11,13 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES } from '@/constants/routes';
-import type { MasterItem, PharmacySpoonItem, RoomMasterItem } from '@/types/api.types';
+import type { MasterItem, PharmacySpoonItem, RoomMasterItem, AppointmentSlotItem } from '@/types/api.types';
 
-type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room' | 'lab';
+type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room' | 'lab' | 'appointmentSlot';
 
-const MasterCard = ({ item }: { item: MasterItem }) => (
+import { Trash2 } from 'lucide-react';
+
+const MasterCard = ({ item, isTime = false, onDelete }: { item: MasterItem | AppointmentSlotItem, isTime?: boolean, onDelete?: (id: string) => void }) => (
   <div
     className={`rounded-xl border p-4 shadow-sm transition-colors ${
       item.active
@@ -23,9 +25,22 @@ const MasterCard = ({ item }: { item: MasterItem }) => (
         : 'border-border-sage/60 bg-cream/40 opacity-70'
     }`}
   >
-    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{item.code}</p>
-    <p className="mt-1 font-serif text-lg font-semibold text-ink">{item.name}</p>
-    <p className="mt-2 text-xs text-ink-soft">{item.active ? 'Active' : 'Inactive'}</p>
+    <div className="flex justify-between items-start">
+      <div>
+        {('code' in item) ? <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{item.code}</p> : null}
+        <p className="mt-1 font-serif text-lg font-semibold text-ink">{isTime ? (item as AppointmentSlotItem).time : (item as MasterItem).name}</p>
+        <p className="mt-2 text-xs text-ink-soft">{item.active ? 'Active' : 'Inactive'}</p>
+      </div>
+      {isTime && onDelete && (
+        <button
+          onClick={() => onDelete(item._id)}
+          className="text-danger hover:bg-danger-bg p-1.5 rounded-md transition-colors"
+          title="Delete slot"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   </div>
 );
 
@@ -114,6 +129,7 @@ const TAB_LABELS: Record<Tab, string> = {
   pharmacySpoon: 'Spoon Size',
   room: 'Room',
   lab: 'Lab Tests',
+  appointmentSlot: 'Appointment Slot',
 };
 
 const emptyRoomForm = () => ({
@@ -131,6 +147,7 @@ export const MasterDataPage = () => {
   const [treatments, setTreatments] = useState<MasterItem[]>([]);
   const [pharmacySpoons, setPharmacySpoons] = useState<PharmacySpoonItem[]>([]);
   const [rooms, setRooms] = useState<RoomMasterItem[]>([]);
+  const [appointmentSlots, setAppointmentSlots] = useState<AppointmentSlotItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editRoomOpen, setEditRoomOpen] = useState(false);
@@ -146,16 +163,18 @@ export const MasterDataPage = () => {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [pRes, tRes, sRes, rRes] = await Promise.all([
+      const [pRes, tRes, sRes, rRes, asRes] = await Promise.all([
         masterService.listPrakriti(),
         masterService.listTreatments(),
         masterService.listPharmacySpoons(),
         masterService.listRooms(),
+        masterService.listAppointmentSlots(),
       ]);
       setPrakriti(pRes.data.res?.items ?? []);
       setTreatments(tRes.data.res?.items ?? []);
       setPharmacySpoons(sRes.data.res?.items ?? []);
       setRooms(rRes.data.res?.items ?? []);
+      setAppointmentSlots(asRes.data.res?.items ?? []);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -281,6 +300,16 @@ export const MasterDataPage = () => {
         });
         if (data.res?.item) setRooms((prev) => [...prev, data.res!.item]);
         showToast(data.message || 'Room created', 'success');
+      } else if (tab === 'appointmentSlot') {
+        const [hh, mm] = trimmed.split(':');
+        const h = parseInt(hh, 10);
+        const suffix = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        const formattedTime = `${String(h12).padStart(2, '0')}:${mm} ${suffix}`;
+
+        const { data } = await masterService.createAppointmentSlot(formattedTime);
+        if (data.res?.item) setAppointmentSlots((prev) => [...prev, data.res!.item]);
+        showToast(data.message || 'Appointment slot created', 'success');
       } else if (tab === 'prakriti') {
         const { data } = await masterService.createPrakriti(trimmed);
         if (data.res?.item) setPrakriti((prev) => [...prev, data.res!.item]);
@@ -306,25 +335,28 @@ export const MasterDataPage = () => {
     }
   };
 
-  const items = tab === 'prakriti' ? prakriti : tab === 'treatment' ? treatments : [];
+  const items = tab === 'prakriti' ? prakriti : tab === 'treatment' ? treatments : tab === 'appointmentSlot' ? appointmentSlots : [];
 
   const emptyLabel =
-    tab === 'prakriti' ? 'prakriti' : tab === 'treatment' ? 'treatments' : tab === 'room' ? 'rooms' : 'spoon sizes';
+    tab === 'prakriti' ? 'prakriti' : tab === 'treatment' ? 'treatments' : tab === 'room' ? 'rooms' : tab === 'appointmentSlot' ? 'appointment slots' : 'spoon sizes';
 
   const placeholder =
     tab === 'pharmacySpoon'
       ? 'e.g. 1.5 gram spoon'
       : tab === 'room'
         ? 'e.g. Panchakarma Suite A'
-        : tab === 'prakriti'
-          ? 'e.g. Vata'
-          : 'e.g. General Consult';
+        : tab === 'appointmentSlot'
+          ? 'e.g. 07:00 AM'
+          : tab === 'prakriti'
+            ? 'e.g. Vata'
+            : 'e.g. General Consult';
 
   const tabs: { id: Tab; label: string; icon: typeof Leaf }[] = [
     { id: 'prakriti', label: 'Prakriti', icon: Leaf },
     { id: 'treatment', label: 'Treatment', icon: Stethoscope },
     { id: 'room', label: 'Room', icon: DoorOpen },
     { id: 'pharmacySpoon', label: 'Spoon Size', icon: Soup },
+    { id: 'appointmentSlot', label: 'Slots', icon: CalendarPlus },
     { id: 'lab', label: 'Lab Tests', icon: FlaskConical },
   ];
 
@@ -378,7 +410,7 @@ export const MasterDataPage = () => {
             Master Data
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Prakriti, treatments, rooms, spoon sizes, and lab test catalog
+            Prakriti, treatments, rooms, spoon sizes, slots, and lab test catalog
           </p>
         </div>
         {tab !== 'lab' && canEdit('masterData') ? (
@@ -465,7 +497,28 @@ export const MasterDataPage = () => {
               No {emptyLabel} yet. Add one above.
             </p>
           ) : (
-            items.map((item) => <MasterCard key={item._id} item={item} />)
+            items.map((item) => (
+              <MasterCard
+                key={item._id}
+                item={item}
+                isTime={tab === 'appointmentSlot'}
+                onDelete={
+                  tab === 'appointmentSlot'
+                    ? async (id) => {
+                        if (confirm('Are you sure you want to delete this appointment slot?')) {
+                          try {
+                            await masterService.deleteAppointmentSlot(id);
+                            setAppointmentSlots((prev) => prev.filter((s) => s._id !== id));
+                            showToast('Appointment slot deleted', 'success');
+                          } catch (err) {
+                            showToast(getApiErrorMessage(err), 'error');
+                          }
+                        }
+                      }
+                    : undefined
+                }
+              />
+            ))
           )}
         </div>
       )}
@@ -494,12 +547,21 @@ export const MasterDataPage = () => {
             roomFields
           ) : (
             <>
-              <Input
-                label="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={placeholder}
-              />
+              {tab === 'appointmentSlot' ? (
+                <Input
+                  label="Time"
+                  type="time"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              ) : (
+                <Input
+                  label="Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={placeholder}
+                />
+              )}
               {tab === 'pharmacySpoon' ? (
                 <Input
                   label="Grams per spoon"
