@@ -71,6 +71,7 @@ export const CustomerAppointmentsPage = () => {
   const { patient } = usePatientPortalAuth();
   const [appointments, setAppointments] = useState<HmsAppointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'book' | 'upcoming' | 'past'>('book');
 
   const patientName = patient?.name || 'Patient';
 
@@ -112,6 +113,11 @@ export const CustomerAppointmentsPage = () => {
     [appointments]
   );
 
+  const handleBooked = useCallback(async () => {
+    await loadAppointments();
+    setActiveTab('upcoming');
+  }, [loadAppointments]);
+
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border-sage bg-gradient-to-br from-sage-mist/80 to-white p-5 shadow-sm">
@@ -124,54 +130,89 @@ export const CustomerAppointmentsPage = () => {
         </p>
       </div>
 
-      <CustomerBookAppointmentCard onBooked={loadAppointments} />
+      <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+        {(['book', 'upcoming', 'past'] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setActiveTab(t)}
+            className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+              activeTab === t
+                ? 'border-sage-deep bg-sage-mist text-sage-deep'
+                : 'border-border-sage bg-white text-ink-soft hover:bg-sage-mist/60'
+            }`}
+          >
+            {t === 'book' ? 'Book Visit' : t === 'upcoming' ? 'Upcoming' : 'History'}
+          </button>
+        ))}
+      </div>
 
-      <div className="rounded-2xl border border-border-sage bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center gap-2">
-          <History className="h-4 w-4 text-sage-deep" strokeWidth={1.75} />
-          <h2 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-            Upcoming visits
-          </h2>
+      {activeTab === 'book' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2">
+          <CustomerBookAppointmentCard onBooked={handleBooked} />
         </div>
-        {loading ? (
-          <p className="text-sm text-ink-soft">Loading appointments…</p>
-        ) : upcoming.length === 0 ? (
-          <p className="text-sm text-ink-ghost">No upcoming appointments.</p>
-        ) : (
-          <ul className="space-y-3">
-            {upcoming.map((a) => (
-              <AppointmentRow
-                key={a.id}
-                appointment={a}
-                patientName={patientName}
-                onPaid={patchAppointment}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+      )}
 
-      <div className="rounded-2xl border border-border-sage bg-white p-5 shadow-sm">
-        <h2 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-          Previous appointments
-        </h2>
-        {loading ? (
-          <p className="mt-3 text-sm text-ink-soft">Loading history…</p>
-        ) : past.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-ghost">No previous appointments yet.</p>
-        ) : (
-          <ul className="mt-3 space-y-3">
-            {past.map((a) => (
-              <AppointmentRow
-                key={a.id}
-                appointment={a}
-                patientName={patientName}
-                onPaid={patchAppointment}
-              />
-            ))}
-          </ul>
-        )}
-      </div>
+      {activeTab === 'upcoming' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border-sage bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <History className="h-4 w-4 text-sage-deep" strokeWidth={1.75} />
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              Upcoming visits
+            </h2>
+          </div>
+          {loading ? (
+            <p className="text-sm text-ink-soft">Loading appointments…</p>
+          ) : upcoming.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border-sage bg-cream/30 p-8 text-center">
+              <p className="text-sm text-ink-soft">No upcoming appointments.</p>
+              <button onClick={() => setActiveTab('book')} className="mt-2 text-xs font-semibold text-sage-deep hover:underline">
+                Book one now
+              </button>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {upcoming.map((a) => (
+                <AppointmentRow
+                  key={a.id}
+                  appointment={a}
+                  patientName={patientName}
+                  onPaid={patchAppointment}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'past' && (
+        <div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border-sage bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2">
+            <History className="h-4 w-4 text-sage-deep" strokeWidth={1.75} />
+            <h2 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              Previous appointments
+            </h2>
+          </div>
+          {loading ? (
+            <p className="text-sm text-ink-soft">Loading history…</p>
+          ) : past.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border-sage bg-cream/30 p-8 text-center">
+              <p className="text-sm text-ink-ghost">No previous appointments yet.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {past.map((a) => (
+                <AppointmentRow
+                  key={a.id}
+                  appointment={a}
+                  patientName={patientName}
+                  onPaid={patchAppointment}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 };

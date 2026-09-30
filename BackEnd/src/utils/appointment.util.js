@@ -60,8 +60,8 @@ export const minutesUntilAppointment = (date, timeSlot, from = moment()) => {
 };
 
 export const assertValidTimeSlot = (timeSlot) => {
-  if (!APPOINTMENT_TIME_SLOTS.includes(timeSlot)) {
-    throw new Error('Invalid appointment time slot');
+  if (!/^(1[0-2]|0?[1-9]):[0-5][0-9] (AM|PM)$/i.test(timeSlot)) {
+    throw new Error('Invalid appointment time slot format. Use HH:MM AM/PM');
   }
 };
 

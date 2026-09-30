@@ -1,5 +1,5 @@
 import axiosInstance from '../http/axiosInstance';
-import type { ApiResponse, MasterItem, PharmacySpoonItem, RoomMasterItem } from '@/types/api.types';
+import type { ApiResponse, MasterItem, PharmacySpoonItem, RoomMasterItem, AppointmentSlotItem } from '@/types/api.types';
 
 class MasterService {
   listPrakriti() {
@@ -181,9 +181,35 @@ class MasterService {
     );
   }
 
+  listAppointmentSlots(activeOnly = false) {
+    const query = activeOnly ? '?active=true' : '';
+    return axiosInstance.get<ApiResponse<{ items: AppointmentSlotItem[] }>>(
+      `/admin/master/appointment-slots${query}`
+    );
+  }
+
+  createAppointmentSlot(time: string) {
+    return axiosInstance.post<ApiResponse<{ item: AppointmentSlotItem }>>('/admin/master/appointment-slots', {
+      time,
+    });
+  }
+
+  updateAppointmentSlot(id: string, payload: { time?: string; active?: boolean }) {
+    return axiosInstance.patch<ApiResponse<{ item: AppointmentSlotItem }>>(
+      `/admin/master/appointment-slots/${id}`,
+      payload
+    );
+  }
+
+  deleteAppointmentSlot(id: string) {
+    return axiosInstance.delete<ApiResponse<{ item: AppointmentSlotItem }>>(
+      `/admin/master/appointment-slots/${id}`
+    );
+  }
+
   portalMasters() {
     return axiosInstance.get<
-      ApiResponse<{ prakriti: MasterItem[]; treatments: MasterItem[] }>
+      ApiResponse<{ prakriti: MasterItem[]; treatments: MasterItem[]; appointmentSlots: AppointmentSlotItem[] }>
     >('/patient-portal/masters');
   }
 }
