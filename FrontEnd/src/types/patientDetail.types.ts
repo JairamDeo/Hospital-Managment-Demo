@@ -126,7 +126,6 @@ export type PatientDetailTab =
   | 'documents';
 
 export interface PatientDetail extends Patient {
-  gender: string;
   bloodGroup: string;
   memberSince: string;
   city: string;

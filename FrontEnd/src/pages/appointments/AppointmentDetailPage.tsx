@@ -74,6 +74,7 @@ export const AppointmentDetailPage = () => {
     patientId: appointment.patientId,
     staffCode: appointment.staffCode,
     type: appointment.type,
+    consultationMode: appointment.consultationMode || 'Offline',
     date: appointment.date,
     time: appointment.time,
     notes: appointment.notes ?? '',

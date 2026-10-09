@@ -12,6 +12,13 @@ export interface PatientCareApi {
   documents: PatientDetail['documents'];
 }
 
+const normalizeGender = (value?: string): '' | 'Male' | 'Female' => {
+  const g = (value || '').trim().toLowerCase();
+  if (g === 'male') return 'Male';
+  if (g === 'female') return 'Female';
+  return '';
+};
+
 export const buildPatientDetail = (
   patient: HmsPatient & { gender?: string; bloodGroup?: string; memberSince?: string; city?: string },
   care: PatientCareApi
@@ -19,7 +26,7 @@ export const buildPatientDetail = (
   const base = hmsToPatient(patient);
   return {
     ...base,
-    gender: patient.gender ?? 'Not recorded',
+    gender: normalizeGender(patient.gender ?? base.gender),
     bloodGroup: patient.bloodGroup ?? '—',
     memberSince: patient.memberSince ?? '—',
     city: patient.city ?? 'India',
