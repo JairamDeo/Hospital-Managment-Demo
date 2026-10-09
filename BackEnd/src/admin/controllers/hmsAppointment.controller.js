@@ -11,6 +11,8 @@ import {
   listDoctorsForBooking,
   getAppointmentByCode,
   attendAppointmentWithFollowUp,
+  cancelAppointment,
+  rescheduleAppointment,
 } from '../services/hmsAppointment.service.js';
 
 const decodeParam = (param) => decodeURIComponent(param ?? '');
@@ -107,6 +109,7 @@ export const postAppointment = async (req, res) => {
         patientCode: req.body.patientCode,
         staffCode,
         appointmentType: req.body.appointmentType,
+        consultationMode: req.body.consultationMode,
         date: req.body.date,
         timeSlot: req.body.timeSlot,
         notes: req.body.notes,
@@ -167,6 +170,47 @@ export const patchAttendAppointment = async (req, res) => {
       return customResponse(res, error.message, status);
     }
     logger.error('Attend appointment error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const patchCancelAppointment = async (req, res) => {
+  try {
+    const appointment = await cancelAppointment(
+      decodeParam(req.params.appointmentCode),
+      req.body?.reason
+    );
+    return customResponse(res, 'Appointment cancelled', 200, { appointment });
+  } catch (error) {
+    const status = appointmentErrorStatus(error.message);
+    if (status !== 500) {
+      return customResponse(res, error.message, status);
+    }
+    logger.error('Cancel appointment error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const patchRescheduleAppointment = async (req, res) => {
+  try {
+    const appointment = await rescheduleAppointment(
+      decodeParam(req.params.appointmentCode),
+      req.body
+    );
+    return customResponse(res, 'Appointment rescheduled', 200, { appointment });
+  } catch (error) {
+    const status = appointmentErrorStatus(error.message);
+    if (status !== 500 && error.message) {
+      return customResponse(res, error.message, status === 500 ? 400 : status);
+    }
+    if (
+      error.message?.includes('past') ||
+      error.message?.includes('full') ||
+      error.message?.includes('reschedule')
+    ) {
+      return customResponse(res, error.message, 400);
+    }
+    logger.error('Reschedule appointment error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

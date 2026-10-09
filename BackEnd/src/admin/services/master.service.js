@@ -6,8 +6,71 @@ import PharmacySpoonMaster from '../../models/pharmacySpoonMaster.model.js';
 import RoomMaster from '../../models/roomMaster.model.js';
 import LabTestCategoryMaster from '../../models/labTestCategoryMaster.model.js';
 import LabTestMaster from '../../models/labTestMaster.model.js';
+import moment from 'moment';
 import AppointmentSlotMaster from '../../models/appointmentSlotMaster.model.js';
 import { MASTER_MESSAGES } from '../../utils/constants.js';
+
+/** Normalize to "hh:mm AM/PM" e.g. 07:00 AM */
+const formatSlotTimeLabel = (input) => {
+  const parsed = moment(
+    String(input || '').trim(),
+    ['HH:mm', 'H:mm', 'hh:mm A', 'h:mm A', 'hh:mm a', 'h:mm a'],
+    true
+  );
+  if (!parsed.isValid()) throw new Error('Invalid time. Use HH:mm');
+  return parsed.format('hh:mm A');
+};
+
+const slotSortMinutes = (timeLabel) => {
+  const parsed = moment(timeLabel, ['hh:mm A', 'h:mm A', 'HH:mm'], true);
+  return parsed.isValid() ? parsed.hours() * 60 + parsed.minutes() : 0;
+};
+
+/** Build bookable windows: [start, start+gap), [start+gap, start+2*gap), ... until end */
+export const generateSlotRangesInRange = (startTime, endTime, gapMinutes) => {
+  const start = moment(formatSlotTimeLabel(startTime), 'hh:mm A', true);
+  const end = moment(formatSlotTimeLabel(endTime), 'hh:mm A', true);
+  const gap = Number(gapMinutes);
+  if (!start.isValid() || !end.isValid()) throw new Error('Invalid start or end time');
+  if (!Number.isFinite(gap) || gap < 5 || gap > 240) {
+    throw new Error('Gap must be between 5 and 240 minutes');
+  }
+  if (!end.isAfter(start)) throw new Error('End time must be after start time');
+
+  const ranges = [];
+  const cursor = start.clone();
+  while (cursor.clone().add(gap, 'minutes').isSameOrBefore(end)) {
+    const slotStart = cursor.format('hh:mm A');
+    const slotEnd = cursor.clone().add(gap, 'minutes').format('hh:mm A');
+    ranges.push({
+      time: slotStart,
+      endTime: slotEnd,
+      label: `${slotStart} – ${slotEnd}`,
+    });
+    cursor.add(gap, 'minutes');
+    if (ranges.length > 200) throw new Error('Too many slots in this range');
+  }
+  if (!ranges.length) {
+    throw new Error('No full slots fit in this range. Widen the range or reduce the gap.');
+  }
+  return ranges;
+};
+
+export const formatSlotRangeLabel = (time, endTime) => {
+  if (endTime) return `${time} – ${endTime}`;
+  return time;
+};
+
+const withSlotLabel = (row) => {
+  const maxAppointments = Math.max(1, Number(row.maxAppointments) || 1);
+  const endTime = row.endTime || '';
+  return {
+    ...row,
+    endTime,
+    maxAppointments,
+    label: formatSlotRangeLabel(row.time, endTime),
+  };
+};
 
 const nextPrakritiCode = async () => {
   const count = await PrakritiMaster.countDocuments();
@@ -320,29 +383,104 @@ export const updateLabTest = async (id, payload) => {
 
 export const listAppointmentSlots = async (activeOnly = false) => {
   const filter = activeOnly ? { active: true } : {};
-  // Sort by time chronologically is ideal, but for string HH:MM AM/PM, string sort works for 24h format. 
-  // We'll just rely on string sort or insertion order depending on how it's saved.
-  return AppointmentSlotMaster.find(filter).sort({ time: 1 }).lean();
+  const rows = await AppointmentSlotMaster.find(filter).lean();
+  return rows
+    .map(withSlotLabel)
+    .sort((a, b) => slotSortMinutes(a.time) - slotSortMinutes(b.time));
 };
 
-export const createAppointmentSlot = async (time) => {
-  const trimmed = time.trim();
+export const createAppointmentSlot = async (time, maxAppointments = 1, endTime) => {
+  const trimmed = formatSlotTimeLabel(time);
+  const end = endTime
+    ? formatSlotTimeLabel(endTime)
+    : moment(trimmed, 'hh:mm A').add(30, 'minutes').format('hh:mm A');
+  const max = Math.max(1, Math.min(100, Number(maxAppointments) || 1));
   const exists = await AppointmentSlotMaster.findOne({ time: new RegExp(`^${trimmed}$`, 'i') });
   if (exists) throw new Error('Appointment slot already exists');
-  return AppointmentSlotMaster.create({ time: trimmed });
+  const item = await AppointmentSlotMaster.create({
+    time: trimmed,
+    endTime: end,
+    maxAppointments: max,
+  });
+  return withSlotLabel(item.toObject());
+};
+
+export const createAppointmentSlotsRange = async ({
+  startTime,
+  endTime,
+  gapMinutes,
+  maxAppointments = 1,
+}) => {
+  const ranges = generateSlotRangesInRange(startTime, endTime, gapMinutes);
+  const max = Math.max(1, Math.min(100, Number(maxAppointments) || 1));
+  const created = [];
+  const skipped = [];
+
+  for (const range of ranges) {
+    const exists = await AppointmentSlotMaster.findOne({
+      time: new RegExp(`^${range.time}$`, 'i'),
+    });
+    if (exists) {
+      exists.endTime = range.endTime;
+      exists.maxAppointments = max;
+      await exists.save();
+      skipped.push(range.label);
+      continue;
+    }
+    const item = await AppointmentSlotMaster.create({
+      time: range.time,
+      endTime: range.endTime,
+      maxAppointments: max,
+    });
+    created.push(withSlotLabel(item.toObject()));
+  }
+
+  return {
+    created,
+    skipped,
+    items: await listAppointmentSlots(false),
+  };
 };
 
 export const updateAppointmentSlot = async (id, payload) => {
   const item = await AppointmentSlotMaster.findById(id);
   if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
-  if (payload.time !== undefined) item.time = payload.time.trim();
+  if (payload.time !== undefined) item.time = formatSlotTimeLabel(payload.time);
+  if (payload.endTime !== undefined) item.endTime = formatSlotTimeLabel(payload.endTime);
   if (payload.active !== undefined) item.active = payload.active;
+  if (payload.maxAppointments !== undefined) {
+    item.maxAppointments = Math.max(1, Math.min(100, Number(payload.maxAppointments) || 1));
+  }
   await item.save();
-  return item;
+  return withSlotLabel(item.toObject());
 };
 
 export const destroyAppointmentSlot = async (id) => {
   const item = await AppointmentSlotMaster.findByIdAndDelete(id);
   if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
-  return item;
+  return withSlotLabel(item.toObject ? item.toObject() : item);
+};
+
+/** Backfill maxAppointments + endTime on legacy slot docs */
+export const ensureSlotMaxAppointments = async () => {
+  await AppointmentSlotMaster.updateMany(
+    {
+      $or: [
+        { maxAppointments: { $exists: false } },
+        { maxAppointments: null },
+        { maxAppointments: { $lt: 1 } },
+      ],
+    },
+    { $set: { maxAppointments: 1 } }
+  );
+
+  const missingEnd = await AppointmentSlotMaster.find({
+    $or: [{ endTime: { $exists: false } }, { endTime: null }, { endTime: '' }],
+  });
+  for (const row of missingEnd) {
+    const start = moment(row.time, ['hh:mm A', 'h:mm A', 'HH:mm'], true);
+    if (!start.isValid()) continue;
+    row.endTime = start.clone().add(30, 'minutes').format('hh:mm A');
+    await row.save();
+  }
 };

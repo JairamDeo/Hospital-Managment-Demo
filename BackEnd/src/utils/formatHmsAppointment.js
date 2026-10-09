@@ -28,6 +28,7 @@ export const formatHmsAppointment = (doc) => {
     doctor: a.doctorName,
     type: a.appointmentType,
     appointmentType: a.appointmentType,
+    consultationMode: a.consultationMode || 'Offline',
     date: formatAppointmentDateIso(a.appointmentDate),
     dateDisplay: formatAppointmentDateDisplay(a.appointmentDate),
     time: a.timeSlot,

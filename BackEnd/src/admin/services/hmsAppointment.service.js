@@ -4,14 +4,15 @@ import HmsInvoice from '../../models/hmsInvoice.model.js';
 import HmsPatient from '../../models/hmsPatient.model.js';
 import HmsStaff from '../../models/hmsStaff.model.js';
 import PatientCareProfile from '../../models/patientCareProfile.model.js';
+import AppointmentSlotMaster from '../../models/appointmentSlotMaster.model.js';
 import { ErrorMessages, APPOINTMENT_MESSAGES, BILLING_MESSAGES } from '../../utils/constants.js';
 import {
-  APPOINTMENT_TIME_SLOTS,
   assertValidTimeSlot,
   findDoctorSlotConflict,
   formatAppointmentDateDisplay,
   formatAppointmentDateIso,
   formatTimeDisplay,
+  minutesUntilAppointment,
   normalizeAppointmentDate,
 } from '../../utils/appointment.util.js';
 import { formatHmsAppointment } from '../../utils/formatHmsAppointment.js';
@@ -180,12 +181,56 @@ export const getBookedSlotsForDoctor = async (staffCode, date) => {
 };
 
 export const getAvailabilityForDoctor = async (staffCode, date) => {
-  const booked = await getBookedSlotsForDoctor(staffCode, date);
+  const appointmentDate = normalizeAppointmentDate(date);
+  const [rows, masters] = await Promise.all([
+    HmsAppointment.find({
+      staffCode,
+      appointmentDate,
+      status: { $ne: 'Cancelled' },
+    })
+      .select('timeSlot')
+      .lean(),
+    AppointmentSlotMaster.find({ active: true }).select('time maxAppointments').lean(),
+  ]);
+
+  const bookedCounts = {};
+  for (const row of rows) {
+    const key = row.timeSlot;
+    bookedCounts[key] = (bookedCounts[key] || 0) + 1;
+  }
+
+  const maxByTime = {};
+  for (const m of masters) {
+    maxByTime[m.time] = Math.max(1, Number(m.maxAppointments) || 1);
+  }
+
+  const masterTimes = masters.map((m) => m.time);
+  const fullSlots = masterTimes.filter(
+    (time) => (bookedCounts[time] || 0) >= (maxByTime[time] || 1)
+  );
+
+  // Legacy: any time not in master that already has a booking is treated as full
+  for (const time of Object.keys(bookedCounts)) {
+    if (!maxByTime[time] && bookedCounts[time] > 0 && !fullSlots.includes(time)) {
+      fullSlots.push(time);
+    }
+  }
+
+  const availableSlots = masterTimes.filter((time) => !fullSlots.includes(time));
+  const slotStats = masterTimes.map((time) => ({
+    time,
+    booked: bookedCounts[time] || 0,
+    maxAppointments: maxByTime[time] || 1,
+    remaining: Math.max(0, (maxByTime[time] || 1) - (bookedCounts[time] || 0)),
+  }));
+
   return {
     staffCode,
-    date: moment.utc(normalizeAppointmentDate(date)).format('YYYY-MM-DD'),
-    bookedSlots: booked,
-    availableSlots: APPOINTMENT_TIME_SLOTS.filter((slot) => !booked.includes(slot)),
+    date: moment.utc(appointmentDate).format('YYYY-MM-DD'),
+    /** Slots that cannot accept more bookings (at capacity) */
+    bookedSlots: fullSlots,
+    availableSlots,
+    slotStats,
   };
 };
 
@@ -236,6 +281,12 @@ const resolvePatient = async (patientCode) => {
 export const createAppointment = async (payload, createdBy) => {
   assertValidTimeSlot(payload.timeSlot);
 
+  const appointmentDate = normalizeAppointmentDate(payload.date);
+  const todayStart = moment.utc().startOf('day');
+  if (moment.utc(appointmentDate).isBefore(todayStart)) {
+    throw new Error('Cannot book an appointment for a past date');
+  }
+
   const [patient, doctor] = await Promise.all([
     resolvePatient(payload.patientCode),
     resolveDoctor(payload.staffCode),
@@ -248,7 +299,11 @@ export const createAppointment = async (payload, createdBy) => {
   });
 
   if (conflict) {
-    throw new Error(APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE);
+    throw new Error(
+      conflict.maxAppointments > 1
+        ? `This time slot is full (${conflict.count}/${conflict.maxAppointments} appointments)`
+        : APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE
+    );
   }
 
   const patientConflict = await HmsAppointment.findOne({
@@ -273,7 +328,11 @@ export const createAppointment = async (payload, createdBy) => {
     appointmentDate: normalizeAppointmentDate(payload.date),
     timeSlot: payload.timeSlot,
     timeDisplay: formatTimeDisplay(payload.timeSlot),
-    appointmentType: payload.appointmentType || 'General Consult',
+    appointmentType:
+      payload.appointmentType && payload.appointmentType !== 'General Consult'
+        ? payload.appointmentType
+        : 'Diet Consult',
+    consultationMode: payload.consultationMode === 'Online' ? 'Online' : 'Offline',
     notes: payload.notes?.trim() || '',
     status: 'Upcoming',
     createdBy,
@@ -327,6 +386,93 @@ export const getAppointmentByCode = async (appointmentCode, staffCode) => {
   const row = await HmsAppointment.findOne(query);
   if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
   return formatHmsAppointment(row);
+};
+
+export const cancelAppointment = async (appointmentCode, reason = '') => {
+  const row = await HmsAppointment.findOne({ appointmentCode });
+  if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  if (row.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
+  if (row.status === 'Completed') throw new Error('Completed appointments cannot be cancelled');
+
+  row.status = 'Cancelled';
+  if (reason?.trim()) {
+    row.notes = row.notes
+      ? `${row.notes}\n[Cancelled] ${reason.trim()}`
+      : `[Cancelled] ${reason.trim()}`;
+  }
+  await row.save();
+  await syncCareFromAppointment(row);
+  return formatHmsAppointment(row);
+};
+
+export const rescheduleAppointment = async (appointmentCode, payload) => {
+  assertValidTimeSlot(payload.timeSlot);
+  const row = await HmsAppointment.findOne({ appointmentCode });
+  if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  if (row.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
+  if (row.status === 'Completed') throw new Error('Completed appointments cannot be rescheduled');
+
+  const appointmentDate = normalizeAppointmentDate(payload.date);
+  const todayStart = moment.utc().startOf('day');
+  if (moment.utc(appointmentDate).isBefore(todayStart)) {
+    throw new Error('Cannot reschedule to a past date');
+  }
+
+  const conflict = await findDoctorSlotConflict({
+    staffCode: row.staffCode,
+    date: payload.date,
+    timeSlot: payload.timeSlot,
+    excludeId: row._id,
+  });
+  if (conflict) {
+    throw new Error(
+      conflict.maxAppointments > 1
+        ? `This time slot is full (${conflict.count}/${conflict.maxAppointments} appointments)`
+        : APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE
+    );
+  }
+
+  row.appointmentDate = appointmentDate;
+  row.timeSlot = payload.timeSlot;
+  row.timeDisplay = formatTimeDisplay(payload.timeSlot);
+  if (payload.consultationMode === 'Online' || payload.consultationMode === 'Offline') {
+    row.consultationMode = payload.consultationMode;
+  }
+  if (payload.notes !== undefined) row.notes = String(payload.notes || '').trim();
+  await row.save();
+  await syncCareFromAppointment(row);
+  return formatHmsAppointment(row);
+};
+
+/**
+ * Auto-cancel Upcoming appointments whose date+time has passed without attendance (acknowledgement).
+ */
+export const autoCancelUnacknowledgedPastAppointments = async () => {
+  const now = moment();
+  const candidates = await HmsAppointment.find({
+    status: 'Upcoming',
+    attendedAt: null,
+    appointmentDate: { $lte: now.clone().endOf('day').toDate() },
+  });
+
+  let cancelled = 0;
+  for (const row of candidates) {
+    const minutesUntil = minutesUntilAppointment(row.appointmentDate, row.timeSlot, now);
+    if (minutesUntil > 0) continue;
+    row.status = 'Cancelled';
+    row.notes = row.notes
+      ? `${row.notes}\n[Auto-cancelled] No acknowledgement / attendance after scheduled time`
+      : '[Auto-cancelled] No acknowledgement / attendance after scheduled time';
+    await row.save();
+    try {
+      await syncCareFromAppointment(row);
+    } catch (err) {
+      // Care profile sync must not block cancellation
+      console.error('Care sync after auto-cancel failed:', err?.message || err);
+    }
+    cancelled += 1;
+  }
+  return cancelled;
 };
 
 const performerFromReq = (req) => {

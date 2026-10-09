@@ -28,6 +28,7 @@ export const formatHmsPatient = (doc) => {
     lastVisit: p.lastVisit ? moment(p.lastVisit).format('MMM D, YYYY') : '',
     lastVisitRaw: p.lastVisit,
     bloodGroup: p.bloodGroup || '—',
+    address: p.address || '',
     city: p.city || 'India',
     memberSince: p.createdAt ? moment(p.createdAt).format('MMM YYYY') : '—',
     recordStatus: p.recordStatus,

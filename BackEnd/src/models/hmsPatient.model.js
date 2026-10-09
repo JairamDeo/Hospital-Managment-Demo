@@ -45,6 +45,7 @@ const hmsPatientSchema = new Schema({
   age: { type: Number, min: 1, max: 120 },
   gender: { type: String, enum: ['Male', 'Female', 'Other', 'Not recorded'], default: 'Not recorded' },
   bloodGroup: { type: String, trim: true, default: '' },
+  address: { type: String, trim: true, default: '' },
   city: { type: String, trim: true, default: 'India' },
   prakriti: { type: Schema.Types.ObjectId, ref: 'PrakritiMaster', default: null },
   treatment: { type: Schema.Types.ObjectId, ref: 'TreatmentMaster', default: null },

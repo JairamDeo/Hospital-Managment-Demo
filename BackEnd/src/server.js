@@ -11,6 +11,9 @@ const start = async () => {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
     import('./jobs/smsReminder.job.js').then(({ startSmsReminderJob }) => startSmsReminderJob());
+    import('./jobs/autoCancelAppointments.job.js').then(({ startAutoCancelAppointmentsJob }) =>
+      startAutoCancelAppointmentsJob()
+    );
   });
 
   server.on('error', (err) => {

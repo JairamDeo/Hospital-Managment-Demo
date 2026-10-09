@@ -4,7 +4,11 @@ import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { FormSelect } from '@/components/ui/FormSelect';
 import type { PatientFormValues } from '@/types/patient.types';
-import { STATUS_OPTIONS } from '@/utils/patientHelpers';
+import {
+  ADD_PATIENT_GENDER_OPTIONS,
+  BLOOD_GROUP_OPTIONS,
+  STATUS_OPTIONS,
+} from '@/utils/patientHelpers';
 import type { MasterItem } from '@/types/api.types';
 
 interface Props {
@@ -12,8 +16,8 @@ interface Props {
   mode: 'add' | 'edit';
   initial: PatientFormValues;
   patientId?: string;
-  prakritiOptions: MasterItem[];
-  treatmentOptions: MasterItem[];
+  prakritiOptions?: MasterItem[];
+  treatmentOptions?: MasterItem[];
   onClose: () => void;
   onSubmit: (values: PatientFormValues) => void;
 }
@@ -23,8 +27,8 @@ export const PatientFormModal = ({
   mode,
   initial,
   patientId,
-  prakritiOptions,
-  treatmentOptions,
+  prakritiOptions = [],
+  treatmentOptions = [],
   onClose,
   onSubmit,
 }: Props) => {
@@ -39,6 +43,7 @@ export const PatientFormModal = ({
     const next: typeof errors = {};
     if (!form.name.trim()) next.name = 'Name is required';
     if (form.age === '' || form.age < 1 || form.age > 120) next.age = 'Enter a valid age';
+    if (mode === 'add' && !form.gender) next.gender = 'Gender is required';
     if (mode === 'edit' && !form.treatmentId) next.treatmentId = 'Treatment is required';
     if (!/^[0-9]{10}$/.test(form.mobile.replace(/\D/g, '')))
       next.mobile = '10-digit mobile is required';
@@ -98,17 +103,6 @@ export const PatientFormModal = ({
           {errors.name ? <p className="mt-1 text-xs text-danger">{errors.name}</p> : null}
         </div>
 
-        <FormSelect
-          label="Prakriti (optional)"
-          value={form.prakritiId}
-          onChange={(v) => set('prakritiId', v)}
-          placeholder="Select prakriti"
-          options={prakritiOptions.map((o) => ({ value: o._id, label: o.name }))}
-          error={errors.prakritiId}
-          clearable
-          clearLabel="Not set"
-        />
-
         <div>
           <label className={formLabelClass}>Age *</label>
           <input
@@ -121,48 +115,104 @@ export const PatientFormModal = ({
               set('age', v === '' ? '' : parseInt(v, 10));
             }}
             className={`${formInputClass} ${errors.age ? 'border-danger' : ''}`}
-            placeholder="Enter your age"
+            placeholder="Enter age"
           />
           {errors.age ? <p className="mt-1 text-xs text-danger">{errors.age}</p> : null}
         </div>
 
         <div>
-          <label className={formLabelClass}>Last Visit</label>
-          <input
-            type="date"
-            value={form.lastVisit}
-            onChange={(e) => set('lastVisit', e.target.value)}
-            className={formInputClass}
-          />
+          <label className={formLabelClass}>Gender *</label>
+          <select
+            value={form.gender}
+            onChange={(e) => set('gender', e.target.value as PatientFormValues['gender'])}
+            className={`${formSelectClass} ${errors.gender ? 'border-danger' : ''}`}
+          >
+            <option value="">Choose gender</option>
+            {ADD_PATIENT_GENDER_OPTIONS.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+          </select>
+          {errors.gender ? <p className="mt-1 text-xs text-danger">{errors.gender}</p> : null}
         </div>
 
         <div>
-          <label className={formLabelClass}>Status *</label>
+          <label className={formLabelClass}>Blood Group</label>
           <select
-            value={form.status}
-            onChange={(e) => set('status', e.target.value as PatientFormValues['status'])}
+            value={form.bloodGroup}
+            onChange={(e) => set('bloodGroup', e.target.value)}
             className={formSelectClass}
           >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
+            <option value="">Choose blood group</option>
+            {BLOOD_GROUP_OPTIONS.filter(Boolean).map((bg) => (
+              <option key={bg} value={bg}>
+                {bg}
               </option>
             ))}
           </select>
         </div>
 
+        <div className="sm:col-span-2">
+          <label className={formLabelClass}>Address</label>
+          <input
+            type="text"
+            value={form.address}
+            onChange={(e) => set('address', e.target.value)}
+            className={formInputClass}
+            placeholder="Optional address"
+          />
+        </div>
+
         {mode === 'edit' ? (
-          <div className="sm:col-span-2">
-            <FormSelect
-              label="Treatment *"
-              value={form.treatmentId}
-              onChange={(v) => set('treatmentId', v)}
-              placeholder="Select treatment"
-              options={treatmentOptions.map((o) => ({ value: o._id, label: o.name }))}
-              error={errors.treatmentId}
-              required
-            />
-          </div>
+          <>
+            {prakritiOptions.length ? (
+              <FormSelect
+                label="Prakriti (optional)"
+                value={form.prakritiId}
+                onChange={(v) => set('prakritiId', v)}
+                placeholder="Choose prakriti"
+                options={prakritiOptions.map((o) => ({ value: o._id, label: o.name }))}
+                error={errors.prakritiId}
+                clearable
+                clearLabel="Choose prakriti"
+              />
+            ) : null}
+            <div>
+              <label className={formLabelClass}>Last Visit</label>
+              <input
+                type="date"
+                value={form.lastVisit}
+                onChange={(e) => set('lastVisit', e.target.value)}
+                className={formInputClass}
+              />
+            </div>
+            <div>
+              <label className={formLabelClass}>Status *</label>
+              <select
+                value={form.status}
+                onChange={(e) => set('status', e.target.value as PatientFormValues['status'])}
+                className={formSelectClass}
+              >
+                {STATUS_OPTIONS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <FormSelect
+                label="Treatment *"
+                value={form.treatmentId}
+                onChange={(v) => set('treatmentId', v)}
+                placeholder="Choose treatment"
+                options={treatmentOptions.map((o) => ({ value: o._id, label: o.name }))}
+                error={errors.treatmentId}
+                required
+              />
+            </div>
+          </>
         ) : null}
 
         <div>

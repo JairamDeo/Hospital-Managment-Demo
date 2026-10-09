@@ -44,15 +44,18 @@ export const parseVisitToInput = (display: string) => {
 export const hmsToPatient = (p: HmsPatient): Patient => ({
   id: p.patientCode,
   name: p.name,
+  age: p.age ?? 0,
+  gender: p.gender === 'Male' || p.gender === 'Female' ? p.gender : '',
+  bloodGroup: p.bloodGroup && p.bloodGroup !== '—' ? p.bloodGroup : '',
+  address: p.address ?? '',
+  mobile: p.mobile ?? p.mobileNumber ?? '',
+  email: p.email ?? '',
   prakritiId: p.prakritiId ?? '',
   prakriti: p.prakritiName ?? p.prakriti ?? '—',
   treatmentId: p.treatmentId ?? '',
   treatment: p.treatmentName ?? p.treatment ?? '—',
-  age: p.age ?? 0,
   lastVisit: formatVisitDate(p.lastVisit),
   status: (p.recordStatus ?? p.status ?? 'Active') as PatientStatus,
-  mobile: p.mobile ?? p.mobileNumber ?? '',
-  email: p.email ?? '',
   initials: getInitialsFromName(p.name),
   avatarClass: pickAvatarClass(p.name),
 });
@@ -66,28 +69,34 @@ export const formToPatient = (
 ): Patient => ({
   id,
   name: values.name.trim(),
+  age: values.age === '' ? 0 : values.age,
+  gender: values.gender,
+  bloodGroup: values.bloodGroup.trim(),
+  address: values.address.trim(),
+  mobile: values.mobile.trim(),
+  email: values.email.trim(),
   prakritiId: values.prakritiId,
   prakriti: prakritiName ?? existing?.prakriti ?? '—',
   treatmentId: values.treatmentId,
   treatment: treatmentName ?? existing?.treatment ?? '—',
-  age: values.age === '' ? 0 : values.age,
   lastVisit: formatVisitDate(values.lastVisit),
   status: values.status,
-  mobile: values.mobile.trim(),
-  email: values.email.trim(),
   initials: getInitialsFromName(values.name),
   avatarClass: existing?.avatarClass ?? pickAvatarClass(values.name),
 });
 
 export const patientToForm = (p: Patient): PatientFormValues => ({
   name: p.name,
-  prakritiId: p.prakritiId,
   age: p.age,
+  gender: '',
+  bloodGroup: '',
+  address: '',
+  mobile: p.mobile ?? '',
+  email: p.email ?? '',
+  prakritiId: p.prakritiId,
   lastVisit: parseVisitToInput(p.lastVisit),
   treatmentId: p.treatmentId,
   status: p.status,
-  mobile: p.mobile ?? '',
-  email: p.email ?? '',
 });
 
 export const detailToProfileForm = (p: PatientDetail): PatientProfileFormValues => ({
@@ -109,14 +118,19 @@ export const BLOOD_GROUP_OPTIONS = ['', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O
 
 export const emptyPatientForm = (): PatientFormValues => ({
   name: '',
-  prakritiId: '',
   age: '',
+  gender: '',
+  bloodGroup: '',
+  address: '',
+  mobile: '',
+  email: '',
+  prakritiId: '',
   lastVisit: new Date().toISOString().slice(0, 10),
   treatmentId: '',
   status: 'Active',
-  mobile: '',
-  email: '',
 });
+
+export const ADD_PATIENT_GENDER_OPTIONS = ['Male', 'Female'] as const;
 
 export const STATUS_OPTIONS: PatientStatus[] = ['Active', 'Pending', 'Inactive'];
 

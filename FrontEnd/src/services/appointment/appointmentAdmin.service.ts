@@ -65,11 +65,34 @@ class AppointmentAdminService {
     return axiosInstance.post<ApiResponse<{ appointment: HmsAppointment }>>('/admin/appointments', {
       patientCode: values.patientId,
       staffCode: values.staffCode,
-      appointmentType: 'General Consult',
+      appointmentType: values.type || 'Diet Consult',
+      consultationMode: values.consultationMode || 'Offline',
       date: values.date,
       timeSlot: values.time,
       notes: values.notes || undefined,
     });
+  }
+
+  cancel(appointmentCode: string, reason?: string) {
+    return axiosInstance.patch<ApiResponse<{ appointment: HmsAppointment }>>(
+      `/admin/appointments/${encodeURIComponent(appointmentCode)}/cancel`,
+      { reason }
+    );
+  }
+
+  reschedule(
+    appointmentCode: string,
+    payload: {
+      date: string;
+      timeSlot: string;
+      consultationMode?: 'Offline' | 'Online';
+      notes?: string;
+    }
+  ) {
+    return axiosInstance.patch<ApiResponse<{ appointment: HmsAppointment }>>(
+      `/admin/appointments/${encodeURIComponent(appointmentCode)}/reschedule`,
+      payload
+    );
   }
 }
 

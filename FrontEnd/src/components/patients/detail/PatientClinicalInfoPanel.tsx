@@ -3,7 +3,6 @@ import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   Apple,
-  ClipboardList,
   Dumbbell,
   Droplets,
   HeartPulse,
@@ -15,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { GENERAL_EXAMINATION_OPTIONS } from '@/constants/patientGeneralExaminationOptions';
 import type { MasterItem } from '@/types/api.types';
@@ -22,7 +22,12 @@ import type {
   ClinicalSectionKey,
   PatientClinicalProfile,
 } from '@/types/patientClinical.types';
-import { withComputedMeasurements } from '@/utils/patientClinicalHelpers';
+import {
+  cmToInches,
+  getBmiCategory,
+  inchesToCm,
+  withComputedMeasurements,
+} from '@/utils/patientClinicalHelpers';
 
 type SectionDef = {
   id: ClinicalSectionKey;
@@ -33,13 +38,6 @@ type SectionDef = {
 };
 
 const SECTIONS: SectionDef[] = [
-  {
-    id: 'presentComplaint',
-    label: 'Complaint',
-    title: 'Present complaint',
-    description: 'Current symptoms or reason for visit',
-    icon: ClipboardList,
-  },
   {
     id: 'generalExamination',
     label: 'General',
@@ -72,7 +70,7 @@ const SECTIONS: SectionDef[] = [
     id: 'eatingHabits',
     label: 'Diet',
     title: 'Eating habits',
-    description: 'Food preference, schedule, likes and dislikes',
+    description: 'Food preference, meal quantity, meal times, likes and dislikes',
     icon: Apple,
   },
   {
@@ -119,10 +117,72 @@ const DISEASE_FIELDS: { key: keyof PatientClinicalProfile['diseaseHistory']; lab
   { key: 'accidentalHistory', label: 'Accidental history' },
 ];
 
+const DIABETES_TYPE_OPTIONS = [
+  'Type 1',
+  'Type 2',
+  'Gestational',
+  'Prediabetes',
+  'LADA',
+  'MODY',
+  'Other',
+  'None',
+];
+
+const DURATION_OPTIONS = [
+  'Less than a month',
+  '1 month',
+  '2 months',
+  '6 months',
+  'More than 1 year',
+  'More than 2 years',
+];
+
+const FOOD_PREFERENCE_OPTIONS = [
+  'Vegetarian',
+  'Non-vegetarian',
+  'Eggetarian',
+  'Vegan',
+  'Jain',
+  'Mixed',
+];
+
+const MEAL_QUANTITY_OPTIONS = [
+  'Light — small portions',
+  'Moderate — normal portions',
+  'Heavy — large portions',
+  'Variable — changes day to day',
+];
+
+const MEAL_TIMES_OPTIONS = [
+  '1 time',
+  '2 times',
+  '3 times',
+  '4 times',
+  '5 times',
+  'More than 5 times',
+];
+
+const WORK_PATTERN_OPTIONS = [
+  'Office / desk job',
+  'Field work',
+  'Hybrid (office + field)',
+  'Work from home',
+  'Standing / shop / retail',
+  'Manual labour',
+  'Driving / travel heavy',
+  'Student',
+  'Homemaker',
+  'Retired / not working',
+];
+
+const YES_NO_OPTIONS = ['Yes', 'No'];
+
 const METABOLIC_PAIRS: {
   label: string;
   medicine: keyof PatientClinicalProfile['metabolicDisorder'];
   duration: keyof PatientClinicalProfile['metabolicDisorder'];
+  /** Hide for these genders (e.g. PCOS / thyroid for male patients) */
+  hideForGenders?: string[];
 }[] = [
   { label: 'Blood pressure', medicine: 'bpMedicine', duration: 'bpMedicineDurations' },
   {
@@ -130,8 +190,18 @@ const METABOLIC_PAIRS: {
     medicine: 'cholesterolMedicine',
     duration: 'cholesterolMedicineDurations',
   },
-  { label: 'Thyroid', medicine: 'thyroidMedicine', duration: 'thyroidMedicineDurations' },
-  { label: 'PCOS', medicine: 'pcosMedicine', duration: 'pcosMedicineDurations' },
+  {
+    label: 'Thyroid',
+    medicine: 'thyroidMedicine',
+    duration: 'thyroidMedicineDurations',
+    hideForGenders: ['Male'],
+  },
+  {
+    label: 'PCOS',
+    medicine: 'pcosMedicine',
+    duration: 'pcosMedicineDurations',
+    hideForGenders: ['Male'],
+  },
   {
     label: 'Retinopathy',
     medicine: 'retinopathyMedicine',
@@ -156,8 +226,19 @@ const METABOLIC_PAIRS: {
   { label: 'Other', medicine: 'otherMedicine', duration: 'otherMedicineDurations' },
 ];
 
+const LabelText = ({ label, required }: { label: string; required?: boolean }) => {
+  if (!label && !required) return null;
+  return (
+    <label className={`${formLabelClass} text-ink-soft`}>
+      {label}
+      {required ? <span className="ml-0.5 text-red-500">*</span> : null}
+    </label>
+  );
+};
+
 interface Props {
   clinical: PatientClinicalProfile;
+  patientGender?: string;
   prakritiMasters?: MasterItem[];
   loading?: boolean;
   saving?: boolean;
@@ -175,6 +256,7 @@ const Field = ({
   multiline,
   placeholder,
   readOnly,
+  required,
 }: {
   label: string;
   value: string;
@@ -182,13 +264,14 @@ const Field = ({
   multiline?: boolean;
   placeholder?: string;
   readOnly?: boolean;
+  required?: boolean;
 }) => {
   const locked = readOnly
     ? 'cursor-default border-border-sage/60 bg-cream/40 text-ink-soft'
     : 'border-border-sage/90 bg-white';
   return (
     <div className="group">
-      <label className={`${formLabelClass} text-ink-soft`}>{label}</label>
+      <LabelText label={label} required={required} />
       {multiline ? (
         <textarea
           rows={3}
@@ -220,7 +303,8 @@ const SelectField = ({
   options,
   onChange,
   readOnly,
-  placeholder = 'Select',
+  placeholder = 'Choose...',
+  required,
 }: {
   label: string;
   value: string;
@@ -228,6 +312,7 @@ const SelectField = ({
   onChange: (v: string) => void;
   readOnly?: boolean;
   placeholder?: string;
+  required?: boolean;
 }) => {
   const optionList =
     value && !options.includes(value) ? [value, ...options] : options;
@@ -237,7 +322,7 @@ const SelectField = ({
 
   return (
     <div className="group">
-      <label className={`${formLabelClass} text-ink-soft`}>{label}</label>
+      <LabelText label={label} required={required} />
       <select
         value={value}
         disabled={readOnly}
@@ -255,15 +340,135 @@ const SelectField = ({
   );
 };
 
-const StatCard = ({ label, value }: { label: string; value: string }) => (
+const YesNoToggle = ({
+  value,
+  disabled,
+  onChange,
+}: {
+  value: boolean;
+  disabled?: boolean;
+  onChange: (next: boolean) => void;
+}) => (
+  <div className="inline-flex rounded-lg border border-border-sage/80 bg-cream/40 p-0.5">
+    {([true, false] as const).map((opt) => {
+      const active = value === opt;
+      return (
+        <button
+          key={String(opt)}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(opt)}
+          className={`rounded-md px-3 py-1 text-xs font-semibold transition-all ${
+            active
+              ? 'bg-sage-mist text-sage-deep ring-1 ring-border-sage/70'
+              : 'text-ink-soft hover:text-ink'
+          } ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+        >
+          {opt ? 'Yes' : 'No'}
+        </button>
+      );
+    })}
+  </div>
+);
+
+/** Length input with per-field cm/in toggle. Value is always stored in cm. */
+const LengthField = ({
+  label,
+  valueCm,
+  onChangeCm,
+  readOnly,
+  syncKey,
+  placeholderCm = 'e.g. 170',
+  placeholderIn = 'e.g. 67',
+}: {
+  label: string;
+  valueCm: string;
+  onChangeCm: (cm: string) => void;
+  readOnly?: boolean;
+  /** Re-sync display when clinical data reloads */
+  syncKey?: string | null;
+  placeholderCm?: string;
+  placeholderIn?: string;
+}) => {
+  const [unit, setUnit] = useState<'cm' | 'in'>('cm');
+  const [input, setInput] = useState(valueCm);
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (focused) return;
+    setInput(unit === 'in' ? cmToInches(valueCm) : valueCm);
+  }, [valueCm, unit, syncKey, focused]);
+
+  const locked = readOnly
+    ? 'cursor-default border-border-sage/60 bg-cream/40 text-ink-soft'
+    : 'border-border-sage/90 bg-white';
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <LabelText label={label} />
+        <div className="inline-flex rounded-lg border border-border-sage/80 bg-cream/40 p-0.5">
+          {(['cm', 'in'] as const).map((u) => (
+            <button
+              key={u}
+              type="button"
+              disabled={readOnly}
+              onClick={() => {
+                setUnit(u);
+                setInput(u === 'in' ? cmToInches(valueCm) : valueCm);
+              }}
+              className={`rounded-md px-2.5 py-0.5 text-[10px] font-semibold uppercase transition-all ${
+                unit === u
+                  ? 'bg-sage-mist text-sage-deep ring-1 ring-border-sage/70'
+                  : 'text-ink-soft hover:text-ink'
+              } ${readOnly ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
+            >
+              {u}
+            </button>
+          ))}
+        </div>
+      </div>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={input}
+        readOnly={readOnly}
+        disabled={readOnly}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(e) => {
+          const raw = e.target.value.replace(/[^\d.]/g, '');
+          setInput(raw);
+          onChangeCm(unit === 'in' ? inchesToCm(raw) : raw);
+        }}
+        placeholder={unit === 'in' ? placeholderIn : placeholderCm}
+        className={`${formInputClass} transition-shadow focus:shadow-sm ${locked}`}
+      />
+    </div>
+  );
+};
+
+const StatCard = ({
+  label,
+  value,
+  subtitle,
+}: {
+  label: string;
+  value: string;
+  subtitle?: string;
+}) => (
   <div className="rounded-xl border border-sage/20 bg-gradient-to-br from-sage-mist/80 to-white px-4 py-3 shadow-sm">
     <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{label}</p>
     <p className="mt-1 font-serif text-2xl font-semibold text-sage-deep">{value || '—'}</p>
+    {subtitle ? (
+      <p className="mt-1 text-xs font-semibold text-sage-deep/80">{subtitle}</p>
+    ) : null}
   </div>
 );
 
 export const PatientClinicalInfoPanel = ({
   clinical,
+  patientGender = '',
   prakritiMasters = [],
   loading = false,
   saving = false,
@@ -275,12 +480,25 @@ export const PatientClinicalInfoPanel = ({
 }: Props) => {
   const readOnly = !editing;
   const [activeSection, setActiveSection] = useState<ClinicalSectionKey>('generalExamination');
+  const [metabolicEnabled, setMetabolicEnabled] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (window.location.hash === '#patient-info') {
       setActiveSection('generalExamination');
     }
   }, [loading]);
+
+  useEffect(() => {
+    // Sync Yes/No from saved values when viewing (not while editing empty Yes cards)
+    if (editing) return;
+    const next: Record<string, boolean> = {};
+    for (const row of METABOLIC_PAIRS) {
+      const med = String(clinical.metabolicDisorder[row.medicine] ?? '').trim();
+      const dur = String(clinical.metabolicDisorder[row.duration] ?? '').trim();
+      next[row.medicine] = Boolean(med || dur);
+    }
+    setMetabolicEnabled(next);
+  }, [editing, clinical.updatedAt, clinical.metabolicDisorder]);
 
   const patch = <K extends ClinicalSectionKey>(
     section: K,
@@ -314,22 +532,10 @@ export const PatientClinicalInfoPanel = ({
 
   const renderForm = () => {
     switch (activeSection) {
-      case 'presentComplaint':
-        return (
-          <Field
-            label="Chief complaint"
-            value={clinical.presentComplaint.complaint}
-            onChange={(v) => patchNested('presentComplaint', 'complaint', v)}
-            multiline
-            readOnly={readOnly}
-            placeholder="Describe current complaints, duration, severity…"
-          />
-        );
-
       case 'generalExamination': {
         const prakritiOptions = prakritiMasters.map((m) => m.name);
         return (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {GENERAL_FIELDS.map((f) => {
               const value = clinical.generalExamination[f.key];
               const options =
@@ -351,10 +557,15 @@ export const PatientClinicalInfoPanel = ({
         );
       }
 
-      case 'diseaseHistory':
+      case 'diseaseHistory': {
+        const gender = String(patientGender || '').trim();
+        const diseaseFields =
+          gender === 'Male'
+            ? DISEASE_FIELDS.filter((f) => f.key !== 'menstrual')
+            : DISEASE_FIELDS;
         return (
           <div className="grid gap-4 sm:grid-cols-2">
-            {DISEASE_FIELDS.map((f) => (
+            {diseaseFields.map((f) => (
               <Field
                 key={f.key}
                 label={f.label}
@@ -366,18 +577,21 @@ export const PatientClinicalInfoPanel = ({
             ))}
           </div>
         );
+      }
 
       case 'diabetesHistory':
         return (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field
+            <SelectField
               label="Diabetes type"
               value={clinical.diabetesHistory.diabetesType}
+              options={DIABETES_TYPE_OPTIONS}
               onChange={(v) => patchNested('diabetesHistory', 'diabetesType', v)}
               readOnly={readOnly}
+              placeholder="Choose..."
             />
             <Field
-              label="Type duration"
+              label="Duration"
               value={clinical.diabetesHistory.typeDurations}
               onChange={(v) => patchNested('diabetesHistory', 'typeDurations', v)}
               readOnly={readOnly}
@@ -394,17 +608,14 @@ export const PatientClinicalInfoPanel = ({
               onChange={(v) => patchNested('diabetesHistory', 'insulinDurations', v)}
               readOnly={readOnly}
             />
-            <div className="sm:col-span-2">
-              <Field
-                label="Current medicine"
-                value={clinical.diabetesHistory.currentMedicine}
-                onChange={(v) => patchNested('diabetesHistory', 'currentMedicine', v)}
-                multiline
-                readOnly={readOnly}
-              />
-            </div>
             <Field
-              label="Current medicine duration"
+              label="Current medicine"
+              value={clinical.diabetesHistory.currentMedicine}
+              onChange={(v) => patchNested('diabetesHistory', 'currentMedicine', v)}
+              readOnly={readOnly}
+            />
+            <Field
+              label="Current duration"
               value={clinical.diabetesHistory.currentMedicineDurations}
               onChange={(v) => patchNested('diabetesHistory', 'currentMedicineDurations', v)}
               readOnly={readOnly}
@@ -412,66 +623,105 @@ export const PatientClinicalInfoPanel = ({
           </div>
         );
 
-      case 'metabolicDisorder':
+      case 'metabolicDisorder': {
+        const gender = String(patientGender || '').trim();
+        const visiblePairs = METABOLIC_PAIRS.filter(
+          (row) => !row.hideForGenders?.includes(gender)
+        );
         return (
           <div className="grid gap-3 sm:grid-cols-2">
-            {METABOLIC_PAIRS.map((row) => (
-              <div
-                key={row.label}
-                className="rounded-xl border border-border-sage/70 bg-white p-4 shadow-sm"
-              >
-                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-sage-deep">
-                  {row.label}
-                </p>
-                <div className="grid gap-3">
-                  <Field
-                    label="Medicine"
-                    value={clinical.metabolicDisorder[row.medicine]}
-                    onChange={(v) => patchNested('metabolicDisorder', row.medicine, v)}
-                    readOnly={readOnly}
-                  />
-                  <Field
-                    label="Duration"
-                    value={clinical.metabolicDisorder[row.duration]}
-                    onChange={(v) => patchNested('metabolicDisorder', row.duration, v)}
-                    readOnly={readOnly}
-                  />
+            {visiblePairs.map((row) => {
+              const enabled = Boolean(metabolicEnabled[row.medicine]);
+              return (
+                <div
+                  key={row.label}
+                  className="rounded-xl border border-border-sage/70 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-sage-deep">
+                      {row.label}
+                    </p>
+                    <YesNoToggle
+                      value={enabled}
+                      disabled={readOnly}
+                      onChange={(next) => {
+                        setMetabolicEnabled((prev) => ({ ...prev, [row.medicine]: next }));
+                        if (!next) {
+                          onChange({
+                            ...clinical,
+                            metabolicDisorder: {
+                              ...clinical.metabolicDisorder,
+                              [row.medicine]: '',
+                              [row.duration]: '',
+                            },
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                  {enabled ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field
+                        label=""
+                        value={clinical.metabolicDisorder[row.medicine]}
+                        onChange={(v) => patchNested('metabolicDisorder', row.medicine, v)}
+                        readOnly={readOnly}
+                        placeholder="Medicine / Details"
+                      />
+                      <SelectField
+                        label=""
+                        value={clinical.metabolicDisorder[row.duration]}
+                        options={DURATION_OPTIONS}
+                        onChange={(v) => patchNested('metabolicDisorder', row.duration, v)}
+                        readOnly={readOnly}
+                        placeholder="Choose..."
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-ink-ghost">Select Yes to add details</p>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         );
+      }
 
       case 'eatingHabits':
         return (
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field
+            <SelectField
               label="Food preference"
               value={clinical.eatingHabits.preference}
+              options={FOOD_PREFERENCE_OPTIONS}
               onChange={(v) => patchNested('eatingHabits', 'preference', v)}
               readOnly={readOnly}
+              placeholder="Choose..."
             />
-            <Field
+            <SelectField
               label="Meal quantity"
               value={clinical.eatingHabits.quantity}
+              options={MEAL_QUANTITY_OPTIONS}
               onChange={(v) => patchNested('eatingHabits', 'quantity', v)}
               readOnly={readOnly}
+              placeholder="Choose..."
             />
-            <div className="sm:col-span-2">
-              <Field
-                label="Meal schedule"
-                value={clinical.eatingHabits.schedule}
-                onChange={(v) => patchNested('eatingHabits', 'schedule', v)}
-                multiline
-                readOnly={readOnly}
-              />
-            </div>
+            <SelectField
+              label="Meal times"
+              value={clinical.eatingHabits.schedule}
+              options={MEAL_TIMES_OPTIONS}
+              onChange={(v) => patchNested('eatingHabits', 'schedule', v)}
+              readOnly={readOnly}
+              placeholder="Choose..."
+            />
             <Field
               label="Likes"
               value={clinical.eatingHabits.likes}
               onChange={(v) => patchNested('eatingHabits', 'likes', v)}
               multiline
               readOnly={readOnly}
+              placeholder="Foods patient likes"
             />
             <Field
               label="Dislikes"
@@ -479,109 +729,148 @@ export const PatientClinicalInfoPanel = ({
               onChange={(v) => patchNested('eatingHabits', 'dislikes', v)}
               multiline
               readOnly={readOnly}
+              placeholder="Foods patient dislikes"
             />
           </div>
         );
 
-      case 'physicalActivity':
+      case 'physicalActivity': {
+        const isActive = clinical.physicalActivity.active === true;
+        const detailReadOnly = readOnly || !isActive;
         return (
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={`${formLabelClass} text-ink-soft`}>Physically active?</label>
-              <select
-                value={
-                  clinical.physicalActivity.active === null
-                    ? ''
-                    : clinical.physicalActivity.active
-                      ? 'yes'
-                      : 'no'
-                }
-                disabled={readOnly}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  patchNested('physicalActivity', 'active', v === '' ? null : v === 'yes');
-                }}
-                className={`${formInputClass} border-border-sage/90 bg-white`}
-              >
-                <option value="">Not set</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
+              <LabelText label="Physical activity" />
+              <div className="mt-1">
+                <YesNoToggle
+                  value={isActive}
+                  disabled={readOnly}
+                  onChange={(next) => {
+                    if (!next) {
+                      onChange({
+                        ...clinical,
+                        physicalActivity: {
+                          ...clinical.physicalActivity,
+                          active: false,
+                          workPattern: '',
+                          walk: '',
+                          yoga: '',
+                          exercise: '',
+                          meditative: '',
+                        },
+                      });
+                      return;
+                    }
+                    patchNested('physicalActivity', 'active', true);
+                  }}
+                />
+              </div>
             </div>
-            <Field
+            <SelectField
               label="Work pattern"
               value={clinical.physicalActivity.workPattern}
+              options={WORK_PATTERN_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'workPattern', v)}
-              readOnly={readOnly}
+              readOnly={detailReadOnly}
+              placeholder="Choose..."
             />
-            <Field
+            <SelectField
               label="Walk"
               value={clinical.physicalActivity.walk}
+              options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'walk', v)}
-              readOnly={readOnly}
+              readOnly={detailReadOnly}
+              placeholder="Choose..."
             />
-            <Field
+            <SelectField
               label="Yoga"
               value={clinical.physicalActivity.yoga}
+              options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'yoga', v)}
-              readOnly={readOnly}
+              readOnly={detailReadOnly}
+              placeholder="Choose..."
             />
-            <Field
+            <SelectField
               label="Exercise"
               value={clinical.physicalActivity.exercise}
+              options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'exercise', v)}
-              readOnly={readOnly}
+              readOnly={detailReadOnly}
+              placeholder="Choose..."
             />
-            <Field
+            <SelectField
               label="Meditation"
               value={clinical.physicalActivity.meditative}
+              options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'meditative', v)}
-              readOnly={readOnly}
+              readOnly={detailReadOnly}
+              placeholder="Choose..."
             />
           </div>
         );
+      }
 
-      case 'physicalMeasurement':
+      case 'physicalMeasurement': {
+        const bmiCategory = getBmiCategory(clinical.physicalMeasurement.bmi);
+        const syncKey = clinical.updatedAt;
         return (
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <StatCard label="BMI" value={clinical.physicalMeasurement.bmi} />
+              <StatCard
+                label="BMI"
+                value={clinical.physicalMeasurement.bmi}
+                subtitle={bmiCategory || undefined}
+              />
               <StatCard label="WHR" value={clinical.physicalMeasurement.whr} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Field
-                label="Height (cm)"
-                value={clinical.physicalMeasurement.height}
-                onChange={(v) => onMeasurementChange('height', v)}
+              <LengthField
+                label="Height"
+                valueCm={clinical.physicalMeasurement.height}
+                onChangeCm={(cm) => onMeasurementChange('height', cm)}
                 readOnly={readOnly}
+                syncKey={syncKey}
+                placeholderCm="e.g. 170"
+                placeholderIn="e.g. 67"
               />
               <Field
                 label="Weight (kg)"
                 value={clinical.physicalMeasurement.weight}
                 onChange={(v) => onMeasurementChange('weight', v)}
                 readOnly={readOnly}
+                placeholder="e.g. 68"
               />
-              <Field
-                label="Bicep (cm)"
-                value={clinical.physicalMeasurement.bicep}
-                onChange={(v) => onMeasurementChange('bicep', v)}
+              <LengthField
+                label="Bicep"
+                valueCm={clinical.physicalMeasurement.bicep}
+                onChangeCm={(cm) => onMeasurementChange('bicep', cm)}
                 readOnly={readOnly}
+                syncKey={syncKey}
+                placeholderCm="e.g. 32"
+                placeholderIn="e.g. 12.6"
               />
-              <Field
-                label="Waist (cm)"
-                value={clinical.physicalMeasurement.waist}
-                onChange={(v) => onMeasurementChange('waist', v)}
+              <LengthField
+                label="Waist"
+                valueCm={clinical.physicalMeasurement.waist}
+                onChangeCm={(cm) => onMeasurementChange('waist', cm)}
                 readOnly={readOnly}
+                syncKey={syncKey}
+                placeholderCm="e.g. 80"
+                placeholderIn="e.g. 31.5"
               />
-              <Field
-                label="Hip (cm)"
-                value={clinical.physicalMeasurement.hip}
-                onChange={(v) => onMeasurementChange('hip', v)}
+              <LengthField
+                label="Hip"
+                valueCm={clinical.physicalMeasurement.hip}
+                onChangeCm={(cm) => onMeasurementChange('hip', cm)}
                 readOnly={readOnly}
+                syncKey={syncKey}
+                placeholderCm="e.g. 95"
+                placeholderIn="e.g. 37.4"
               />
             </div>
           </div>
         );
+      }
 
       default:
         return null;
@@ -590,8 +879,8 @@ export const PatientClinicalInfoPanel = ({
 
   if (loading) {
     return (
-      <div className="flex min-h-[280px] items-center justify-center rounded-xl bg-cream/30">
-        <p className="text-sm text-ink-soft">Loading clinical assessment…</p>
+      <div className="min-h-[280px] rounded-xl bg-cream/30">
+        <ContentLoader size="md" className="min-h-[280px]" />
       </div>
     );
   }
@@ -645,8 +934,8 @@ export const PatientClinicalInfoPanel = ({
                 onClick={() => setActiveSection(tab.id)}
                 className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
                   active
-                    ? 'bg-white text-sage-deep shadow-sm ring-1 ring-border-sage/80'
-                    : 'text-ink-soft hover:bg-white/60 hover:text-ink'
+                    ? 'bg-sage-mist text-sage-deep ring-1 ring-border-sage/70'
+                    : 'text-ink-soft hover:bg-sage-mist/50 hover:text-ink'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />

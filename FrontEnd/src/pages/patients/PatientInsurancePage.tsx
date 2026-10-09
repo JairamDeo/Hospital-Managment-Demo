@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pencil, Plus, Search, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { EditPatientInsuranceModal } from '@/components/patients/insurance/EditPatientInsuranceModal';
 import { SelectPatientModal } from '@/components/patients/insurance/SelectPatientModal';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -230,8 +231,8 @@ export const PatientInsurancePage = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-ink-soft">
-                    Loading insurance records…
+                  <td colSpan={8} className="px-4 py-4">
+                    <ContentLoader size="md" className="min-h-[180px]" />
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (

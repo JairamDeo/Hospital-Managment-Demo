@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
 import { StaffSectionNav } from '@/components/staff/StaffSectionNav';
 import { StaffRoleFilters, StaffFilterChips } from '@/components/staff/StaffRoleFilters';
@@ -157,7 +158,7 @@ export const StaffPage = () => {
       <div className="overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
         <div className="p-4">
           {listLoading ? (
-            <p className="py-16 text-center text-sm text-ink-soft">Loading staff directory…</p>
+            <ContentLoader size="md" className="min-h-[280px]" />
           ) : pageStaff.length === 0 ? (
             <p className="py-16 text-center text-sm text-ink-soft">No staff found</p>
           ) : (

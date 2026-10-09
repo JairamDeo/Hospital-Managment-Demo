@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { ScheduleProgramModal } from '@/components/modals/ScheduleProgramModal';
 import { TherapySummaryCard } from '@/components/panchakarma/TherapySummaryCard';
 import { ActiveProgramsTable } from '@/components/panchakarma/ActiveProgramsTable';
@@ -149,7 +150,7 @@ export const PanchakarmaPage = () => {
           </div>
           <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto">
             {listLoading ? (
-              <p className="py-12 text-center text-sm text-ink-soft">Loading programs…</p>
+              <ContentLoader size="md" className="min-h-[220px]" />
             ) : (
               <ActiveProgramsTable programs={programs} />
             )}

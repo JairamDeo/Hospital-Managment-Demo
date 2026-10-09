@@ -5,6 +5,7 @@ import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import type { Patient } from '@/types/patient.types';
 import type { AppointmentDoctor, AppointmentFormValues } from '@/types/appointment.types';
+import { CONSULTATION_MODE_OPTIONS } from '@/types/appointment.types';
 import { formatTimeLabel } from '@/utils/appointmentHelpers';
 import { masterService } from '@/services/master/master.service';
 
@@ -15,6 +16,7 @@ interface Props {
   doctors: AppointmentDoctor[];
   lockedDoctor?: AppointmentDoctor | null;
   submitting?: boolean;
+  title?: string;
   onClose: () => void;
   onSubmit: (values: AppointmentFormValues) => void | Promise<void>;
 }
@@ -26,21 +28,40 @@ export const NewAppointmentModal = ({
   doctors,
   lockedDoctor = null,
   submitting = false,
+  title = 'New Appointment',
   onClose,
   onSubmit,
 }: Props) => {
   const [form, setForm] = useState<AppointmentFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof AppointmentFormValues, string>>>({});
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [slotStats, setSlotStats] = useState<
+    Array<{ time: string; booked: number; maxAppointments: number; remaining: number }>
+  >([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  const [allSlots, setAllSlots] = useState<string[]>([]);
+  const [allSlots, setAllSlots] = useState<Array<{ time: string; label: string }>>([]);
 
   useEffect(() => {
     if (open) {
-      setForm(initial);
-      masterService.listAppointmentSlots(true)
-        .then(res => setAllSlots(res.data.res?.items?.map(i => i.time) ?? []))
+      const minDate = new Date().toISOString().slice(0, 10);
+      setForm({
+        ...initial,
+        date: initial.date && initial.date < minDate ? minDate : initial.date,
+      });
+      setErrors({});
+      masterService
+        .listAppointmentSlots(true)
+        .then((res) =>
+          setAllSlots(
+            (res.data.res?.items ?? []).map((i) => ({
+              time: i.time,
+              label:
+                i.label ||
+                (i.endTime ? `${i.time} – ${i.endTime}` : formatTimeLabel(i.time)),
+            }))
+          )
+        )
         .catch(() => setAllSlots([]));
     }
   }, [open, initial]);
@@ -56,10 +77,16 @@ export const NewAppointmentModal = ({
     appointmentAdminService
       .getAvailability(form.staffCode, form.date)
       .then((res) => {
-        if (!cancelled) setBookedSlots(res.data.res?.availability.bookedSlots ?? []);
+        if (!cancelled) {
+          setBookedSlots(res.data.res?.availability.bookedSlots ?? []);
+          setSlotStats(res.data.res?.availability.slotStats ?? []);
+        }
       })
       .catch(() => {
-        if (!cancelled) setBookedSlots([]);
+        if (!cancelled) {
+          setBookedSlots([]);
+          setSlotStats([]);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingSlots(false);
@@ -71,20 +98,23 @@ export const NewAppointmentModal = ({
   }, [open, form.staffCode, form.date]);
 
   const availableSlots = useMemo(
-    () => allSlots.filter((slot) => !bookedSlots.includes(slot)),
+    () => allSlots.filter((slot) => !bookedSlots.includes(slot.time)),
     [allSlots, bookedSlots]
   );
 
   useEffect(() => {
-    if (!form.time || availableSlots.includes(form.time)) return;
-    setForm((f) => ({ ...f, time: availableSlots[0] ?? '' }));
+    if (!form.time || availableSlots.some((s) => s.time === form.time)) return;
+    setForm((f) => ({ ...f, time: availableSlots[0]?.time ?? '' }));
   }, [availableSlots, form.time]);
+
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [open]);
 
   const validate = () => {
     const next: typeof errors = {};
     if (!form.patientId) next.patientId = 'Select a patient';
     if (!form.staffCode) next.staffCode = 'Select a doctor';
     if (!form.date) next.date = 'Date is required';
+    else if (form.date < today) next.date = 'Cannot book for a past date';
     if (!form.time) next.time = 'Time is required';
     if (form.time && bookedSlots.includes(form.time)) {
       next.time = 'This slot is already booked for the selected doctor';
@@ -103,15 +133,17 @@ export const NewAppointmentModal = ({
     setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
+  const isReschedule = /reschedule/i.test(title);
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="New Appointment"
+      title={title}
       subtitle={
         lockedDoctor
           ? `Schedule a visit for ${lockedDoctor.name}`
-          : 'Schedule a patient visit'
+          : 'Schedule a patient visit · default Offline'
       }
       size="lg"
       footer={
@@ -120,7 +152,13 @@ export const NewAppointmentModal = ({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={submitting || loadingSlots}>
-            {submitting ? 'Scheduling…' : 'Create Appointment'}
+            {submitting
+              ? isReschedule
+                ? 'Rescheduling…'
+                : 'Scheduling…'
+              : isReschedule
+                ? 'Reschedule'
+                : 'Create Appointment'}
           </Button>
         </>
       }
@@ -178,10 +216,28 @@ export const NewAppointmentModal = ({
           <input
             type="date"
             value={form.date}
+            min={today}
             onChange={(e) => set('date', e.target.value)}
             className={`${formInputClass} ${errors.date ? 'border-danger' : ''}`}
           />
           {errors.date ? <p className="mt-1 text-xs text-danger">{errors.date}</p> : null}
+        </div>
+
+        <div>
+          <label className={formLabelClass}>Mode *</label>
+          <select
+            value={form.consultationMode}
+            onChange={(e) =>
+              set('consultationMode', e.target.value as AppointmentFormValues['consultationMode'])
+            }
+            className={formSelectClass}
+          >
+            {CONSULTATION_MODE_OPTIONS.map((mode) => (
+              <option key={mode} value={mode}>
+                {mode}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -199,17 +255,25 @@ export const NewAppointmentModal = ({
             ) : availableSlots.length === 0 ? (
               <option value="">No slots available</option>
             ) : (
-              availableSlots.map((t) => (
-                <option key={t} value={t}>
-                  {formatTimeLabel(t)}
-                </option>
-              ))
+              availableSlots.map((slot) => {
+                const stat = slotStats.find((s) => s.time === slot.time);
+                const capacity =
+                  stat && stat.maxAppointments > 1
+                    ? ` (${stat.remaining}/${stat.maxAppointments} left)`
+                    : '';
+                return (
+                  <option key={slot.time} value={slot.time}>
+                    {slot.label}
+                    {capacity}
+                  </option>
+                );
+              })
             )}
           </select>
           {errors.time ? <p className="mt-1 text-xs text-danger">{errors.time}</p> : null}
           {form.staffCode && form.date && bookedSlots.length > 0 ? (
             <p className="mt-1 text-xs text-ink-ghost">
-              {bookedSlots.length} slot{bookedSlots.length === 1 ? '' : 's'} already booked for this
+              {bookedSlots.length} slot{bookedSlots.length === 1 ? '' : 's'} at full capacity for this
               doctor
             </p>
           ) : null}

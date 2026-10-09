@@ -37,6 +37,12 @@ const hmsAppointmentSchema = new Schema({
     enum: ['General Consult', 'Panchakarma', 'Follow-up', 'Diet Consult', 'Shodhana'],
     required: true,
   },
+  consultationMode: {
+    type: String,
+    enum: ['Offline', 'Online'],
+    default: 'Offline',
+    index: true,
+  },
   notes: { type: String, trim: true, default: '' },
   status: {
     type: String,

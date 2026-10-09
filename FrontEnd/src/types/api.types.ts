@@ -57,7 +57,14 @@ export interface MasterItem {
 
 export interface AppointmentSlotItem {
   _id: string;
+  /** Window start, e.g. "09:00 AM" */
   time: string;
+  /** Window end, e.g. "09:30 AM" */
+  endTime?: string;
+  /** Display label e.g. "09:00 AM – 09:30 AM" */
+  label?: string;
+  /** Max appointments allowed for this slot per doctor per day */
+  maxAppointments?: number;
   active?: boolean;
 }
 
@@ -120,6 +127,8 @@ export interface HmsPatient {
   mobile: string;
   age: number;
   gender?: string;
+  bloodGroup?: string;
+  address?: string;
   prakritiId: string | null;
   prakritiName: string | null;
   prakriti: string | null;
@@ -187,6 +196,7 @@ export interface HmsAppointment {
   doctor?: string;
   appointmentType: string;
   type: string;
+  consultationMode?: 'Offline' | 'Online';
   date: string;
   dateDisplay?: string;
   time: string;

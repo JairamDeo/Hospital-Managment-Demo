@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Download, Eye, FileText, Loader2, MessageCircle, Plus } from 'lucide-react';
+import { ContentLoader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { prescriptionPath } from '@/constants/routes';
@@ -97,12 +98,7 @@ export const PatientPrescriptionsTab = ({
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-soft">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading prescriptions…
-      </div>
-    );
+    return <ContentLoader size="md" className="min-h-[200px]" />;
   }
 
   return (
@@ -178,19 +174,23 @@ export const PatientPrescriptionsTab = ({
                     type="button"
                     disabled={pdfLoading === `${rx.prescriptionCode}-staff`}
                     onClick={() => void openPdf(rx.prescriptionCode, 'staff')}
-                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
+                    className="group relative cursor-pointer rounded-lg p-2 text-ink hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
                     title="View PDF (staff)"
+                    aria-label="View PDF staff"
                   >
-                    <Eye className="h-4 w-4" strokeWidth={1.75} />
+                    <Eye className="h-4 w-4" strokeWidth={2.5} />
+                    <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-[10px] font-semibold text-white group-hover:block">
+                      View PDF · Staff
+                    </span>
                   </button>
                   <button
                     type="button"
                     disabled={pdfLoading === `${rx.prescriptionCode}-patient`}
                     onClick={() => void openPdf(rx.prescriptionCode, 'patient', true)}
-                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
+                    className="cursor-pointer rounded-lg p-2 text-ink hover:bg-sage-mist hover:text-sage-deep disabled:opacity-50"
                     title="Download PDF"
                   >
-                    <Download className="h-4 w-4" strokeWidth={1.75} />
+                    <Download className="h-4 w-4" strokeWidth={2.5} />
                   </button>
                   <button
                     type="button"
@@ -199,7 +199,7 @@ export const PatientPrescriptionsTab = ({
                     className={`rounded-lg p-2 disabled:opacity-50 ${
                       waAlreadySent
                         ? 'cursor-not-allowed bg-emerald-50 text-emerald-600'
-                        : 'cursor-pointer text-ink-ghost hover:bg-emerald-50 hover:text-emerald-700'
+                        : 'cursor-pointer text-ink hover:bg-emerald-50 hover:text-emerald-700'
                     }`}
                     title={
                       waAlreadySent
@@ -208,11 +208,11 @@ export const PatientPrescriptionsTab = ({
                     }
                   >
                     {waLoading === rx.prescriptionCode ? (
-                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} />
+                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
                     ) : waAlreadySent ? (
-                      <Check className="h-4 w-4" strokeWidth={2} />
+                      <Check className="h-4 w-4" strokeWidth={2.5} />
                     ) : (
-                      <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
+                      <MessageCircle className="h-4 w-4" strokeWidth={2.5} />
                     )}
                   </button>
                 </div>

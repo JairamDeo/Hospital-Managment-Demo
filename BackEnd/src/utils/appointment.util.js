@@ -1,5 +1,6 @@
 import moment from 'moment';
 import HmsAppointment from '../models/hmsAppointment.model.js';
+import AppointmentSlotMaster from '../models/appointmentSlotMaster.model.js';
 
 export const APPOINTMENT_TIME_SLOTS = [
   '09:00',
@@ -23,12 +24,13 @@ export const APPOINTMENT_TIME_SLOTS = [
 ];
 
 export const APPOINTMENT_TYPES = [
-  'General Consult',
   'Panchakarma',
   'Follow-up',
   'Diet Consult',
   'Shodhana',
 ];
+
+export const CONSULTATION_MODES = ['Offline', 'Online'];
 
 export const normalizeAppointmentDate = (dateInput) => {
   const parsed = moment.utc(dateInput, ['YYYY-MM-DD', moment.ISO_8601], true);
@@ -48,9 +50,15 @@ export const formatTimeDisplay = (time24) => {
   return parsed.format('h:mm A');
 };
 
-/** Combine UTC-stored appointment date with HH:mm slot (local wall-clock). */
+/** Combine UTC-stored appointment date with slot time (supports HH:mm and hh:mm A). */
 export const combineAppointmentDateTime = (date, timeSlot) => {
   const dateStr = moment.utc(date).format('YYYY-MM-DD');
+  const parsed = moment(
+    `${dateStr} ${timeSlot}`,
+    ['YYYY-MM-DD HH:mm', 'YYYY-MM-DD hh:mm A', 'YYYY-MM-DD h:mm A'],
+    true
+  );
+  if (parsed.isValid()) return parsed;
   return moment(`${dateStr} ${timeSlot}`, 'YYYY-MM-DD HH:mm');
 };
 
@@ -65,6 +73,15 @@ export const assertValidTimeSlot = (timeSlot) => {
   }
 };
 
+export const getSlotMaxAppointments = async (timeSlot) => {
+  const slot = await AppointmentSlotMaster.findOne({
+    time: new RegExp(`^${String(timeSlot).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+  })
+    .select('maxAppointments')
+    .lean();
+  return Math.max(1, Number(slot?.maxAppointments) || 1);
+};
+
 export const findDoctorSlotConflict = async ({ staffCode, date, timeSlot, excludeId }) => {
   const appointmentDate = normalizeAppointmentDate(date);
   const query = {
@@ -74,5 +91,14 @@ export const findDoctorSlotConflict = async ({ staffCode, date, timeSlot, exclud
     status: { $ne: 'Cancelled' },
   };
   if (excludeId) query._id = { $ne: excludeId };
-  return HmsAppointment.findOne(query).lean();
+
+  const [count, maxAppointments] = await Promise.all([
+    HmsAppointment.countDocuments(query),
+    getSlotMaxAppointments(timeSlot),
+  ]);
+
+  if (count >= maxAppointments) {
+    return { full: true, count, maxAppointments };
+  }
+  return null;
 };

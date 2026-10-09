@@ -92,12 +92,12 @@ const parseNum = (value) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
-/** Height in cm, weight in kg */
+/** Height stored in cm, weight in kg */
 export const computeBmi = (height, weight) => {
   const h = parseNum(height);
   const w = parseNum(weight);
   if (!h || !w) return '';
-  const heightM = h > 3 ? h / 100 : h;
+  const heightM = h / 100;
   if (heightM <= 0) return '';
   const bmi = w / (heightM * heightM);
   return bmi > 0 ? bmi.toFixed(1) : '';

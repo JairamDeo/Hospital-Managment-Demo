@@ -16,6 +16,7 @@ import hmsBillingRoutes from './admin/routes/hmsBilling.routes.js';
 import { postRazorpayWebhook } from './admin/controllers/hmsBilling.controller.js';
 import hmsIpdRoutes from './admin/routes/hmsIpd.routes.js';
 import hmsLabRoutes from './admin/routes/hmsLab.routes.js';
+import clinicSettingsRoutes from './admin/routes/clinicSettings.routes.js';
 import connectDB from './config/db.js';
 import { customResponse } from './utils/response.js';
 import { logger } from './utils/logger.js';
@@ -91,6 +92,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/patient', patientRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/clinic-settings', clinicSettingsRoutes);
 app.use('/api/admin/patients', hmsPatientRoutes);
 app.use('/api/admin/staff', hmsStaffRoutes);
 app.use('/api/admin/appointments', hmsAppointmentRoutes);

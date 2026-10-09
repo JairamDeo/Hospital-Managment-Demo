@@ -5,6 +5,8 @@ import {
   createAppointmentSchema,
   availabilityQuerySchema,
   attendAppointmentSchema,
+  cancelAppointmentSchema,
+  rescheduleAppointmentSchema,
 } from '../validators/hmsAppointment.validator.js';
 import {
   getAppointments,
@@ -15,6 +17,8 @@ import {
   getDoctorsForBooking,
   getAppointment,
   patchAttendAppointment,
+  patchCancelAppointment,
+  patchRescheduleAppointment,
 } from '../controllers/hmsAppointment.controller.js';
 
 const router = Router();
@@ -31,6 +35,16 @@ router.patch(
   '/:appointmentCode/attend',
   validateRequest(attendAppointmentSchema),
   patchAttendAppointment
+);
+router.patch(
+  '/:appointmentCode/cancel',
+  validateRequest(cancelAppointmentSchema),
+  patchCancelAppointment
+);
+router.patch(
+  '/:appointmentCode/reschedule',
+  validateRequest(rescheduleAppointmentSchema),
+  patchRescheduleAppointment
 );
 router.get('/:appointmentCode', getAppointment);
 

@@ -11,6 +11,7 @@ import type { StaffAssignment } from './data/mockStaffDetails';
 import { AddStaffModal } from '@/components/modals/AddStaffModal';
 import { StaffProfileCard } from '@/components/staff/detail/StaffProfileCard';
 import { StaffDetailTabs } from '@/components/staff/detail/StaffDetailTabs';
+import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROUTES } from '@/constants/routes';
@@ -128,11 +129,7 @@ export const StaffDetailPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto w-full max-w-[1280px] py-16 text-center text-sm text-ink-soft">
-        Loading staff profile…
-      </div>
-    );
+    return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
 
   if (!staff) {

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { PanelLeftOpen } from 'lucide-react';
 import { PatientProfileCard } from '@/components/patients/detail/PatientProfileCard';
 import { PatientVitalsRow } from '@/components/patients/detail/PatientVitalsCard';
 import { PatientActiveTreatmentCard } from '@/components/patients/detail/PatientActiveTreatmentCard';
 import { PatientDetailTabs } from '@/components/patients/detail/PatientDetailTabs';
 import { AddVitalsModal } from '@/components/patients/detail/AddVitalsModal';
 import { AiConsultationModal } from '@/components/patients/detail/AiConsultationModal';
+import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { buildPatientDetail } from '@/utils/buildPatientDetail';
@@ -26,6 +28,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 export const PatientDetailPage = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { showToast } = useToast();
   const { isAdmin, canEdit, staffRole, canCreatePrescription, canView } = usePermissions();
   const canManageVisits =
@@ -43,6 +46,13 @@ export const PatientDetailPage = () => {
   const [profileEditing, setProfileEditing] = useState(false);
   const [profileForm, setProfileForm] = useState<PatientProfileFormValues | null>(null);
   const [activeTab, setActiveTab] = useState<PatientDetailTab>('patient-info');
+  const [profileOpen, setProfileOpen] = useState(() => {
+    try {
+      return localStorage.getItem('hms.patientProfileOpen') !== '0';
+    } catch {
+      return true;
+    }
+  });
   const [prakritiMasters, setPrakritiMasters] = useState<MasterItem[]>([]);
   const [treatmentMasters, setTreatmentMasters] = useState<MasterItem[]>([]);
   const [prescriptions, setPrescriptions] = useState<StructuredPrescription[]>([]);
@@ -154,9 +164,21 @@ export const PatientDetailPage = () => {
   }, [load]);
 
   useEffect(() => {
-    const tab = (location.state as { activeTab?: PatientDetailTab } | null)?.activeTab;
-    if (tab) setActiveTab(tab);
-  }, [location.state]);
+    const fromState = (location.state as { activeTab?: PatientDetailTab } | null)?.activeTab;
+    const fromQuery = searchParams.get('tab') as PatientDetailTab | null;
+    const validTabs: PatientDetailTab[] = [
+      'patient-info',
+      'history',
+      'appointments',
+      'prescriptions',
+      'panchakarma',
+      'labs',
+      'billing',
+      'documents',
+    ];
+    const tab = fromState || fromQuery;
+    if (tab && validTabs.includes(tab)) setActiveTab(tab);
+  }, [location.state, searchParams]);
 
   useEffect(() => {
     if (activeTab !== 'history' || !patientId) return;
@@ -270,8 +292,17 @@ export const PatientDetailPage = () => {
     return <Navigate to={ROUTES.ADMIN_PATIENTS} replace />;
   }
 
+  const setProfilePanelOpen = (open: boolean) => {
+    setProfileOpen(open);
+    try {
+      localStorage.setItem('hms.patientProfileOpen', open ? '1' : '0');
+    } catch {
+      /* ignore */
+    }
+  };
+
   if (loading) {
-    return <p className="text-sm text-ink-soft">Loading patient…</p>;
+    return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
 
   if (!patient || !profileForm) {
@@ -281,44 +312,55 @@ export const PatientDetailPage = () => {
   return (
     <div className="mx-auto w-full max-w-[1280px] pb-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-        <aside className="flex w-full min-w-0 shrink-0 flex-col gap-4 lg:w-[min(100%,320px)] lg:max-w-[320px]">
-          <PatientProfileCard
-            patient={patient}
-            editing={profileEditing}
-            saving={savingProfile}
-            profileForm={profileForm}
-            prakritiMasters={prakritiMasters.filter((m) => m.active !== false)}
-            treatmentMasters={treatmentMasters.filter((m) => m.active !== false)}
-            onProfileFormChange={setProfileForm}
-            onBookAppt={() => showToast('Appointment booking — coming soon', 'success')}
-            onAiSummary={() => setAiSummaryOpen(true)}
-            onStartEdit={startProfileEdit}
-            onCancelEdit={cancelProfileEdit}
-            onSaveProfile={handleSaveProfile}
-          />
-          {patient.activeTreatment ? (
-            <PatientActiveTreatmentCard treatment={patient.activeTreatment} />
-          ) : null}
-          <div className="hidden lg:block">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                Current Vitals
-              </h3>
-              {canRecordVitals ? (
-                <button
-                  type="button"
-                  onClick={() => setVitalsOpen(true)}
-                  className="text-[11px] font-semibold text-sage-deep hover:underline"
-                >
-                  Add vitals
-                </button>
-              ) : null}
-            </div>
-            <PatientVitalsRow vitals={patient.vitals} layout="sidebar" />
-          </div>
-        </aside>
+        {profileOpen ? (
+          <aside className="flex w-full min-w-0 shrink-0 flex-col gap-4 lg:sticky lg:top-4 lg:w-[min(100%,300px)] lg:max-w-[300px]">
+            <PatientProfileCard
+              patient={patient}
+              editing={profileEditing}
+              saving={savingProfile}
+              profileForm={profileForm}
+              treatmentMasters={treatmentMasters.filter((m) => m.active !== false)}
+              onProfileFormChange={setProfileForm}
+              onBookAppt={() => showToast('Appointment booking — coming soon', 'success')}
+              onAiSummary={() => setAiSummaryOpen(true)}
+              onStartEdit={startProfileEdit}
+              onCancelEdit={cancelProfileEdit}
+              onSaveProfile={handleSaveProfile}
+              onCollapse={() => setProfilePanelOpen(false)}
+            />
+            {patient.activeTreatment ? (
+              <PatientActiveTreatmentCard treatment={patient.activeTreatment} />
+            ) : null}
+          </aside>
+        ) : (
+          <aside className="flex w-full shrink-0 flex-row items-center gap-2 lg:w-auto lg:flex-col">
+            <button
+              type="button"
+              onClick={() => setProfilePanelOpen(true)}
+              className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-border-sage bg-white px-3 py-2.5 text-sm font-semibold text-sage-deep shadow-sm hover:bg-sage-mist/50 lg:flex-col lg:px-2.5 lg:py-3"
+              title="Open patient panel"
+              aria-label="Open patient panel"
+            >
+              <span
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold ${patient.avatarClass}`}
+              >
+                {patient.initials}
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs lg:flex-col">
+                <PanelLeftOpen className="h-4 w-4" strokeWidth={2.25} />
+                <span className="lg:hidden">Open profile</span>
+              </span>
+            </button>
+          </aside>
+        )}
 
         <section className="flex min-w-0 flex-1 flex-col gap-5">
+          <PatientVitalsRow
+            vitals={patient.vitals}
+            canAdd={canRecordVitals}
+            onAdd={() => setVitalsOpen(true)}
+          />
+
           <PatientDetailTabs
             patient={patient}
             activeTab={activeTab}
@@ -356,24 +398,6 @@ export const PatientDetailPage = () => {
             canRecordVitals={canRecordVitals}
             onAddVitals={() => setVitalsOpen(true)}
           />
-
-          <div className="lg:hidden">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-                Current Vitals
-              </h3>
-              {canRecordVitals ? (
-                <button
-                  type="button"
-                  onClick={() => setVitalsOpen(true)}
-                  className="text-[11px] font-semibold text-sage-deep hover:underline"
-                >
-                  Add vitals
-                </button>
-              ) : null}
-            </div>
-            <PatientVitalsRow vitals={patient.vitals} />
-          </div>
         </section>
       </div>
 

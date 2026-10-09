@@ -8,7 +8,8 @@ import type { StaffAssignment } from '@/pages/staff/data/mockStaffDetails';
 export const emptyAppointmentForm = (): AppointmentFormValues => ({
   patientId: '',
   staffCode: '',
-  type: 'General Consult',
+  type: 'Diet Consult',
+  consultationMode: 'Offline',
   date: new Date().toISOString().slice(0, 10),
   time: '10:30',
   notes: '',
@@ -23,6 +24,7 @@ export const hmsToAppointment = (a: HmsAppointment): Appointment => ({
   staffCode: a.staffCode,
   doctorName: a.doctorName ?? a.doctor ?? '',
   type: (a.appointmentType ?? a.type) as AppointmentType,
+  consultationMode: (a.consultationMode as Appointment['consultationMode']) || 'Offline',
   date: (a.date ?? '').slice(0, 10),
   time: a.timeSlot ?? a.time,
   status: (a.adminStatus ?? 'Soon') as Appointment['status'],

@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom';
-import { CalendarCheck, Eye, Leaf } from 'lucide-react';
+import { CalendarCheck, CalendarClock, Eye, Leaf, XCircle } from 'lucide-react';
 import { appointmentFollowUpPath, patientDetailPath } from '@/constants/routes';
 import type { Appointment, AppointmentStatus } from '@/types/appointment.types';
 
 interface Props {
   appointment: Appointment;
   canAttend?: boolean;
+  canManage?: boolean;
   canSchedulePanchakarma?: boolean;
   onSchedulePanchakarma?: (appointment: Appointment) => void;
+  onReschedule?: (appointment: Appointment) => void;
+  onCancel?: (appointment: Appointment) => void;
 }
 
 const statusStyles: Record<AppointmentStatus, string> = {
@@ -27,17 +30,26 @@ const statusLabels: Record<AppointmentStatus, string> = {
 export const ScheduleListItem = ({
   appointment,
   canAttend = false,
+  canManage = false,
   canSchedulePanchakarma = false,
   onSchedulePanchakarma,
+  onReschedule,
+  onCancel,
 }: Props) => {
   const { clock, period } = parseTime(appointment.time);
   const isCheckedIn = appointment.status === 'In';
   const showAttend =
     canAttend && (appointment.status === 'Soon' || appointment.status === 'In');
+  const showManageActions =
+    canManage && (appointment.status === 'Soon' || appointment.status === 'In');
   const showPanchakarma =
     canSchedulePanchakarma &&
     appointment.status !== 'Cancelled' &&
     onSchedulePanchakarma;
+
+  const modeLabel = appointment.consultationMode || 'Offline';
+  const typeLabel =
+    appointment.type === 'General Consult' ? modeLabel : `${appointment.type} · ${modeLabel}`;
 
   return (
     <div
@@ -67,7 +79,7 @@ export const ScheduleListItem = ({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-ink">{appointment.patientName}</p>
         <p className="truncate text-[10px] text-ink-soft">
-          {appointment.type} · {appointment.id}
+          {typeLabel} · {appointment.id}
         </p>
       </div>
 
@@ -77,13 +89,13 @@ export const ScheduleListItem = ({
         {statusLabels[appointment.status]}
       </span>
 
-      <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
+      <div className="flex shrink-0 flex-wrap justify-end gap-1">
         <Link
           to={patientDetailPath(appointment.patientId)}
           state={{ activeTab: 'appointments' as const }}
           className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg border border-border-sage bg-white px-2 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist/60 hover:text-ink"
         >
-          <Eye className="h-3 w-3" />
+          <Eye className="h-3 w-3" strokeWidth={2.5} />
           View
         </Link>
         {showAttend ? (
@@ -91,9 +103,29 @@ export const ScheduleListItem = ({
             to={appointmentFollowUpPath(appointment.id)}
             className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg bg-sage-deep px-2 py-1 text-[10px] font-semibold text-white hover:bg-sage-deep/90"
           >
-            <CalendarCheck className="h-3 w-3" />
+            <CalendarCheck className="h-3 w-3" strokeWidth={2.5} />
             Attend
           </Link>
+        ) : null}
+        {showManageActions && onReschedule ? (
+          <button
+            type="button"
+            onClick={() => onReschedule(appointment)}
+            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg border border-border-sage bg-white px-2 py-1 text-[10px] font-semibold text-ink-soft hover:bg-sage-mist"
+          >
+            <CalendarClock className="h-3 w-3" strokeWidth={2.5} />
+            Reschedule
+          </button>
+        ) : null}
+        {showManageActions && onCancel ? (
+          <button
+            type="button"
+            onClick={() => onCancel(appointment)}
+            className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg border border-danger/30 bg-white px-2 py-1 text-[10px] font-semibold text-danger hover:bg-danger-bg"
+          >
+            <XCircle className="h-3 w-3" strokeWidth={2.5} />
+            Cancel
+          </button>
         ) : null}
         {showPanchakarma ? (
           <button
@@ -101,7 +133,7 @@ export const ScheduleListItem = ({
             onClick={() => onSchedulePanchakarma(appointment)}
             className="inline-flex cursor-pointer items-center justify-center gap-1 rounded-lg border border-sage-deep/40 bg-sage-mist/50 px-2 py-1 text-[10px] font-semibold text-sage-deep hover:bg-sage-mist"
           >
-            <Leaf className="h-3 w-3" />
+            <Leaf className="h-3 w-3" strokeWidth={2.5} />
             <span className="hidden min-[420px]:inline">Panchakarma</span>
             <span className="min-[420px]:hidden">PK</span>
           </button>
@@ -112,13 +144,15 @@ export const ScheduleListItem = ({
 };
 
 const parseTime = (time: string) => {
-  const [hStr, mStr] = time.split(':');
-  const h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  const period = h >= 12 ? 'PM' : 'AM';
-  const hour = h % 12 || 12;
+  const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+  if (!match) {
+    return { clock: time, period: '' };
+  }
+  const hour = parseInt(match[1], 10);
+  const minute = match[2];
+  const period = (match[3] || '').toUpperCase();
   return {
-    clock: `${hour}:${String(m).padStart(2, '0')}`,
+    clock: `${hour}:${minute}`,
     period,
   };
 };

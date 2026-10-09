@@ -13,6 +13,7 @@ export interface PatientBookAppointmentPayload {
   timeSlot: string;
   notes?: string;
   appointmentType?: string;
+  consultationMode?: 'Offline' | 'Online';
 }
 
 export interface VerifyAppointmentPaymentPayload {

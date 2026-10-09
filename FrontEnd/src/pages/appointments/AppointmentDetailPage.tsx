@@ -4,6 +4,7 @@ import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
 import { AppointmentProfileCard } from '@/components/appointments/detail/AppointmentProfileCard';
 import { AppointmentDetailTabs } from '@/components/appointments/detail/AppointmentDetailTabs';
 import { AppointmentVisitSummaryRow } from '@/components/appointments/detail/AppointmentVisitSummaryRow';
+import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ROUTES } from '@/constants/routes';
@@ -62,11 +63,7 @@ export const AppointmentDetailPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto w-full max-w-[1280px] py-16 text-center text-sm text-ink-soft">
-        Loading appointment…
-      </div>
-    );
+    return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
 
   if (!appointment) {

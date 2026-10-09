@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   AlertTriangle,
   Leaf,
-  Loader2,
   Plus,
   Siren,
   Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { AddPharmacyItemModal } from '@/components/modals/AddPharmacyItemModal';
 import { ImportPharmacyModal } from '@/components/modals/ImportPharmacyModal';
 import { ExportPharmacyMenu } from '@/components/pharmacy/ExportPharmacyMenu';
@@ -325,10 +325,7 @@ export const PharmacyPage = () => {
           </div>
           <div className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-soft">
-                <Loader2 className="h-5 w-5 animate-spin text-sage-deep" />
-                Loading inventory…
-              </div>
+              <ContentLoader size="md" className="min-h-[240px]" />
             ) : (
               <InventoryTable items={items} />
             )}

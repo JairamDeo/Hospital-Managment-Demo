@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ContentLoader } from '@/components/ui/Loader';
 import type {
   IpdDailyTreatmentRecord,
   IpdTreatmentHistoryItem,
@@ -141,7 +142,7 @@ export const PatientTreatmentHistoryTab = ({ history, loading }: Props) => {
   const [mode, setMode] = useState<HistoryMode>('opd');
 
   if (loading) {
-    return <p className="py-10 text-center text-sm text-ink-soft">Loading treatment history…</p>;
+    return <ContentLoader size="md" className="min-h-[200px]" />;
   }
 
   if (!history) {

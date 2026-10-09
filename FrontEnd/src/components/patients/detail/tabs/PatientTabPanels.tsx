@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Download, Eye, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ContentLoader } from '@/components/ui/Loader';
 import { invoiceDetailPath } from '@/constants/routes';
 import { labAdminService } from '@/services/lab/labAdmin.service';
 import type { PatientDocument, LabReport, PatientInvoice } from '@/types/patientDetail.types';
@@ -75,7 +76,7 @@ export const PatientLabReportsTab = ({
   }, [patientCode]);
 
   if (loading && reports.length === 0) {
-    return <p className="py-6 text-sm text-ink-soft">Loading lab reports…</p>;
+    return <ContentLoader size="sm" className="min-h-[160px]" />;
   }
 
   if (!reports.length) {

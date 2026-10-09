@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { CalendarPlus, DoorOpen, FlaskConical, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { formLabelClass, formSelectClass } from '@/components/ui/formStyles';
@@ -17,7 +18,17 @@ type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room' | 'lab' | 'appoin
 
 import { Trash2 } from 'lucide-react';
 
-const MasterCard = ({ item, isTime = false, onDelete }: { item: MasterItem | AppointmentSlotItem, isTime?: boolean, onDelete?: (id: string) => void }) => (
+const MasterCard = ({
+  item,
+  isTime = false,
+  onDelete,
+  onEditSlot,
+}: {
+  item: MasterItem | AppointmentSlotItem;
+  isTime?: boolean;
+  onDelete?: (id: string) => void;
+  onEditSlot?: (item: AppointmentSlotItem) => void;
+}) => (
   <div
     className={`rounded-xl border p-4 shadow-sm transition-colors ${
       item.active
@@ -25,24 +36,62 @@ const MasterCard = ({ item, isTime = false, onDelete }: { item: MasterItem | App
         : 'border-border-sage/60 bg-cream/40 opacity-70'
     }`}
   >
-    <div className="flex justify-between items-start">
-      <div>
-        {('code' in item) ? <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{item.code}</p> : null}
-        <p className="mt-1 font-serif text-lg font-semibold text-ink">{isTime ? (item as AppointmentSlotItem).time : (item as MasterItem).name}</p>
+    <div className="flex justify-between items-start gap-2">
+      <div className="min-w-0">
+        {'code' in item ? (
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{item.code}</p>
+        ) : null}
+        <p className="mt-1 font-serif text-lg font-semibold text-ink">
+          {isTime
+            ? (item as AppointmentSlotItem).label ||
+              ((item as AppointmentSlotItem).endTime
+                ? `${(item as AppointmentSlotItem).time} – ${(item as AppointmentSlotItem).endTime}`
+                : (item as AppointmentSlotItem).time)
+            : (item as MasterItem).name}
+        </p>
+        {isTime ? (
+          <p className="mt-1 text-xs text-ink-soft">
+            Max {(item as AppointmentSlotItem).maxAppointments ?? 1} appointment
+            {((item as AppointmentSlotItem).maxAppointments ?? 1) === 1 ? '' : 's'}/slot
+          </p>
+        ) : null}
         <p className="mt-2 text-xs text-ink-soft">{item.active ? 'Active' : 'Inactive'}</p>
       </div>
-      {isTime && onDelete && (
-        <button
-          onClick={() => onDelete(item._id)}
-          className="text-danger hover:bg-danger-bg p-1.5 rounded-md transition-colors"
-          title="Delete slot"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      )}
+      {isTime ? (
+        <div className="flex shrink-0 gap-1">
+          {onEditSlot ? (
+            <button
+              type="button"
+              onClick={() => onEditSlot(item as AppointmentSlotItem)}
+              className="rounded-md p-1.5 text-sage-deep hover:bg-sage-mist transition-colors"
+              title="Edit slot"
+            >
+              <Pencil className="h-4 w-4" />
+            </button>
+          ) : null}
+          {onDelete ? (
+            <button
+              type="button"
+              onClick={() => onDelete(item._id)}
+              className="rounded-md p-1.5 text-danger hover:bg-danger-bg transition-colors"
+              title="Delete slot"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   </div>
 );
+
+const emptySlotForm = () => ({
+  startTime: '09:00',
+  endTime: '17:00',
+  gapPreset: '30',
+  customGap: '30',
+  maxAppointments: '1',
+});
 
 const RoomCard = ({
   item,
@@ -152,9 +201,13 @@ export const MasterDataPage = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [editRoomOpen, setEditRoomOpen] = useState(false);
   const [editingRoomId, setEditingRoomId] = useState('');
+  const [editSlotOpen, setEditSlotOpen] = useState(false);
+  const [editingSlotId, setEditingSlotId] = useState('');
+  const [editSlotMax, setEditSlotMax] = useState('1');
   const [name, setName] = useState('');
   const [grams, setGrams] = useState('');
   const [roomForm, setRoomForm] = useState(emptyRoomForm());
+  const [slotForm, setSlotForm] = useState(emptySlotForm());
   const [saving, setSaving] = useState(false);
   const [settingDefaultId, setSettingDefaultId] = useState('');
   const [busyRoomId, setBusyRoomId] = useState('');
@@ -190,6 +243,40 @@ export const MasterDataPage = () => {
     setName('');
     setGrams('');
     setRoomForm(emptyRoomForm());
+    setSlotForm(emptySlotForm());
+  };
+
+  const openEditSlot = (item: AppointmentSlotItem) => {
+    setEditingSlotId(item._id);
+    setEditSlotMax(String(item.maxAppointments ?? 1));
+    setEditSlotOpen(true);
+  };
+
+  const handleSaveSlotEdit = async () => {
+    if (!editingSlotId) return;
+    const max = Number(editSlotMax);
+    if (!Number.isFinite(max) || max < 1 || max > 100) {
+      showToast('Max appointments must be between 1 and 100', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data } = await masterService.updateAppointmentSlot(editingSlotId, {
+        maxAppointments: max,
+      });
+      if (data.res?.item) {
+        setAppointmentSlots((prev) =>
+          prev.map((s) => (s._id === editingSlotId ? data.res!.item : s))
+        );
+      }
+      showToast(data.message || 'Slot updated', 'success');
+      setEditSlotOpen(false);
+      setEditingSlotId('');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const openEditRoom = (item: RoomMasterItem) => {
@@ -278,6 +365,24 @@ export const MasterDataPage = () => {
     const trimmed = name.trim();
     if (tab === 'room') {
       if (!validateRoomForm()) return;
+    } else if (tab === 'appointmentSlot') {
+      if (!slotForm.startTime || !slotForm.endTime) {
+        showToast('Start and end time are required', 'error');
+        return;
+      }
+      const gap =
+        slotForm.gapPreset === 'custom'
+          ? Number(slotForm.customGap)
+          : Number(slotForm.gapPreset);
+      const max = Number(slotForm.maxAppointments);
+      if (!Number.isFinite(gap) || gap < 5) {
+        showToast('Gap must be at least 5 minutes', 'error');
+        return;
+      }
+      if (!Number.isFinite(max) || max < 1 || max > 100) {
+        showToast('Max appointments must be between 1 and 100', 'error');
+        return;
+      }
     } else if (!trimmed) {
       showToast('Name is required', 'error');
       return;
@@ -301,15 +406,27 @@ export const MasterDataPage = () => {
         if (data.res?.item) setRooms((prev) => [...prev, data.res!.item]);
         showToast(data.message || 'Room created', 'success');
       } else if (tab === 'appointmentSlot') {
-        const [hh, mm] = trimmed.split(':');
-        const h = parseInt(hh, 10);
-        const suffix = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        const formattedTime = `${String(h12).padStart(2, '0')}:${mm} ${suffix}`;
-
-        const { data } = await masterService.createAppointmentSlot(formattedTime);
-        if (data.res?.item) setAppointmentSlots((prev) => [...prev, data.res!.item]);
-        showToast(data.message || 'Appointment slot created', 'success');
+        const gap =
+          slotForm.gapPreset === 'custom'
+            ? Number(slotForm.customGap)
+            : Number(slotForm.gapPreset);
+        const { data } = await masterService.createAppointmentSlotsRange({
+          startTime: slotForm.startTime,
+          endTime: slotForm.endTime,
+          gapMinutes: gap,
+          maxAppointments: Number(slotForm.maxAppointments),
+        });
+        if (data.res?.items) setAppointmentSlots(data.res.items);
+        const created = data.res?.created?.length ?? 0;
+        const skipped = data.res?.skipped?.length ?? 0;
+        showToast(
+          created > 0
+            ? `Created ${created} slot(s)${skipped ? `, ${skipped} already existed` : ''}`
+            : skipped
+              ? `Updated capacity on ${skipped} existing slot(s)`
+              : data.message || 'Slots saved',
+          'success'
+        );
       } else if (tab === 'prakriti') {
         const { data } = await masterService.createPrakriti(trimmed);
         if (data.res?.item) setPrakriti((prev) => [...prev, data.res!.item]);
@@ -349,7 +466,7 @@ export const MasterDataPage = () => {
           ? 'e.g. 07:00 AM'
           : tab === 'prakriti'
             ? 'e.g. Vata'
-            : 'e.g. General Consult';
+            : 'e.g. Diet Consult';
 
   const tabs: { id: Tab; label: string; icon: typeof Leaf }[] = [
     { id: 'prakriti', label: 'Prakriti', icon: Leaf },
@@ -450,11 +567,17 @@ export const MasterDataPage = () => {
           Default spoon is used for all powder/churan billing. Mark one as default.
         </p>
       ) : null}
+      {tab === 'appointmentSlot' ? (
+        <p className="mb-3 text-xs text-ink-soft">
+          Add slots by time range (start–end + gap). Set max appointments per slot so multiple
+          bookings can share the same time when capacity allows.
+        </p>
+      ) : null}
 
       {tab === 'lab' ? (
         <LabMasterPanel />
       ) : loading ? (
-        <p className="text-sm text-ink-soft">Loading…</p>
+        <ContentLoader size="md" className="min-h-[240px]" />
       ) : tab === 'pharmacySpoon' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {pharmacySpoons.length === 0 ? (
@@ -502,6 +625,7 @@ export const MasterDataPage = () => {
                 key={item._id}
                 item={item}
                 isTime={tab === 'appointmentSlot'}
+                onEditSlot={tab === 'appointmentSlot' ? openEditSlot : undefined}
                 onDelete={
                   tab === 'appointmentSlot'
                     ? async (id) => {
@@ -529,15 +653,19 @@ export const MasterDataPage = () => {
           setCreateOpen(false);
           resetCreateModal();
         }}
-        title={`Add ${TAB_LABELS[tab]}`}
-        subtitle="Code will be generated automatically"
+        title={tab === 'appointmentSlot' ? 'Add slots by range' : `Add ${TAB_LABELS[tab]}`}
+        subtitle={
+          tab === 'appointmentSlot'
+            ? 'Generate slots between start and end with your chosen gap'
+            : 'Code will be generated automatically'
+        }
         footer={
           <>
             <Button variant="secondary" onClick={() => setCreateOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleCreate} isLoading={saving}>
-              Create
+              {tab === 'appointmentSlot' ? 'Generate slots' : 'Create'}
             </Button>
           </>
         }
@@ -545,23 +673,68 @@ export const MasterDataPage = () => {
         <div className="space-y-3">
           {tab === 'room' ? (
             roomFields
+          ) : tab === 'appointmentSlot' ? (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  label="Start time"
+                  type="time"
+                  value={slotForm.startTime}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, startTime: e.target.value }))}
+                />
+                <Input
+                  label="End time"
+                  type="time"
+                  value={slotForm.endTime}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, endTime: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className={formLabelClass}>Gap between slots</label>
+                <select
+                  className={formSelectClass}
+                  value={slotForm.gapPreset}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, gapPreset: e.target.value }))}
+                >
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="45">45 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              {slotForm.gapPreset === 'custom' ? (
+                <Input
+                  label="Custom gap (minutes)"
+                  type="number"
+                  min={5}
+                  max={240}
+                  value={slotForm.customGap}
+                  onChange={(e) => setSlotForm((f) => ({ ...f, customGap: e.target.value }))}
+                  placeholder="e.g. 20"
+                />
+              ) : null}
+              <Input
+                label="Max appointments per slot"
+                type="number"
+                min={1}
+                max={100}
+                value={slotForm.maxAppointments}
+                onChange={(e) => setSlotForm((f) => ({ ...f, maxAppointments: e.target.value }))}
+                placeholder="e.g. 1"
+              />
+              <p className="text-xs text-ink-ghost">
+                Example: 09:00–12:00 with 30 min gap → ranges 09:00–09:30, 09:30–10:00, 10:00–10:30…
+              </p>
+            </>
           ) : (
             <>
-              {tab === 'appointmentSlot' ? (
-                <Input
-                  label="Time"
-                  type="time"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              ) : (
-                <Input
-                  label="Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={placeholder}
-                />
-              )}
+              <Input
+                label="Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={placeholder}
+              />
               {tab === 'pharmacySpoon' ? (
                 <Input
                   label="Grams per spoon"
@@ -576,6 +749,35 @@ export const MasterDataPage = () => {
             </>
           )}
         </div>
+      </Modal>
+
+      <Modal
+        open={editSlotOpen}
+        onClose={() => {
+          setEditSlotOpen(false);
+          setEditingSlotId('');
+        }}
+        title="Edit slot capacity"
+        subtitle="How many appointments this time slot can hold per doctor per day"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setEditSlotOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void handleSaveSlotEdit()} isLoading={saving}>
+              Save
+            </Button>
+          </>
+        }
+      >
+        <Input
+          label="Max appointments per slot"
+          type="number"
+          min={1}
+          max={100}
+          value={editSlotMax}
+          onChange={(e) => setEditSlotMax(e.target.value)}
+        />
       </Modal>
 
       <Modal

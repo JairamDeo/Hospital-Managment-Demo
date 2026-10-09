@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { SettingsSidebar } from '@/components/settings/SettingsSidebar';
 import { SettingsSectionCard } from '@/components/settings/SettingsSectionCard';
 import { SettingsToggle } from '@/components/settings/SettingsToggle';
@@ -10,6 +10,7 @@ import { RbacSettingsPanel } from '@/components/settings/RbacSettingsPanel';
 import { useToast } from '@/hooks/useToast';
 import { formatDisplayName, getInitials } from '@/utils/helpers';
 import { ROUTES } from '@/constants/routes';
+import { clinicSettingsService } from '@/services/clinic/clinicSettings.service';
 import {
   DEFAULT_SETTINGS,
   SLOT_OPTIONS,
@@ -17,6 +18,14 @@ import {
   type AppSettings,
   type SettingsSectionId,
 } from './data/mockSettings';
+
+const previewPatientCode = (prefix: string) => {
+  const cleaned = prefix.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'AH';
+  const now = new Date();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const yy = String(now.getFullYear()).slice(-2);
+  return `${cleaned}-0001/${mm}-${yy}`;
+};
 
 const Field = ({
   label,
@@ -47,12 +56,80 @@ export const SettingsPage = () => {
   const displayName = formatDisplayName(user?.firstName, user?.lastName, user?.name);
   const initials = getInitials(user?.firstName, user?.lastName);
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await clinicSettingsService.get();
+        const row = res.data?.res?.settings;
+        if (cancelled || !row) return;
+        setSettings((s) => ({
+          ...s,
+          clinic: {
+            ...s.clinic,
+            name: row.name || s.clinic.name,
+            patientCodePrefix: row.patientCodePrefix || s.clinic.patientCodePrefix,
+          },
+        }));
+      } catch {
+        // Keep local defaults if API is unavailable
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
+
+  const patientCodePreview = useMemo(
+    () => previewPatientCode(settings.clinic.patientCodePrefix),
+    [settings.clinic.patientCodePrefix]
+  );
+
   const save = (section: string) => {
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
       showToast(`${section} settings saved`, 'success');
     }, 400);
+  };
+
+  const saveClinic = async () => {
+    setSaving(true);
+    try {
+      const res = await clinicSettingsService.update({
+        name: settings.clinic.name.trim(),
+        patientCodePrefix: settings.clinic.patientCodePrefix.trim(),
+        applyToExistingPatients: true,
+      });
+      const row = res.data?.res?.settings;
+      if (row) {
+        setSettings((s) => ({
+          ...s,
+          clinic: {
+            ...s.clinic,
+            name: row.name || s.clinic.name,
+            patientCodePrefix: row.patientCodePrefix || s.clinic.patientCodePrefix,
+          },
+        }));
+        const count = row.reassignedPatients ?? 0;
+        showToast(
+          count > 0
+            ? `Clinic settings saved. Updated ${count} existing patient code(s).`
+            : 'Clinic settings saved',
+          'success'
+        );
+      } else {
+        showToast('Clinic settings saved', 'success');
+      }
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        'Failed to save clinic settings';
+      showToast(msg, 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateClinic = <K extends keyof AppSettings['clinic']>(
@@ -100,8 +177,8 @@ export const SettingsPage = () => {
           {active === 'clinic' ? (
             <SettingsSectionCard
               title="Clinic Profile"
-              description="Hospital name, contact details and registration shown across the system."
-              onSave={() => save('Clinic')}
+              description="Hospital name, patient code format, and contact details shown across the system."
+              onSave={() => void saveClinic()}
               saving={saving}
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -111,6 +188,26 @@ export const SettingsPage = () => {
                     value={settings.clinic.name}
                     onChange={(e) => updateClinic('name', e.target.value)}
                   />
+                </Field>
+                <Field label="Patient Code Prefix">
+                  <input
+                    className={formInputClass}
+                    value={settings.clinic.patientCodePrefix}
+                    maxLength={8}
+                    placeholder="AH"
+                    onChange={(e) =>
+                      updateClinic(
+                        'patientCodePrefix',
+                        e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+                      )
+                    }
+                  />
+                  <p className="mt-1.5 text-xs text-ink-soft">
+                    Format: <span className="font-medium text-ink">{'{PREFIX}-0001/MM-YY'}</span>
+                    {' · '}
+                    Preview: <span className="font-medium text-sage-deep">{patientCodePreview}</span>
+                    . Saving also updates existing patients.
+                  </p>
                 </Field>
                 <Field label="Tagline">
                   <input

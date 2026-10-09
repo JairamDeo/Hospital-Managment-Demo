@@ -1,7 +1,13 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middleware/validateRequest.js';
 import { portalAuth } from '../../middleware/portalAuthMiddleware.js';
-import { masterNameSchema, masterUpdateSchema, masterTimeSchema, masterTimeUpdateSchema } from '../validators/hmsPatient.validator.js';
+import {
+  masterNameSchema,
+  masterUpdateSchema,
+  masterTimeSchema,
+  masterTimeRangeSchema,
+  masterTimeUpdateSchema,
+} from '../validators/hmsPatient.validator.js';
 import {
   getPrakritiList,
   postPrakriti,
@@ -30,6 +36,7 @@ import {
   patchLabTest,
   getAppointmentSlotList,
   postAppointmentSlot,
+  postAppointmentSlotRange,
   patchAppointmentSlot,
   deleteAppointmentSlot,
 } from '../controllers/master.controller.js';
@@ -83,6 +90,11 @@ router.patch('/lab-tests/:id', validateRequest(updateLabTestSchema), patchLabTes
 
 router.get('/appointment-slots', getAppointmentSlotList);
 router.post('/appointment-slots', validateRequest(masterTimeSchema), postAppointmentSlot);
+router.post(
+  '/appointment-slots/range',
+  validateRequest(masterTimeRangeSchema),
+  postAppointmentSlotRange
+);
 router.patch('/appointment-slots/:id', validateRequest(masterTimeUpdateSchema), patchAppointmentSlot);
 router.delete('/appointment-slots/:id', deleteAppointmentSlot);
 

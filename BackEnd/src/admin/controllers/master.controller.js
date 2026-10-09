@@ -28,8 +28,10 @@ import {
   updateLabTest,
   listAppointmentSlots,
   createAppointmentSlot,
+  createAppointmentSlotsRange,
   updateAppointmentSlot,
   destroyAppointmentSlot,
+  ensureSlotMaxAppointments,
 } from '../services/master.service.js';
 
 export const getPrakritiList = async (_req, res) => {
@@ -325,6 +327,7 @@ export const patchLabTest = async (req, res) => {
 
 export const getAppointmentSlotList = async (_req, res) => {
   try {
+    await ensureSlotMaxAppointments();
     const items = await listAppointmentSlots(false);
     return customResponse(res, 'Appointment slot list fetched successfully', 200, { items });
   } catch {
@@ -334,11 +337,31 @@ export const getAppointmentSlotList = async (_req, res) => {
 
 export const postAppointmentSlot = async (req, res) => {
   try {
-    const item = await createAppointmentSlot(req.body.time);
+    const item = await createAppointmentSlot(req.body.time, req.body.maxAppointments);
     return customResponse(res, 'Appointment slot created successfully', 201, { item });
   } catch (error) {
     if (error.message === 'Appointment slot already exists') {
       return customResponse(res, error.message, 409);
+    }
+    if (error.message?.includes('Invalid')) {
+      return customResponse(res, error.message, 400);
+    }
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postAppointmentSlotRange = async (req, res) => {
+  try {
+    const result = await createAppointmentSlotsRange(req.body);
+    return customResponse(res, 'Appointment slots created from range', 201, result);
+  } catch (error) {
+    if (
+      error.message?.includes('Invalid') ||
+      error.message?.includes('Gap') ||
+      error.message?.includes('End time') ||
+      error.message?.includes('Too many')
+    ) {
+      return customResponse(res, error.message, 400);
     }
     return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
   }

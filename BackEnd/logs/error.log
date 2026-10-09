@@ -134,3 +134,6 @@ MongoServerSelectionError: getaddrinfo ENOTFOUND ac-iuuy7zw-shard-00-01.kpbnznd.
 2026-08-17 12:48:00 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:
 2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] Foxglove WhatsApp OTP failed: Invalid apikey
 2026-08-17 12:54:36 [error] [_stream_transform.js:166 - Transform._read] OTP email failed for patient1@gmail.com:
+2026-10-09 20:13:23 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-10-09 20:13:23 [error] [_stream_transform.js:166 - Transform._read] Invalid or expired token
+2026-10-09 21:53:02 [error] [_stream_transform.js:166 - Transform._read] Auto-cancel appointments job failed: PatientCareProfile validation failed: patientCode: Path `patientCode` is required.

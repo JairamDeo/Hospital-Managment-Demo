@@ -1,6 +1,5 @@
 import { Eye, SquarePen } from 'lucide-react';
 import type { Patient } from '@/types/patient.types';
-import { PrakritiBadge } from './PrakritiBadge';
 import { PatientStatusBadge } from './PatientStatusBadge';
 
 interface Props {
@@ -11,25 +10,23 @@ interface Props {
 
 export const PatientTable = ({ patients, onView, onEdit }: Props) => (
   <div className="overflow-x-auto">
-    <table className="w-full min-w-[800px] border-collapse">
+    <table className="w-full min-w-[640px] border-collapse">
       <thead>
         <tr className="border-b border-border-sage bg-cream/50">
-          {['Patient', 'Prakriti', 'Age', 'Last Visit', 'Treatment', 'Status', 'Actions'].map(
-            (col) => (
-              <th
-                key={col}
-                className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-ink-ghost"
-              >
-                {col}
-              </th>
-            )
-          )}
+          {['Patient', 'Age', 'Last Visit', 'Status', 'Actions'].map((col) => (
+            <th
+              key={col}
+              className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-ink-ghost"
+            >
+              {col}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody>
         {patients.length === 0 ? (
           <tr>
-            <td colSpan={7} className="px-4 py-12 text-center text-sm text-ink-soft">
+            <td colSpan={5} className="px-4 py-12 text-center text-sm text-ink-soft">
               No patients found
             </td>
           </tr>
@@ -52,12 +49,8 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
                   </div>
                 </div>
               </td>
-              <td className="px-4 py-3.5">
-                <PrakritiBadge prakriti={p.prakriti} />
-              </td>
               <td className="px-4 py-3.5 text-sm text-ink-soft">{p.age} yrs</td>
               <td className="px-4 py-3.5 text-sm text-ink-soft">{p.lastVisit}</td>
-              <td className="px-4 py-3.5 text-sm text-ink-soft">{p.treatment}</td>
               <td className="px-4 py-3.5">
                 <PatientStatusBadge status={p.status} />
               </td>

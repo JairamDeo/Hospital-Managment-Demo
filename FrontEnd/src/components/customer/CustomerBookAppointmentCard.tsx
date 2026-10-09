@@ -29,13 +29,14 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const [staffCode, setStaffCode] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [timeSlot, setTimeSlot] = useState('10:30');
+  const [consultationMode, setConsultationMode] = useState<'Offline' | 'Online'>('Offline');
   const [notes, setNotes] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastBooked, setLastBooked] = useState<HmsAppointment | null>(null);
   const [razorpayEnabled, setRazorpayEnabled] = useState(false);
-  const [allSlots, setAllSlots] = useState<string[]>([]);
+  const [allSlots, setAllSlots] = useState<Array<{ time: string; label: string }>>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const loadDoctorsAndMine = async () => {
@@ -47,7 +48,12 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
       ]);
       setDoctors(doctorsRes.data.res?.doctors ?? []);
       setRazorpayEnabled(Boolean(configRes?.data.res?.razorpay?.enabled));
-      setAllSlots(mastersRes.data.res?.appointmentSlots?.map(s => s.time) ?? []);
+      setAllSlots(
+        (mastersRes.data.res?.appointmentSlots ?? []).map((s) => ({
+          time: s.time,
+          label: s.label || (s.endTime ? `${s.time} – ${s.endTime}` : formatTimeLabel(s.time)),
+        }))
+      );
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     }
@@ -83,13 +89,13 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   }, [staffCode, date]);
 
   const availableSlots = useMemo(
-    () => allSlots.filter((slot) => !bookedSlots.includes(slot)),
+    () => allSlots.filter((slot) => !bookedSlots.includes(slot.time)),
     [allSlots, bookedSlots]
   );
 
   useEffect(() => {
-    if (!timeSlot || availableSlots.includes(timeSlot)) return;
-    setTimeSlot(availableSlots[0] ?? '');
+    if (!timeSlot || availableSlots.some((s) => s.time === timeSlot)) return;
+    setTimeSlot(availableSlots[0]?.time ?? '');
   }, [availableSlots, timeSlot]);
 
   const selectedDoctor = doctors.find((d) => d.staffCode === staffCode);
@@ -125,6 +131,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
         staffCode,
         date,
         timeSlot,
+        consultationMode,
         notes: notes.trim() || undefined,
       });
       if (data.status_code === 201) {
@@ -187,6 +194,18 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
             </select>
           </div>
 
+          <div>
+            <label className={formLabelClass}>Mode *</label>
+            <select
+              value={consultationMode}
+              onChange={(e) => setConsultationMode(e.target.value as 'Offline' | 'Online')}
+              className={formSelectClass}
+            >
+              <option value="Offline">Offline</option>
+              <option value="Online">Online</option>
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={formLabelClass}>Date *</label>
@@ -213,9 +232,9 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
                 ) : availableSlots.length === 0 ? (
                   <option value="">No slots available</option>
                 ) : (
-                  availableSlots.map((t) => (
-                    <option key={t} value={t}>
-                      {formatTimeLabel(t)}
+                  availableSlots.map((slot) => (
+                    <option key={slot.time} value={slot.time}>
+                      {slot.label}
                     </option>
                   ))
                 )}
@@ -287,7 +306,9 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
         <ConfirmActionModal
           open={confirmOpen}
           title="Confirm Appointment"
-          message={`Are you sure you want to book an appointment with ${selectedDoctor?.name || 'this doctor'} on ${date} at ${formatTimeLabel(timeSlot)}?`}
+          message={`Are you sure you want to book an appointment with ${selectedDoctor?.name || 'this doctor'} on ${date} at ${
+            allSlots.find((s) => s.time === timeSlot)?.label || formatTimeLabel(timeSlot)
+          }?`}
           confirmLabel="Yes, book now"
           onConfirm={() => void handleBook(false)}
           onClose={() => setConfirmOpen(false)}

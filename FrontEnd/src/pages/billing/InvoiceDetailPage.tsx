@@ -5,6 +5,7 @@ import { InvoicePaymentCard } from '@/components/billing/detail/InvoicePaymentCa
 import { InvoiceAmountRow } from '@/components/billing/detail/InvoiceAmountRow';
 import { InvoiceDetailTabs } from '@/components/billing/detail/InvoiceDetailTabs';
 import { CollectPaymentModal } from '@/components/billing/CollectPaymentModal';
+import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
 import { ROUTES } from '@/constants/routes';
 import { billingAdminService } from '@/services/billing/billingAdmin.service';
@@ -41,9 +42,7 @@ export const InvoiceDetailPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="py-16 text-center text-sm text-ink-soft">Loading invoice…</div>
-    );
+    return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
 
   if (!invoice) {

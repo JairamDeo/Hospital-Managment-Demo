@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardList, Search, Upload } from 'lucide-react';
 import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { Modal } from '@/components/ui/Modal';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { useToast } from '@/hooks/useToast';
@@ -278,7 +279,7 @@ export const LabPage = () => {
         </h2>
 
         {loading ? (
-          <p className="text-sm text-ink-soft">Loading…</p>
+          <ContentLoader size="md" className="min-h-[220px]" />
         ) : pageRows.length === 0 ? (
           <p className="text-sm text-ink-ghost">No matching lab requests.</p>
         ) : (

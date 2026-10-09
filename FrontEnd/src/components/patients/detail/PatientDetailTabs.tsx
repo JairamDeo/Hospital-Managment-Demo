@@ -139,8 +139,8 @@ export const PatientDetailTabs = ({
                 onClick={() => setActiveTab(tab.id)}
                 className={`inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all sm:px-3.5 sm:text-sm ${
                   active
-                    ? 'bg-white text-sage-deep shadow-sm ring-1 ring-border-sage/80'
-                    : 'text-ink-soft hover:bg-white/70 hover:text-ink'
+                    ? 'bg-sage-mist text-sage-deep ring-1 ring-border-sage/70'
+                    : 'text-ink-soft hover:bg-sage-mist/50 hover:text-ink'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
@@ -156,6 +156,7 @@ export const PatientDetailTabs = ({
           <>
             <PatientClinicalInfoPanel
               clinical={clinical.clinical}
+              patientGender={patient.gender}
               prakritiMasters={prakritiMasters}
               loading={clinical.clinicalLoading}
               saving={clinical.savingClinical}

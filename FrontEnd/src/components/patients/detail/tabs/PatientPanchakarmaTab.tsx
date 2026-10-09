@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, ClipboardCheck, Loader2, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, ClipboardCheck, Sparkles } from 'lucide-react';
+import { ContentLoader } from '@/components/ui/Loader';
 import { Button } from '@/components/ui/Button';
 import { AnimatedProgressBar } from '@/components/panchakarma/AnimatedProgressBar';
 import { ProgramStatusBadge } from '@/components/panchakarma/ProgramStatusBadge';
@@ -54,12 +55,7 @@ export const PatientPanchakarmaTab = ({ patientCode: _patientCode, programs, loa
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[200px] items-center justify-center text-sm text-ink-soft">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading panchakarma programs…
-      </div>
-    );
+    return <ContentLoader size="md" className="min-h-[200px]" />;
   }
 
   if (programs.length === 0) {

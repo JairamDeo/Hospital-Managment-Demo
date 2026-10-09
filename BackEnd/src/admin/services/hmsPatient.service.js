@@ -39,6 +39,9 @@ export const createPatientByAdmin = async (payload) => {
     email,
     mobileNumber,
     age: payload.age,
+    gender: payload.gender || 'Not recorded',
+    bloodGroup: payload.bloodGroup ? String(payload.bloodGroup).trim() : '',
+    address: payload.address ? String(payload.address).trim() : '',
     prakriti: payload.prakritiId || null,
     treatment: payload.treatmentId || null,
     lastVisit: payload.lastVisit ? new Date(payload.lastVisit) : new Date(),
@@ -70,6 +73,7 @@ export const updatePatientByAdmin = async (patientCode, payload, req) => {
   if (payload.age !== undefined) patient.age = payload.age;
   if (payload.gender !== undefined) patient.gender = payload.gender;
   if (payload.bloodGroup !== undefined) patient.bloodGroup = String(payload.bloodGroup).trim();
+  if (payload.address !== undefined) patient.address = String(payload.address).trim();
   if (payload.city !== undefined) patient.city = String(payload.city).trim() || 'India';
   if (payload.prakritiId !== undefined) patient.prakriti = payload.prakritiId || null;
   if (payload.treatmentId !== undefined) patient.treatment = payload.treatmentId;

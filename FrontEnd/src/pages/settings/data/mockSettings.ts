@@ -17,6 +17,8 @@ export interface ClinicSettings {
   email: string;
   registrationNo: string;
   timezone: string;
+  /** Short clinic prefix used in patient codes, e.g. AH → AH-0001/10-26 */
+  patientCodePrefix: string;
 }
 
 export interface AppointmentSettings {
@@ -75,6 +77,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     email: 'admin@ayurvedahealth.com',
     registrationNo: 'MH-AH-2019-0842',
     timezone: 'Asia/Kolkata (IST)',
+    patientCodePrefix: 'AH',
   },
   appointments: {
     openTime: '08:00',

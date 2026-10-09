@@ -2,13 +2,17 @@ export type PatientStatus = 'Active' | 'Pending' | 'Inactive';
 
 export interface PatientFormValues {
   name: string;
-  prakritiId: string;
   age: number | '';
+  gender: 'Male' | 'Female' | '';
+  bloodGroup: string;
+  address: string;
+  mobile: string;
+  email: string;
+  /** Kept for edit flows / legacy mapping */
+  prakritiId: string;
   lastVisit: string;
   treatmentId: string;
   status: PatientStatus;
-  mobile: string;
-  email: string;
 }
 
 /** Demographics editable from patient detail sidebar */

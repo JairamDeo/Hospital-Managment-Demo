@@ -89,14 +89,38 @@ const parseNum = (value: string) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
-export const computeBmi = (height: string, weight: string) => {
-  const h = parseNum(height);
-  const w = parseNum(weight);
+/** Height stored in cm, weight in kg */
+export const computeBmi = (heightCm: string, weightKg: string) => {
+  const h = parseNum(heightCm);
+  const w = parseNum(weightKg);
   if (!h || !w) return '';
-  const heightM = h > 3 ? h / 100 : h;
+  const heightM = h / 100;
   if (heightM <= 0) return '';
   const bmi = w / (heightM * heightM);
   return bmi > 0 ? bmi.toFixed(1) : '';
+};
+
+export const getBmiCategory = (bmi: string) => {
+  const n = Number(bmi);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  if (n < 18.5) return 'Underweight';
+  if (n < 25) return 'Normal';
+  if (n < 30) return 'Overweight';
+  if (n < 35) return 'Obese Class I';
+  if (n < 40) return 'Obese Class II';
+  return 'Obese Class III';
+};
+
+export const cmToInches = (cm: string) => {
+  const n = parseNum(cm);
+  if (!n) return '';
+  return (n / 2.54).toFixed(1);
+};
+
+export const inchesToCm = (inches: string) => {
+  const n = parseNum(inches);
+  if (!n) return '';
+  return (n * 2.54).toFixed(1);
 };
 
 export const computeWhr = (waist: string, hip: string) => {

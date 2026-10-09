@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
 import { ScheduleProgramModal } from '@/components/modals/ScheduleProgramModal';
 import { AppointmentCalendar } from '@/components/appointments/AppointmentCalendar';
@@ -27,6 +28,7 @@ import type {
   AppointmentFormValues,
   AppointmentStats,
   AppointmentStatus,
+  ConsultationMode,
 } from '@/types/appointment.types';
 import type {
   ScheduleProgramFormValues,
@@ -41,9 +43,10 @@ const defaultStats = (): AppointmentStats => ({
   cancelled: 0,
 });
 
-const LIST_PAGE_SIZE = 8;
+const LIST_PAGE_SIZE = 20;
 
 type StatusFilter = 'all' | AppointmentStatus;
+type ModeFilter = 'all' | ConsultationMode;
 
 const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'All statuses' },
@@ -52,6 +55,24 @@ const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
   { value: 'Done', label: 'Completed' },
   { value: 'Cancelled', label: 'Cancelled' },
 ];
+
+const MODE_FILTER_OPTIONS: { value: ModeFilter; label: string }[] = [
+  { value: 'all', label: 'All modes' },
+  { value: 'Offline', label: 'Offline' },
+  { value: 'Online', label: 'Online' },
+];
+
+const startOfWeek = (d: Date) => {
+  const copy = new Date(d);
+  const day = copy.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  copy.setDate(copy.getDate() + diff);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const toIsoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const statusPriority: Record<AppointmentStatus, number> = {
   Soon: 0,
@@ -80,11 +101,12 @@ export const AppointmentsPage = () => {
   const [formInitial, setFormInitial] = useState(emptyAppointmentForm());
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [listPage, setListPage] = useState(1);
-  const [filterByDay, setFilterByDay] = useState(false);
+  const [rescheduleFromId, setRescheduleFromId] = useState('');
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { canEdit, isStaff, staffRole, staffCode } = usePermissions();
+  const { canEdit, isStaff, staffRole, staffCode, isAdmin } = usePermissions();
 
   const lockedDoctor = useMemo((): AppointmentDoctor | null => {
     if (!isStaff || staffRole !== 'Doctor' || !staffCode) return null;
@@ -101,24 +123,40 @@ export const AppointmentsPage = () => {
 
   const canCreatePanchakarma = staffRole !== 'Therapist' && canEdit('panchakarma');
   const canAttendVisits = isStaff && staffRole === 'Doctor' && canEdit('appointments');
+  const canManageAppointments = canEdit('appointments') && (isAdmin || staffRole === 'Support' || staffRole === 'Doctor');
 
   const selectedDateIso = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
 
   const filteredSchedule = useMemo(() => {
     const q = search.trim().toLowerCase();
     let list = [...appointments];
+    const selected = new Date(year, month, selectedDay);
 
-    if (filterByDay) {
+    if (view === 'day') {
       list = list.filter((a) => a.date === selectedDateIso);
+    } else if (view === 'week') {
+      const weekStart = startOfWeek(selected);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      const from = toIsoDate(weekStart);
+      const to = toIsoDate(weekEnd);
+      list = list.filter((a) => a.date >= from && a.date <= to);
+    } else {
+      const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+      list = list.filter((a) => a.date.startsWith(prefix));
     }
 
     if (statusFilter !== 'all') {
       list = list.filter((a) => a.status === statusFilter);
     }
 
+    if (modeFilter !== 'all') {
+      list = list.filter((a) => (a.consultationMode || 'Offline') === modeFilter);
+    }
+
     if (q) {
       list = list.filter((a) =>
-        [a.patientName, a.doctorName, a.id, a.type, a.patientId]
+        [a.patientName, a.doctorName, a.id, a.type, a.patientId, a.consultationMode]
           .some((field) => field?.toLowerCase().includes(q))
       );
     }
@@ -134,7 +172,17 @@ export const AppointmentsPage = () => {
       const dateCmp = b.date.localeCompare(a.date);
       return dateCmp !== 0 ? dateCmp : a.time.localeCompare(b.time);
     });
-  }, [appointments, filterByDay, selectedDateIso, statusFilter, search]);
+  }, [
+    appointments,
+    selectedDateIso,
+    statusFilter,
+    modeFilter,
+    search,
+    view,
+    year,
+    month,
+    selectedDay,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredSchedule.length / LIST_PAGE_SIZE));
 
@@ -145,7 +193,7 @@ export const AppointmentsPage = () => {
 
   useEffect(() => {
     setListPage(1);
-  }, [search, statusFilter, filterByDay, selectedDateIso]);
+  }, [search, statusFilter, modeFilter, selectedDateIso, view, month, year]);
 
   useEffect(() => {
     if (listPage > totalPages) setListPage(totalPages);
@@ -153,7 +201,33 @@ export const AppointmentsPage = () => {
 
   const handleSelectDay = (day: number) => {
     setSelectedDay(day);
-    setFilterByDay(true);
+    setView('day');
+  };
+
+  const handleCancelAppointment = async (appointment: Appointment) => {
+    if (!confirm(`Cancel appointment ${appointment.id} for ${appointment.patientName}?`)) return;
+    try {
+      await appointmentAdminService.cancel(appointment.id, 'Cancelled by receptionist');
+      showToast('Appointment cancelled', 'success');
+      await loadData();
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    }
+  };
+
+  const handleRescheduleAppointment = (appointment: Appointment) => {
+    setRescheduleFromId(appointment.id);
+    setFormInitial({
+      ...emptyAppointmentForm(),
+      patientId: appointment.patientId,
+      staffCode: appointment.staffCode,
+      date: appointment.date,
+      time: appointment.time,
+      consultationMode: appointment.consultationMode || 'Offline',
+      notes: appointment.notes || '',
+      type: appointment.type === 'General Consult' ? 'Diet Consult' : appointment.type,
+    });
+    setModalOpen(true);
   };
 
   const loadData = useCallback(async () => {
@@ -201,6 +275,7 @@ export const AppointmentsPage = () => {
   }, [loadData]);
 
   const openNew = () => {
+    setRescheduleFromId('');
     setFormInitial({
       ...emptyAppointmentForm(),
       date: selectedDateIso,
@@ -221,6 +296,21 @@ export const AppointmentsPage = () => {
   const handleCreate = async (values: AppointmentFormValues) => {
     setSubmitting(true);
     try {
+      if (rescheduleFromId) {
+        const { data } = await appointmentAdminService.reschedule(rescheduleFromId, {
+          date: values.date,
+          timeSlot: values.time,
+          consultationMode: values.consultationMode,
+          notes: values.notes || undefined,
+        });
+        if (data.status_code === 200) {
+          setModalOpen(false);
+          setRescheduleFromId('');
+          showToast('Appointment rescheduled', 'success');
+          await loadData();
+        }
+        return;
+      }
       const { data } = await appointmentAdminService.create(values);
       if (data.status_code === 201) {
         setModalOpen(false);
@@ -269,8 +359,8 @@ export const AppointmentsPage = () => {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="mb-4 flex shrink-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="font-serif text-2xl font-bold text-sage-deep sm:text-[1.75rem]">
             {lockedDoctor ? 'My Appointments' : 'Appointments'}
@@ -292,45 +382,43 @@ export const AppointmentsPage = () => {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(240px,300px)_1fr]">
-        <AppointmentCalendar
-          month={month}
-          year={year}
-          selectedDay={selectedDay}
-          appointments={appointments}
-          onSelectDay={handleSelectDay}
-          onPrevMonth={prevMonth}
-          onNextMonth={nextMonth}
-          compact
-        />
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden xl:grid-cols-[minmax(240px,300px)_1fr]">
+        <div className="min-h-0 overflow-y-auto">
+          <AppointmentCalendar
+            month={month}
+            year={year}
+            selectedDay={selectedDay}
+            appointments={appointments}
+            onSelectDay={handleSelectDay}
+            onPrevMonth={prevMonth}
+            onNextMonth={nextMonth}
+            compact
+          />
+        </div>
 
-        <aside className="flex min-h-0 min-w-0 flex-col gap-3">
-          <AppointmentStatsCards stats={stats} />
+        <aside className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden">
+          <div className="shrink-0">
+            <AppointmentStatsCards stats={stats} />
+          </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border-sage bg-white shadow-sm">
-            <div className="space-y-3 border-b border-border-sage px-3 py-3">
+            <div className="shrink-0 space-y-3 border-b border-border-sage px-3 py-3">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h2 className="text-sm font-semibold text-ink">
-                    {filterByDay ? 'Appointments on date' : 'All appointments'}
+                    {view === 'day'
+                      ? 'Day appointments'
+                      : view === 'week'
+                        ? 'Week appointments'
+                        : 'Month appointments'}
                   </h2>
                   <p className="text-xs text-ink-soft">
-                    {filterByDay ? selectedDateIso : `${filteredSchedule.length} shown`}
-                    {' · '}Pending first
+                    {filteredSchedule.length} shown · Pending first
                   </p>
                 </div>
-                {filterByDay ? (
-                  <button
-                    type="button"
-                    onClick={() => setFilterByDay(false)}
-                    className="cursor-pointer text-[11px] font-semibold text-sage-deep hover:underline"
-                  >
-                    Show all
-                  </button>
-                ) : null}
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-ghost" />
                   <input
@@ -352,19 +440,28 @@ export const AppointmentsPage = () => {
                     </option>
                   ))}
                 </select>
+                <select
+                  value={modeFilter}
+                  onChange={(e) => setModeFilter(e.target.value as ModeFilter)}
+                  className={`${formSelectClass} py-1.5 text-sm`}
+                >
+                  {MODE_FILTER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
               {listLoading ? (
-                <p className="py-8 text-center text-sm text-ink-soft">Loading…</p>
+                <ContentLoader size="sm" className="min-h-[180px]" />
               ) : paginatedSchedule.length === 0 ? (
                 <p className="py-8 text-center text-sm text-ink-soft">
-                  {search || statusFilter !== 'all'
+                  {search || statusFilter !== 'all' || modeFilter !== 'all'
                     ? 'No appointments match your filters'
-                    : filterByDay
-                      ? 'No appointments on this date'
-                      : 'No appointments yet'}
+                    : 'No appointments in this view'}
                 </p>
               ) : (
                 paginatedSchedule.map((a) => (
@@ -372,8 +469,11 @@ export const AppointmentsPage = () => {
                     key={a.id}
                     appointment={a}
                     canAttend={canAttendVisits && a.staffCode === staffCode}
+                    canManage={canManageAppointments}
                     canSchedulePanchakarma={canCreatePanchakarma}
                     onSchedulePanchakarma={openPanchakarmaForAppointment}
+                    onReschedule={handleRescheduleAppointment}
+                    onCancel={handleCancelAppointment}
                   />
                 ))
               )}
@@ -395,14 +495,18 @@ export const AppointmentsPage = () => {
       </div>
 
       <NewAppointmentModal
-        key={modalOpen ? 'open' : 'closed'}
+        key={modalOpen ? `open-${rescheduleFromId || 'new'}` : 'closed'}
         open={modalOpen}
         initial={formInitial}
         patients={patients}
         doctors={doctors}
         lockedDoctor={lockedDoctor}
         submitting={submitting}
-        onClose={() => setModalOpen(false)}
+        title={rescheduleFromId ? 'Reschedule Appointment' : 'New Appointment'}
+        onClose={() => {
+          setModalOpen(false);
+          setRescheduleFromId('');
+        }}
         onSubmit={handleCreate}
       />
 

@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { ConfirmActionModal } from '@/components/staff/detail/ConfirmActionModal';
+import { ContentLoader } from '@/components/ui/Loader';
 import { PrescriptionEditor } from '@/components/prescriptions/PrescriptionEditor';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { useToast } from '@/hooks/useToast';
@@ -14,12 +14,6 @@ import { getApiErrorMessage } from '@/utils/helpers';
 import { formatDateLabel, formatTimeLabel } from '@/utils/appointmentHelpers';
 import { ROUTES, patientDetailPath } from '@/constants/routes';
 import type { HmsAppointment } from '@/types/api.types';
-
-interface AppointmentAttendDraft {
-  appointmentCode: string;
-  patientName: string;
-  visitNotes: string;
-}
 
 interface FollowUpDraft {
   appointmentCode: string;
@@ -41,24 +35,15 @@ export const AppointmentFollowUpPage = () => {
   const [appointment, setAppointment] = useState<HmsAppointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTimeSlot, setFollowUpTimeSlot] = useState('10:30');
-  const [visitNotes, setVisitNotes] = useState('');
-
-  const buildAttendDraftLabel = useCallback((draft: AppointmentAttendDraft) => {
-    return `${draft.patientName || 'Patient'} · ${draft.appointmentCode} · visit`;
-  }, []);
+  const autoAttendStarted = useRef(false);
 
   const buildFollowUpDraftLabel = useCallback((draft: FollowUpDraft) => {
     const parts = [draft.patientName || 'Patient', draft.appointmentCode];
     if (draft.followUpDate) parts.push(`follow-up ${draft.followUpDate}`);
     return parts.join(' · ');
   }, []);
-
-  const attendDraft = useFormDraft<AppointmentAttendDraft>(FORM_DRAFT_CATEGORIES.appointmentAttend, {
-    buildLabel: buildAttendDraftLabel,
-  });
 
   const followUpDraft = useFormDraft<FollowUpDraft>(FORM_DRAFT_CATEGORIES.appointmentFollowUp, {
     buildLabel: buildFollowUpDraftLabel,
@@ -72,9 +57,17 @@ export const AppointmentFollowUpPage = () => {
     setAppointment(row);
     setFollowUpDate(row.followUpDate ?? '');
     setFollowUpTimeSlot(row.followUpTimeSlot ?? row.timeSlot ?? row.time ?? '10:30');
-    setVisitNotes(row.visitNotes ?? '');
     return row;
   }, [appointmentId]);
+
+  const canManage = useMemo(() => {
+    if (!appointment) return false;
+    if (isAdmin) return canEdit('appointments');
+    if (isStaff && staffCode && appointment.staffCode === staffCode) {
+      return canEdit('appointments');
+    }
+    return false;
+  }, [appointment, isAdmin, isStaff, staffCode, canEdit]);
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -83,7 +76,24 @@ export const AppointmentFollowUpPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        await loadAppointment();
+        const row = await loadAppointment();
+        if (cancelled || !row) return;
+
+        const canAttendThis =
+          (isAdmin && canEdit('appointments')) ||
+          (isStaff && staffCode && row.staffCode === staffCode && canEdit('appointments'));
+
+        if (
+          row.status === 'Upcoming' &&
+          canAttendThis &&
+          !autoAttendStarted.current
+        ) {
+          autoAttendStarted.current = true;
+          const { data } = await appointmentAdminService.attend(appointmentId, {});
+          if (!cancelled && data.res?.appointment) {
+            setAppointment(data.res.appointment);
+          }
+        }
       } catch (err) {
         if (!cancelled) {
           showToast(getApiErrorMessage(err), 'error');
@@ -98,27 +108,14 @@ export const AppointmentFollowUpPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [appointmentId, loadAppointment, showToast]);
-
-  const canManage = useMemo(() => {
-    if (!appointment) return false;
-    if (isAdmin) return canEdit('appointments');
-    if (isStaff && staffCode && appointment.staffCode === staffCode) {
-      return canEdit('appointments');
-    }
-    return false;
-  }, [appointment, isAdmin, isStaff, staffCode, canEdit]);
+  }, [appointmentId, loadAppointment, showToast, isAdmin, isStaff, staffCode, canEdit]);
 
   if (!appointmentId) {
     return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
   }
 
   if (loading) {
-    return (
-      <div className="mx-auto w-full max-w-5xl py-16 text-center text-sm text-ink-soft">
-        Loading visit…
-      </div>
-    );
+    return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
 
   if (!appointment) {
@@ -127,12 +124,7 @@ export const AppointmentFollowUpPage = () => {
 
   const isCompleted = appointment.status === 'Completed';
   const isCancelled = appointment.status === 'Cancelled';
-
-  const attendDraftPayload = (): AppointmentAttendDraft => ({
-    appointmentCode: appointment.appointmentCode ?? appointmentId ?? '',
-    patientName: appointment.patientName ?? '',
-    visitNotes,
-  });
+  const patientViewUrl = `${patientDetailPath(appointment.patientCode)}?tab=prescriptions`;
 
   const followUpDraftPayload = (): FollowUpDraft => ({
     appointmentCode: appointment.appointmentCode ?? appointmentId ?? '',
@@ -140,38 +132,8 @@ export const AppointmentFollowUpPage = () => {
     followUpDate,
   });
 
-  const applyAttendDraft = (draft: AppointmentAttendDraft) => {
-    setVisitNotes(draft.visitNotes);
-  };
-
   const applyFollowUpDraft = (draft: FollowUpDraft) => {
     setFollowUpDate(draft.followUpDate);
-  };
-
-  const handleCompleteVisit = async () => {
-    setSubmitting(true);
-    try {
-      const { data } = await appointmentAdminService.attend(appointmentId, {
-        visitNotes: visitNotes.trim() || undefined,
-      });
-      if (data.res?.appointment) {
-        attendDraft.clearDraftAfterSubmit(
-          appointmentId ? draftContextKeys.appointment(appointmentId) : undefined
-        );
-        setAppointment(data.res.appointment);
-        showToast('Visit completed', 'success');
-        if (!canCreatePrescription) {
-          navigate(patientDetailPath(appointment.patientCode), {
-            state: { activeTab: 'appointments' as const },
-          });
-        }
-      }
-    } catch (err) {
-      showToast(getApiErrorMessage(err), 'error');
-    } finally {
-      setSubmitting(false);
-      setConfirmOpen(false);
-    }
   };
 
   const handleSaveFollowUp = async () => {
@@ -198,28 +160,30 @@ export const AppointmentFollowUpPage = () => {
   };
 
   return (
-    <div className={`mx-auto w-full pb-8 ${isCompleted ? 'max-w-6xl' : 'max-w-5xl'}`}>
+    <div className="mx-auto w-full max-w-6xl pb-8">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
-            {isCompleted ? 'Post-visit' : 'Visit'}
-          </p>
-          <h1 className="font-serif text-2xl font-bold text-sage-deep">
-            {isCompleted ? 'Follow-up & prescription' : 'Complete visit'}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">Visit</p>
+          <h1 className="font-serif text-[1.85rem] font-bold leading-tight text-sage-deep sm:text-3xl">
+            Prescription
+            <span className="font-normal text-ink-soft"> — </span>
+            <a
+              href={patientViewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-sage-deep hover:underline"
+            >
+              {appointment.patientName}
+            </a>
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            {isCompleted
-              ? 'Write the prescription for this visit. Set an optional follow-up date at the end.'
-              : 'Mark attended and add visit notes for the patient.'}
+            {formatDateLabel(appointment.date)} · {formatTimeLabel(appointment.time)}
+            {appointment.doctorName ? ` · ${appointment.doctorName}` : ''}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border-sage bg-white px-3 py-2 text-sm shadow-sm">
           <CalendarCheck className="h-4 w-4 text-sage-deep" />
           <span className="font-semibold text-ink">{appointment.appointmentCode}</span>
-          <span className="text-ink-ghost">·</span>
-          <span className="text-ink-soft">
-            {formatDateLabel(appointment.date)} · {formatTimeLabel(appointment.time)}
-          </span>
         </div>
       </div>
 
@@ -230,97 +194,7 @@ export const AppointmentFollowUpPage = () => {
       ) : !canManage ? (
         <p className="text-sm text-ink-soft">You do not have permission to update this visit.</p>
       ) : !isCompleted ? (
-        <div className="space-y-4">
-          {attendDraft.hasDrafts ? (
-            <FormDraftPanel
-              drafts={attendDraft.drafts}
-              activeDraftId={attendDraft.activeDraftId}
-              onRestore={(id) => {
-                const draft = attendDraft.restoreDraft(id);
-                if (draft) {
-                  applyAttendDraft(draft);
-                  showToast('Draft restored', 'success');
-                }
-              }}
-              onDiscard={(id) => {
-                attendDraft.discardDraft(id);
-                showToast('Draft discarded', 'success');
-              }}
-            />
-          ) : null}
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm">
-              <h2 className="mb-3 font-serif text-base font-semibold text-ink">Patient details</h2>
-              <div className="grid grid-cols-2 gap-2">
-                <InfoCell
-                  label="Patient"
-                  value={
-                    <Link
-                      to={patientDetailPath(appointment.patientCode)}
-                      className="font-medium text-sage-deep hover:underline"
-                    >
-                      {appointment.patientName}
-                    </Link>
-                  }
-                />
-                <InfoCell label="Doctor" value={appointment.doctorName} />
-                <InfoCell label="Type" value={appointment.appointmentType} />
-                <InfoCell label="Status" value={appointment.status} />
-              </div>
-              {appointment.notes ? (
-                <p className="mt-3 rounded-lg bg-cream/40 px-3 py-2 text-xs text-ink-soft">
-                  {appointment.notes}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm">
-              <h2 className="mb-1 font-serif text-base font-semibold text-ink">Visit notes</h2>
-              <p className="mb-3 text-xs text-ink-soft">
-                Lifestyle advice, diet suggestions, or notes for the patient.
-              </p>
-              <label className="block">
-                <span className="mb-1 block text-xs font-semibold text-ink-ghost">
-                  Visit notes for patient
-                </span>
-                <textarea
-                  value={visitNotes}
-                  onChange={(e) => setVisitNotes(e.target.value)}
-                  rows={6}
-                  placeholder="Suggestions, lifestyle advice, diet changes…"
-                  className="w-full resize-none rounded-lg border border-border-sage bg-white px-3 py-2 text-sm outline-none focus:border-sage focus:ring-2 focus:ring-sage-pale"
-                />
-              </label>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={() => setConfirmOpen(true)} disabled={submitting}>
-              Complete visit & save
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                attendDraft.saveDraft(attendDraftPayload(), {
-                  contextKey: appointmentId ? draftContextKeys.appointment(appointmentId) : 'unsaved',
-                });
-                showToast('Visit draft saved', 'success');
-              }}
-              disabled={submitting}
-            >
-              Save as draft
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => navigate(patientDetailPath(appointment.patientCode))}
-              disabled={submitting}
-            >
-              Back to patient
-            </Button>
-          </div>
-        </div>
+        <p className="py-10 text-center text-sm text-ink-soft">Completing visit…</p>
       ) : (
         <div className="space-y-4">
           {followUpDraft.hasDrafts ? (
@@ -342,8 +216,7 @@ export const AppointmentFollowUpPage = () => {
           ) : null}
 
           {canCreatePrescription ? (
-            <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm">
-              <h2 className="mb-3 font-serif text-base font-semibold text-ink">Prescription</h2>
+            <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm sm:p-5">
               <PrescriptionEditor
                 patientCode={appointment.patientCode}
                 appointmentCode={appointment.appointmentCode}
@@ -361,7 +234,11 @@ export const AppointmentFollowUpPage = () => {
                 }}
               />
             </div>
-          ) : null}
+          ) : (
+            <p className="rounded-xl border border-border-sage bg-white px-4 py-3 text-sm text-ink-soft">
+              Visit marked complete. You do not have permission to write a prescription.
+            </p>
+          )}
 
           <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm">
             <label className="block max-w-sm">
@@ -428,25 +305,8 @@ export const AppointmentFollowUpPage = () => {
           </Button>
         </div>
       )}
-
-      <ConfirmActionModal
-        open={confirmOpen}
-        title="Complete this visit?"
-        message="Mark this appointment as attended and save visit notes?"
-        confirmLabel="Complete visit"
-        loading={submitting}
-        onConfirm={() => void handleCompleteVisit()}
-        onClose={() => !submitting && setConfirmOpen(false)}
-      />
     </div>
   );
 };
-
-const InfoCell = ({ label, value }: { label: string; value: ReactNode }) => (
-  <div className="rounded-lg bg-cream/50 px-2.5 py-2">
-    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">{label}</p>
-    <div className="mt-0.5 text-sm text-ink">{value}</div>
-  </div>
-);
 
 export default AppointmentFollowUpPage;

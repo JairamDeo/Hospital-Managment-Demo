@@ -1,9 +1,11 @@
 export type AppointmentType =
-  | 'General Consult'
   | 'Panchakarma'
   | 'Follow-up'
   | 'Diet Consult'
-  | 'Shodhana';
+  | 'Shodhana'
+  | 'General Consult';
+
+export type ConsultationMode = 'Offline' | 'Online';
 
 export type AppointmentStatus = 'Soon' | 'In' | 'Done' | 'Cancelled';
 
@@ -27,6 +29,7 @@ export interface Appointment {
   staffCode: string;
   doctorName: string;
   type: AppointmentType;
+  consultationMode?: ConsultationMode;
   date: string;
   time: string;
   status: AppointmentStatus;
@@ -38,6 +41,7 @@ export interface AppointmentFormValues {
   patientId: string;
   staffCode: string;
   type: AppointmentType;
+  consultationMode: ConsultationMode;
   date: string;
   time: string;
   notes: string;
@@ -53,17 +57,25 @@ export interface AppointmentStats {
 export interface DoctorAvailability {
   staffCode: string;
   date: string;
+  /** Slots at capacity (cannot book more) */
   bookedSlots: string[];
-  availableSlots: string[];
+  availableSlots?: string[];
+  slotStats?: Array<{
+    time: string;
+    booked: number;
+    maxAppointments: number;
+    remaining: number;
+  }>;
 }
 
 export const APPOINTMENT_TYPE_OPTIONS: AppointmentType[] = [
-  'General Consult',
-  'Panchakarma',
-  'Follow-up',
   'Diet Consult',
+  'Follow-up',
+  'Panchakarma',
   'Shodhana',
 ];
+
+export const CONSULTATION_MODE_OPTIONS: ConsultationMode[] = ['Offline', 'Online'];
 
 export const TIME_SLOTS = [
   '09:00',

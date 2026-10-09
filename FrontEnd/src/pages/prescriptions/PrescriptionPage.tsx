@@ -28,10 +28,20 @@ export const PrescriptionPage = () => {
         Back to patient
       </Link>
 
-      <h1 className="font-serif text-2xl font-bold text-sage-deep">New prescription</h1>
+      <h1 className="font-serif text-[1.85rem] font-bold leading-tight text-sage-deep sm:text-3xl">
+        Prescription
+        <span className="font-normal text-ink-soft"> — </span>
+        <a
+          href={`${patientDetailPath(patientCode)}?tab=prescriptions`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-sage-deep hover:underline"
+        >
+          {patientCode}
+        </a>
+      </h1>
       <p className="mt-1 text-sm text-ink-soft">
-        Patient {patientCode}
-        {appointmentCode ? ` · Visit ${appointmentCode}` : ''}
+        {appointmentCode ? `Visit ${appointmentCode}` : 'New prescription'}
       </p>
 
       <div className="mt-5 rounded-xl border border-border-sage bg-white p-4 shadow-sm">

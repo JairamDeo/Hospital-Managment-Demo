@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Download, FileSpreadsheet, FileText, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ContentLoader } from '@/components/ui/Loader';
 import { PopoverMenu, PopoverMenuItem } from '@/components/ui/PopoverMenu';
 import { PatientTable } from '@/components/patients/PatientTable';
 import { PatientPagination } from '@/components/patients/PatientPagination';
@@ -19,9 +20,7 @@ import {
 } from '@/utils/patientHelpers';
 import { exportPatientsCsv, exportPatientsPdf } from '@/utils/patientExport';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
-import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
-import type { MasterItem } from '@/types/api.types';
 
 const PAGE_SIZE = 6;
 
@@ -43,12 +42,9 @@ export const PatientsPage = () => {
   const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [stats, setStats] = useState<PatientStats>(defaultStats());
-  const [prakritiMasters, setPrakritiMasters] = useState<MasterItem[]>([]);
-  const [treatmentMasters, setTreatmentMasters] = useState<MasterItem[]>([]);
   const [listLoading, setListLoading] = useState(false);
 
   const [search, setSearch] = useState('');
-  const [prakritiFilter, setPrakritiFilter] = useState<string>('All Patients');
   const [sortBy, setSortBy] = useState<SortOption>('visit-newest');
   const [page, setPage] = useState(1);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -61,29 +57,14 @@ export const PatientsPage = () => {
   const { showToast } = useToast();
   const { canView, canEdit } = usePermissions();
 
-  const activePrakriti = useMemo(
-    () => prakritiMasters.filter((p) => p.active),
-    [prakritiMasters]
-  );
-  const activeTreatments = useMemo(
-    () => treatmentMasters.filter((t) => t.active),
-    [treatmentMasters]
-  );
-
   const loadData = useCallback(async () => {
     setListLoading(true);
     try {
       const patRes = await patientAdminService.list();
       setPatients((patRes.data.res?.patients ?? []).map(hmsToPatient));
 
-      const [statsRes, pRes, tRes] = await Promise.all([
-        patientAdminService.getStats().catch(() => null),
-        masterService.listPrakriti().catch(() => null),
-        masterService.listTreatments().catch(() => null),
-      ]);
+      const statsRes = await patientAdminService.getStats().catch(() => null);
       if (statsRes?.data.res?.stats) setStats(statsRes.data.res.stats);
-      setPrakritiMasters(pRes?.data.res?.items ?? []);
-      setTreatmentMasters(tRes?.data.res?.items ?? []);
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -95,31 +76,20 @@ export const PatientsPage = () => {
     loadData();
   }, [loadData]);
 
-  const prakritiFilters = useMemo(() => {
-    const fromPatients = [...new Set(patients.map((p) => p.prakriti).filter(Boolean))];
-    const fromMaster = activePrakriti.map((p) => p.name);
-    const unique = [...new Set([...fromPatients, ...fromMaster])];
-    return ['All Patients', ...unique];
-  }, [patients, activePrakriti]);
-
   const filtered = useMemo(() => {
     let list = [...patients];
-    if (prakritiFilter !== 'All Patients') {
-      list = list.filter((p) => p.prakriti === prakritiFilter);
-    }
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
           p.id.toLowerCase().includes(q) ||
-          p.treatment.toLowerCase().includes(q) ||
           p.mobile?.includes(q) ||
           p.email?.toLowerCase().includes(q)
       );
     }
     return sortPatients(list, sortBy);
-  }, [patients, search, prakritiFilter, sortBy]);
+  }, [patients, search, sortBy]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -250,31 +220,6 @@ export const PatientsPage = () => {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {prakritiFilters.map((label) => {
-                const active = prakritiFilter === label;
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      setPrakritiFilter(label);
-                      setPage(1);
-                    }}
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
-                      active
-                        ? 'border-sage-deep bg-sage-mist text-sage-deep'
-                        : 'border-border-sage bg-white text-ink-soft hover:bg-sage-mist/60'
-                    }`}
-                  >
-                    {label === 'All Patients' && active ? (
-                      <SlidersHorizontal className="h-3 w-3" strokeWidth={2} />
-                    ) : null}
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
             <div className="relative" ref={sortRef}>
               <button
                 type="button"
@@ -305,11 +250,15 @@ export const PatientsPage = () => {
           </div>
         </div>
 
-        <PatientTable patients={pagePatients} onView={openView} onEdit={openEdit} />
-        {listLoading ? (
-          <p className="border-t border-border-sage px-4 py-2 text-center text-xs text-ink-ghost">
-            Loading patients…
-          </p>
+        {listLoading && patients.length === 0 ? (
+          <ContentLoader size="md" className="border-t border-border-sage" />
+        ) : (
+          <PatientTable patients={pagePatients} onView={openView} onEdit={openEdit} />
+        )}
+        {listLoading && patients.length > 0 ? (
+          <div className="flex justify-center border-t border-border-sage py-3">
+            <ContentLoader size="sm" className="!py-0" />
+          </div>
         ) : null}
         {!listLoading && filtered.length === 0 ? (
           <p className="border-t border-border-sage px-4 py-8 text-center text-sm text-ink-soft">
@@ -332,8 +281,6 @@ export const PatientsPage = () => {
         open={modalMode === 'add'}
         mode="add"
         initial={formInitial}
-        prakritiOptions={activePrakriti}
-        treatmentOptions={activeTreatments}
         onClose={closeModal}
         onSubmit={(values) => {
           if (!submitting) void handleFormSubmit(values);

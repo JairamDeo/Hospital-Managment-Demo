@@ -188,13 +188,32 @@ class MasterService {
     );
   }
 
-  createAppointmentSlot(time: string) {
+  createAppointmentSlot(time: string, maxAppointments = 1) {
     return axiosInstance.post<ApiResponse<{ item: AppointmentSlotItem }>>('/admin/master/appointment-slots', {
       time,
+      maxAppointments,
     });
   }
 
-  updateAppointmentSlot(id: string, payload: { time?: string; active?: boolean }) {
+  createAppointmentSlotsRange(payload: {
+    startTime: string;
+    endTime: string;
+    gapMinutes: number;
+    maxAppointments?: number;
+  }) {
+    return axiosInstance.post<
+      ApiResponse<{
+        created: AppointmentSlotItem[];
+        skipped: string[];
+        items: AppointmentSlotItem[];
+      }>
+    >('/admin/master/appointment-slots/range', payload);
+  }
+
+  updateAppointmentSlot(
+    id: string,
+    payload: { time?: string; active?: boolean; maxAppointments?: number }
+  ) {
     return axiosInstance.patch<ApiResponse<{ item: AppointmentSlotItem }>>(
       `/admin/master/appointment-slots/${id}`,
       payload

@@ -640,20 +640,18 @@ export const PrescriptionEditor = ({
             {medicines.map((med, index) => {
               const item = med.itemCode ? itemByCode.get(med.itemCode) : undefined;
               const maxPacks = item ? getMaxPackStock(item) : undefined;
-              const remaining =
-                maxPacks != null ? Math.max(0, maxPacks - med.packQuantity) : null;
               const atLimit = maxPacks != null && med.packQuantity >= maxPacks;
               return (
                 <div
                   key={med.itemCode ?? index}
-                  className="rounded-lg border border-border-sage bg-cream/20 p-2.5"
+                  className="rounded-lg border border-border-sage bg-cream/20 px-2.5 py-2"
                 >
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-                    <p className="min-w-[100px] shrink-0 truncate text-sm font-semibold text-ink">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="w-[9.5rem] shrink-0 truncate text-sm font-semibold text-ink sm:w-[11rem]">
                       {med.name}
                     </p>
-                    <div className="flex shrink-0 items-center gap-1">
-                      <span className="text-[10px] font-semibold uppercase text-ink-ghost">
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-ghost">
                         Pack
                       </span>
                       <QtyStepper
@@ -663,18 +661,18 @@ export const PrescriptionEditor = ({
                         compact
                       />
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       {TIMING_LABELS.map(({ key: timingKey, label, title }) => (
                         <label
                           key={timingKey}
                           title={title}
-                          className="flex shrink-0 cursor-pointer items-center gap-0.5 text-xs font-bold text-ink"
+                          className="inline-flex w-[2.35rem] shrink-0 cursor-pointer items-center justify-start gap-1 text-[11px] font-bold leading-none text-ink"
                         >
                           <input
                             type="checkbox"
                             checked={Boolean(med.timing[timingKey])}
                             onChange={() => toggleTiming(index, timingKey)}
-                            className="h-3.5 w-3.5 accent-sage-deep"
+                            className="h-3.5 w-3.5 shrink-0 accent-sage-deep"
                           />
                           {label}
                         </label>
@@ -683,24 +681,19 @@ export const PrescriptionEditor = ({
                     <button
                       type="button"
                       onClick={() => removeMedicine(index)}
-                      className="ml-auto shrink-0 rounded p-0.5 text-ink-ghost hover:text-danger"
+                      className="shrink-0 rounded p-0.5 text-ink-ghost hover:text-danger"
                       aria-label="Remove"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
-                    {item ? (
-                      <span className="text-ink-ghost">In stock: {formatStockLabel(item)}</span>
-                    ) : null}
-                    {item && maxPacks != null ? (
-                      <span
-                        className={`font-semibold ${atLimit ? 'text-danger' : 'text-sage-deep'}`}
-                      >
-                        Using {med.packQuantity} of {maxPacks} · Available: {remaining}
-                      </span>
-                    ) : null}
-                  </div>
+                  {item && maxPacks != null ? (
+                    <p
+                      className={`mt-1.5 text-[11px] font-semibold ${atLimit ? 'text-danger' : 'text-sage-deep'}`}
+                    >
+                      Using {med.packQuantity} of {maxPacks}
+                    </p>
+                  ) : null}
                 </div>
               );
             })}

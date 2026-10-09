@@ -69,13 +69,11 @@ class PatientAdminService {
       email: values.email || undefined,
       mobileNumber: values.mobile.replace(/\D/g, '').slice(0, 10),
       age: values.age === '' ? 0 : values.age,
-      prakritiId: values.prakritiId || undefined,
-      lastVisit: values.lastVisit,
-      recordStatus: values.status,
+      gender: values.gender,
+      bloodGroup: values.bloodGroup.trim() || undefined,
+      address: values.address.trim() || undefined,
+      recordStatus: 'Active',
     };
-    if (values.treatmentId?.trim()) {
-      payload.treatmentId = values.treatmentId;
-    }
     return axiosInstance.post<ApiResponse<{ patient: HmsPatient }>>('/admin/patients', payload);
   }
 

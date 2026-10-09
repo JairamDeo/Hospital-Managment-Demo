@@ -1,15 +1,12 @@
 import type { ReactNode } from 'react';
 import {
   CalendarPlus,
-  Flame,
-  Leaf,
   Mail,
   MapPin,
   Phone,
   Save,
   Sparkles,
   SquarePen,
-  Wind,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -25,7 +22,6 @@ interface Props {
   editing: boolean;
   saving?: boolean;
   profileForm: PatientProfileFormValues;
-  prakritiMasters: MasterItem[];
   treatmentMasters: MasterItem[];
   onProfileFormChange: (values: PatientProfileFormValues) => void;
   onBookAppt: () => void;
@@ -33,19 +29,8 @@ interface Props {
   onStartEdit: () => void;
   onCancelEdit: () => void;
   onSaveProfile: () => void | Promise<void>;
+  onCollapse?: () => void;
 }
-
-const PRAKRITI_STYLES: Record<string, string> = {
-  Vata: 'bg-violet-50 text-violet-700 ring-violet-200',
-  Pitta: 'bg-orange-50 text-orange-700 ring-orange-200',
-  Kapha: 'bg-sage-mist text-sage-deep ring-border-sage',
-};
-
-const PRAKRITI_ICONS: Record<string, typeof Flame> = {
-  Vata: Wind,
-  Pitta: Flame,
-  Kapha: Leaf,
-};
 
 const DetailCell = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-lg bg-cream/60 px-3 py-2">
@@ -72,7 +57,6 @@ export const PatientProfileCard = ({
   editing,
   saving = false,
   profileForm,
-  prakritiMasters,
   treatmentMasters,
   onProfileFormChange,
   onBookAppt,
@@ -80,17 +64,25 @@ export const PatientProfileCard = ({
   onStartEdit,
   onCancelEdit,
   onSaveProfile,
+  onCollapse,
 }: Props) => {
-  const PrakritiIcon = PRAKRITI_ICONS[patient.prakriti] ?? Leaf;
   const set = <K extends keyof PatientProfileFormValues>(key: K, value: PatientProfileFormValues[K]) => {
     onProfileFormChange({ ...profileForm, [key]: value });
   };
 
-  const displayPrakriti =
-    prakritiMasters.find((m) => m._id === profileForm.prakritiId)?.name ?? patient.prakriti;
-
   return (
-    <div className="overflow-hidden rounded-2xl border border-border-sage bg-white shadow-sm">
+    <div className="relative overflow-hidden rounded-2xl border border-border-sage bg-white shadow-sm">
+      {onCollapse ? (
+        <button
+          type="button"
+          onClick={onCollapse}
+          className="absolute right-2.5 top-2.5 z-10 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-border-sage bg-white/90 text-ink-soft shadow-sm hover:bg-sage-mist hover:text-ink"
+          aria-label="Close patient panel"
+          title="Close panel"
+        >
+          <X className="h-4 w-4" strokeWidth={2.25} />
+        </button>
+      ) : null}
       <div className="bg-gradient-to-b from-sage-mist/80 to-white px-5 pb-5 pt-6 text-center">
         <div
           className={`mx-auto flex h-[72px] w-[72px] items-center justify-center rounded-full text-xl font-bold ring-4 ring-white shadow-sm ${patient.avatarClass}`}
@@ -129,12 +121,6 @@ export const PatientProfileCard = ({
           ) : (
             <PatientStatusBadge status={patient.status} />
           )}
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${PRAKRITI_STYLES[displayPrakriti] ?? 'bg-sage-mist text-sage-deep ring-border-sage'}`}
-          >
-            <PrakritiIcon className="h-3 w-3" strokeWidth={2.25} />
-            {displayPrakriti} Prakriti
-          </span>
         </div>
       </div>
 

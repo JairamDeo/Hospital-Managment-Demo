@@ -5,6 +5,7 @@ import { BillingStatCard } from '@/components/billing/BillingStatCard';
 import { InvoiceTable } from '@/components/billing/InvoiceTable';
 import { PaymentMethodsPanel } from '@/components/billing/PaymentMethodsPanel';
 import { StaffPagination } from '@/components/staff/StaffPagination';
+import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
 import {
   invoiceDetailPath,
@@ -221,7 +222,7 @@ export const BillingPage = () => {
           </div>
 
           {loading ? (
-            <p className="px-4 py-10 text-center text-sm text-ink-soft">Loading invoices…</p>
+            <ContentLoader size="md" className="min-h-[220px]" />
           ) : (
             <InvoiceTable
               invoices={pageInvoices}

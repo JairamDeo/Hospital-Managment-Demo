@@ -58,6 +58,7 @@ export const patientBookAppointment = async (req, res) => {
         patientCode: req.patient.patientCode,
         staffCode: req.body.staffCode,
         appointmentType: req.body.appointmentType,
+        consultationMode: req.body.consultationMode,
         date: req.body.date,
         timeSlot: req.body.timeSlot,
         notes: req.body.notes,
