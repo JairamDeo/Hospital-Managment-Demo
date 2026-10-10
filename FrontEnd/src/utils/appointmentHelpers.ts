@@ -56,6 +56,36 @@ export const formatTimeLabel = (time: string) => {
   return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 };
 
+/** Local calendar YYYY-MM-DD (avoids UTC day-shift from toISOString). */
+export const localDateIso = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** Parse slot like "1:00 PM" / "13:00" to minutes from midnight; null if invalid. */
+export const slotToMinutes = (time: string): number | null => {
+  const ampm = time.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (ampm) {
+    let h = parseInt(ampm[1], 10);
+    const m = parseInt(ampm[2], 10);
+    const period = ampm[3].toUpperCase();
+    if (period === 'AM' && h === 12) h = 0;
+    if (period === 'PM' && h !== 12) h += 12;
+    return h * 60 + m;
+  }
+  const hhmm = time.match(/^(\d{1,2}):(\d{2})$/);
+  if (hhmm) {
+    return parseInt(hhmm[1], 10) * 60 + parseInt(hhmm[2], 10);
+  }
+  return null;
+};
+
+/** Hide slots that are already past when booking for today. */
+export const isSlotPastForDate = (dateIso: string, time: string, now = new Date()) => {
+  if (!dateIso || dateIso !== localDateIso(now)) return false;
+  const slotMins = slotToMinutes(time);
+  if (slotMins == null) return false;
+  return slotMins <= now.getHours() * 60 + now.getMinutes();
+};
+
 export const formatDateLabel = (iso: string) => {
   const d = new Date(`${iso}T12:00:00`);
   return d.toLocaleDateString('en-IN', {

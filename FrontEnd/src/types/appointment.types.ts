@@ -59,12 +59,15 @@ export interface DoctorAvailability {
   date: string;
   /** Slots at capacity (cannot book more) */
   bookedSlots: string[];
+  /** Slots already past when booking for today */
+  pastSlots?: string[];
   availableSlots?: string[];
   slotStats?: Array<{
     time: string;
     booked: number;
     maxAppointments: number;
     remaining: number;
+    past?: boolean;
   }>;
 }
 

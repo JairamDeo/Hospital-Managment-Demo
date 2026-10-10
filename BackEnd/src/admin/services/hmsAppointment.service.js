@@ -12,6 +12,7 @@ import {
   formatAppointmentDateDisplay,
   formatAppointmentDateIso,
   formatTimeDisplay,
+  isAppointmentSlotPast,
   minutesUntilAppointment,
   normalizeAppointmentDate,
 } from '../../utils/appointment.util.js';
@@ -216,19 +217,35 @@ export const getAvailabilityForDoctor = async (staffCode, date) => {
     }
   }
 
-  const availableSlots = masterTimes.filter((time) => !fullSlots.includes(time));
+  const now = moment();
+  const dateIso = moment.utc(appointmentDate).format('YYYY-MM-DD');
+  const isToday = dateIso === now.format('YYYY-MM-DD');
+
+  const availableSlots = masterTimes.filter((time) => {
+    if (fullSlots.includes(time)) return false;
+    if (isToday && isAppointmentSlotPast(appointmentDate, time, now)) return false;
+    return true;
+  });
+
+  const pastSlots = isToday
+    ? masterTimes.filter((time) => isAppointmentSlotPast(appointmentDate, time, now))
+    : [];
+
   const slotStats = masterTimes.map((time) => ({
     time,
     booked: bookedCounts[time] || 0,
     maxAppointments: maxByTime[time] || 1,
     remaining: Math.max(0, (maxByTime[time] || 1) - (bookedCounts[time] || 0)),
+    past: pastSlots.includes(time),
   }));
 
   return {
     staffCode,
-    date: moment.utc(appointmentDate).format('YYYY-MM-DD'),
+    date: dateIso,
     /** Slots that cannot accept more bookings (at capacity) */
     bookedSlots: fullSlots,
+    /** Past slots for today — UI should hide these */
+    pastSlots,
     availableSlots,
     slotStats,
   };
@@ -285,6 +302,9 @@ export const createAppointment = async (payload, createdBy) => {
   const todayStart = moment.utc().startOf('day');
   if (moment.utc(appointmentDate).isBefore(todayStart)) {
     throw new Error('Cannot book an appointment for a past date');
+  }
+  if (isAppointmentSlotPast(appointmentDate, payload.timeSlot)) {
+    throw new Error('Cannot book a time slot that has already passed');
   }
 
   const [patient, doctor] = await Promise.all([
@@ -416,6 +436,9 @@ export const rescheduleAppointment = async (appointmentCode, payload) => {
   const todayStart = moment.utc().startOf('day');
   if (moment.utc(appointmentDate).isBefore(todayStart)) {
     throw new Error('Cannot reschedule to a past date');
+  }
+  if (isAppointmentSlotPast(appointmentDate, payload.timeSlot)) {
+    throw new Error('Cannot reschedule to a time slot that has already passed');
   }
 
   const conflict = await findDoctorSlotConflict({

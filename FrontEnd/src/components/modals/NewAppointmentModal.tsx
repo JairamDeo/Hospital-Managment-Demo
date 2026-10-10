@@ -6,7 +6,7 @@ import { appointmentAdminService } from '@/services/appointment/appointmentAdmin
 import type { Patient } from '@/types/patient.types';
 import type { AppointmentDoctor, AppointmentFormValues } from '@/types/appointment.types';
 import { CONSULTATION_MODE_OPTIONS } from '@/types/appointment.types';
-import { formatTimeLabel } from '@/utils/appointmentHelpers';
+import { formatTimeLabel, isSlotPastForDate, localDateIso } from '@/utils/appointmentHelpers';
 import { masterService } from '@/services/master/master.service';
 
 interface Props {
@@ -35,6 +35,8 @@ export const NewAppointmentModal = ({
   const [form, setForm] = useState<AppointmentFormValues>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof AppointmentFormValues, string>>>({});
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [pastSlots, setPastSlots] = useState<string[]>([]);
+  const [apiAvailableSlots, setApiAvailableSlots] = useState<string[] | null>(null);
   const [slotStats, setSlotStats] = useState<
     Array<{ time: string; booked: number; maxAppointments: number; remaining: number }>
   >([]);
@@ -44,7 +46,7 @@ export const NewAppointmentModal = ({
 
   useEffect(() => {
     if (open) {
-      const minDate = new Date().toISOString().slice(0, 10);
+      const minDate = localDateIso();
       setForm({
         ...initial,
         date: initial.date && initial.date < minDate ? minDate : initial.date,
@@ -69,6 +71,8 @@ export const NewAppointmentModal = ({
   useEffect(() => {
     if (!open || !form.staffCode || !form.date) {
       setBookedSlots([]);
+      setPastSlots([]);
+      setApiAvailableSlots(null);
       return;
     }
 
@@ -78,13 +82,18 @@ export const NewAppointmentModal = ({
       .getAvailability(form.staffCode, form.date)
       .then((res) => {
         if (!cancelled) {
-          setBookedSlots(res.data.res?.availability.bookedSlots ?? []);
-          setSlotStats(res.data.res?.availability.slotStats ?? []);
+          const availability = res.data.res?.availability;
+          setBookedSlots(availability?.bookedSlots ?? []);
+          setPastSlots(availability?.pastSlots ?? []);
+          setApiAvailableSlots(availability?.availableSlots ?? null);
+          setSlotStats(availability?.slotStats ?? []);
         }
       })
       .catch(() => {
         if (!cancelled) {
           setBookedSlots([]);
+          setPastSlots([]);
+          setApiAvailableSlots(null);
           setSlotStats([]);
         }
       })
@@ -98,8 +107,14 @@ export const NewAppointmentModal = ({
   }, [open, form.staffCode, form.date]);
 
   const availableSlots = useMemo(
-    () => allSlots.filter((slot) => !bookedSlots.includes(slot.time)),
-    [allSlots, bookedSlots]
+    () =>
+      allSlots.filter((slot) => {
+        if (bookedSlots.includes(slot.time) || pastSlots.includes(slot.time)) return false;
+        if (isSlotPastForDate(form.date, slot.time)) return false;
+        if (apiAvailableSlots) return apiAvailableSlots.includes(slot.time);
+        return true;
+      }),
+    [allSlots, bookedSlots, pastSlots, apiAvailableSlots, form.date]
   );
 
   useEffect(() => {
@@ -107,7 +122,7 @@ export const NewAppointmentModal = ({
     setForm((f) => ({ ...f, time: availableSlots[0]?.time ?? '' }));
   }, [availableSlots, form.time]);
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), [open]);
+  const today = useMemo(() => localDateIso(), [open]);
 
   const validate = () => {
     const next: typeof errors = {};
@@ -116,6 +131,9 @@ export const NewAppointmentModal = ({
     if (!form.date) next.date = 'Date is required';
     else if (form.date < today) next.date = 'Cannot book for a past date';
     if (!form.time) next.time = 'Time is required';
+    else if (isSlotPastForDate(form.date, form.time)) {
+      next.time = 'This time slot has already passed';
+    }
     if (form.time && bookedSlots.includes(form.time)) {
       next.time = 'This slot is already booked for the selected doctor';
     }

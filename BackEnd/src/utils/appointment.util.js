@@ -67,6 +67,10 @@ export const minutesUntilAppointment = (date, timeSlot, from = moment()) => {
   return apptAt.diff(from, 'minutes', true);
 };
 
+/** True when the slot datetime is already in the past (or right now). */
+export const isAppointmentSlotPast = (date, timeSlot, from = moment()) =>
+  minutesUntilAppointment(date, timeSlot, from) <= 0;
+
 export const assertValidTimeSlot = (timeSlot) => {
   if (!/^(1[0-2]|0?[1-9]):[0-5][0-9] (AM|PM)$/i.test(timeSlot)) {
     throw new Error('Invalid appointment time slot format. Use HH:MM AM/PM');

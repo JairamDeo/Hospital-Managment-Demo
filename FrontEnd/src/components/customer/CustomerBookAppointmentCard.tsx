@@ -16,7 +16,7 @@ import {
 } from '@/types/appointment.types';
 import { masterService } from '@/services/master/master.service';
 import type { HmsAppointment } from '@/types/api.types';
-import { formatTimeLabel } from '@/utils/appointmentHelpers';
+import { formatTimeLabel, isSlotPastForDate, localDateIso } from '@/utils/appointmentHelpers';
 
 interface Props {
   onBooked?: () => void;
@@ -27,11 +27,13 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   const { patient } = usePatientPortalAuth();
   const [doctors, setDoctors] = useState<AppointmentDoctor[]>([]);
   const [staffCode, setStaffCode] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(localDateIso());
   const [timeSlot, setTimeSlot] = useState('10:30');
   const [consultationMode, setConsultationMode] = useState<'Offline' | 'Online'>('Offline');
   const [notes, setNotes] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [pastSlots, setPastSlots] = useState<string[]>([]);
+  const [apiAvailableSlots, setApiAvailableSlots] = useState<string[] | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastBooked, setLastBooked] = useState<HmsAppointment | null>(null);
@@ -66,6 +68,8 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   useEffect(() => {
     if (!staffCode || !date) {
       setBookedSlots([]);
+      setPastSlots([]);
+      setApiAvailableSlots(null);
       return;
     }
 
@@ -74,10 +78,19 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
     patientPortalAppointmentService
       .getAvailability(staffCode, date)
       .then((res) => {
-        if (!cancelled) setBookedSlots(res.data.res?.availability.bookedSlots ?? []);
+        if (!cancelled) {
+          const availability = res.data.res?.availability;
+          setBookedSlots(availability?.bookedSlots ?? []);
+          setPastSlots(availability?.pastSlots ?? []);
+          setApiAvailableSlots(availability?.availableSlots ?? null);
+        }
       })
       .catch(() => {
-        if (!cancelled) setBookedSlots([]);
+        if (!cancelled) {
+          setBookedSlots([]);
+          setPastSlots([]);
+          setApiAvailableSlots(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingSlots(false);
@@ -89,8 +102,14 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
   }, [staffCode, date]);
 
   const availableSlots = useMemo(
-    () => allSlots.filter((slot) => !bookedSlots.includes(slot.time)),
-    [allSlots, bookedSlots]
+    () =>
+      allSlots.filter((slot) => {
+        if (bookedSlots.includes(slot.time) || pastSlots.includes(slot.time)) return false;
+        if (isSlotPastForDate(date, slot.time)) return false;
+        if (apiAvailableSlots) return apiAvailableSlots.includes(slot.time);
+        return true;
+      }),
+    [allSlots, bookedSlots, pastSlots, apiAvailableSlots, date]
   );
 
   useEffect(() => {
@@ -108,6 +127,10 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
     }
     if (!date || !timeSlot) {
       showToast('Please select date and time', 'error');
+      return;
+    }
+    if (isSlotPastForDate(date, timeSlot)) {
+      showToast('This time slot has already passed. Please choose a later time.', 'error');
       return;
     }
     if (bookedSlots.includes(timeSlot)) {
@@ -212,7 +235,7 @@ export const CustomerBookAppointmentCard = ({ onBooked }: Props) => {
               <input
                 type="date"
                 value={date}
-                min={new Date().toISOString().slice(0, 10)}
+                min={localDateIso()}
                 onChange={(e) => setDate(e.target.value)}
                 className={formInputClass}
               />
