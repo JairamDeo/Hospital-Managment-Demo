@@ -29,7 +29,7 @@ export interface AppointmentClinicalNote {
   value: string;
 }
 
-export type AppointmentDetailTab = 'overview' | 'vitals' | 'notes' | 'activity' | 'documents';
+export type AppointmentDetailTab = 'overview' | 'vitals';
 
 export interface AppointmentDetail extends Appointment {
   formattedDate: string;
@@ -40,6 +40,8 @@ export interface AppointmentDetail extends Appointment {
   room: string;
   department: string;
   chiefComplaint: string;
+  /** Free-text symptoms entered on attend overview */
+  symptomsText: string;
   symptoms: string[];
   diagnosis?: string;
   treatmentPlan?: string;

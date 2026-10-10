@@ -22,6 +22,7 @@ export const addPatientVitals = async (patientCode, payload, req) => {
     recordedAt: new Date(),
     recordedByName,
     date: moment().format('DD-MMM-YYYY'),
+    temp: payload.temp?.trim() || '',
     bp: payload.bp?.trim() || '',
     pulse: payload.pulse?.trim() || '',
     spo2: payload.spo2?.trim() || '',
@@ -33,7 +34,7 @@ export const addPatientVitals = async (patientCode, payload, req) => {
 
   care.vitalsHistory.unshift(entry);
   care.vitals = {
-    temp: care.vitals?.temp || '—',
+    temp: entry.temp || care.vitals?.temp || '—',
     bp: entry.bp || care.vitals?.bp || '—',
     pulse: entry.pulse || care.vitals?.pulse || '—',
     spo2: entry.spo2 || care.vitals?.spo2 || '—',
@@ -46,6 +47,7 @@ export const addPatientVitals = async (patientCode, payload, req) => {
     vitalsHistory: care.vitalsHistory.map((v, index) => ({
       id: String(v._id ?? `vh-${index}`),
       date: v.date,
+      temp: v.temp || '',
       bp: v.bp,
       pulse: v.pulse,
       spo2: v.spo2,
@@ -63,6 +65,7 @@ export const listPatientVitalsHistory = async (patientCode) => {
   return (care?.vitalsHistory ?? []).map((v, index) => ({
     id: String(v._id ?? `vh-${index}`),
     date: v.date,
+    temp: v.temp || '',
     bp: v.bp,
     pulse: v.pulse,
     spo2: v.spo2,

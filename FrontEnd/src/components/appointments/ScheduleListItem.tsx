@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CalendarCheck, CalendarClock, Eye, Leaf, XCircle } from 'lucide-react';
-import { appointmentFollowUpPath, patientDetailPath } from '@/constants/routes';
+import { appointmentDetailPath, patientDetailPath } from '@/constants/routes';
 import type { Appointment, AppointmentStatus } from '@/types/appointment.types';
 
 interface Props {
@@ -107,7 +107,7 @@ export const ScheduleListItem = ({
         </Link>
         {showAttend ? (
           <Link
-            to={appointmentFollowUpPath(appointment.id)}
+            to={appointmentDetailPath(appointment.id)}
             className={`${actionBtnBase} bg-sage-deep text-white hover:bg-sage-deep/90`}
           >
             <CalendarCheck className="h-3.5 w-3.5" strokeWidth={2.5} />

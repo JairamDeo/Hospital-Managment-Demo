@@ -27,7 +27,7 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
     <table className="w-full min-w-[640px] border-collapse">
       <thead>
         <tr className="border-b border-border-sage bg-cream/50">
-          {['Patient', 'Age', 'Last Visit', 'Status', 'Actions'].map((col) => (
+          {['Patient', 'Patient ID', 'Age', 'Last Visit', 'Status', 'Actions'].map((col) => (
             <th
               key={col}
               className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-ink-ghost"
@@ -40,7 +40,7 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
       <tbody>
         {patients.length === 0 ? (
           <tr>
-            <td colSpan={5} className="px-4 py-12 text-center text-sm text-ink-soft">
+            <td colSpan={6} className="px-4 py-12 text-center text-sm text-ink-soft">
               No patients found
             </td>
           </tr>
@@ -57,13 +57,13 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
                   >
                     {p.initials}
                   </div>
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                    <p className="truncate text-sm font-semibold text-ink">{p.name}</p>
-                    <span className="inline-flex max-w-full items-center truncate rounded-md border border-border-sage/80 bg-cream/70 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-sage-deep">
-                      {p.id}
-                    </span>
-                  </div>
+                  <p className="truncate text-sm font-semibold text-ink">{p.name}</p>
                 </div>
+              </td>
+              <td className="px-4 py-3.5">
+                <span className="inline-flex max-w-full items-center truncate rounded-md border border-border-sage/80 bg-cream/70 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-sage-deep">
+                  {p.id}
+                </span>
               </td>
               <td className="px-4 py-3.5 text-sm text-ink-soft">{p.age} yrs</td>
               <td className="px-4 py-3.5 text-sm text-ink-soft">{p.lastVisit}</td>

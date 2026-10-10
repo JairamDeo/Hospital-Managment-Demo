@@ -45,11 +45,12 @@ export const PanchakarmaPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { canEdit, staffRole, staffCode } = usePermissions();
+  const { canEdit, staffRole, staffCode, isAdmin } = usePermissions();
   const { patients } = useAdminPatientsList();
 
   const isTherapist = staffRole === 'Therapist' && Boolean(staffCode);
-  const canCreateProgram = !isTherapist && canEdit('panchakarma');
+  const isDoctor = staffRole === 'Doctor';
+  const canCreateProgram = isAdmin || (isDoctor && canEdit('panchakarma'));
 
   const lockedTherapist = useMemo((): TherapistOnDuty | null => {
     if (!isTherapist || !staffCode) return null;

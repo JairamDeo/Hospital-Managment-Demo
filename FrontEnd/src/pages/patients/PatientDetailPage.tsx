@@ -451,8 +451,10 @@ export const PatientDetailPage = () => {
             }}
             panchakarma={{
               patientCode: patient.id,
+              patientName: patient.name,
               programs: panchakarmaPrograms,
               loading: pkLoading,
+              onRefresh: loadPanchakarmaPrograms,
             }}
             treatmentHistory={{
               history: treatmentHistory,

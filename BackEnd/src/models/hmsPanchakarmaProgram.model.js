@@ -21,12 +21,12 @@ const hmsPanchakarmaProgramSchema = new Schema({
   therapy: {
     type: String,
     enum: ['Vamana', 'Virechana', 'Basti', 'Nasya'],
-    required: true,
+    default: 'Basti',
   },
   totalDays: { type: Number, required: true, min: 1 },
   currentDay: { type: Number, default: 1, min: 1 },
-  roomCode: { type: String, required: true, index: true },
-  room: { type: String, required: true, trim: true },
+  roomCode: { type: String, default: '', index: true },
+  room: { type: String, trim: true, default: '' },
   startDate: { type: Date, required: true },
   status: {
     type: String,

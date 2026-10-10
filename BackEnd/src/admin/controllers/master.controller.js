@@ -32,6 +32,9 @@ import {
   updateAppointmentSlot,
   destroyAppointmentSlot,
   ensureSlotMaxAppointments,
+  listChuranCombinations,
+  createChuranCombination,
+  updateChuranCombination,
 } from '../services/master.service.js';
 
 export const getPrakritiList = async (_req, res) => {
@@ -388,5 +391,43 @@ export const deleteAppointmentSlot = async (req, res) => {
       return customResponse(res, error.message, 404);
     }
     return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const getChuranCombinationList = async (req, res) => {
+  try {
+    const activeOnly = req.query.active === 'true';
+    const q = req.query.q || '';
+    const items = await listChuranCombinations(activeOnly, q);
+    return customResponse(res, MASTER_MESSAGES.CHURAN_LIST, 200, { items });
+  } catch {
+    return customResponse(res, ErrorMessages.SERVER_ERROR, 500);
+  }
+};
+
+export const postChuranCombination = async (req, res) => {
+  try {
+    const item = await createChuranCombination(req.body);
+    return customResponse(res, MASTER_MESSAGES.CHURAN_CREATED, 201, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.CHURAN_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
+  }
+};
+
+export const patchChuranCombination = async (req, res) => {
+  try {
+    const item = await updateChuranCombination(req.params.id, req.body);
+    return customResponse(res, MASTER_MESSAGES.CHURAN_UPDATED, 200, { item });
+  } catch (error) {
+    if (error.message === MASTER_MESSAGES.NOT_FOUND) {
+      return customResponse(res, error.message, 404);
+    }
+    if (error.message === MASTER_MESSAGES.CHURAN_EXISTS) {
+      return customResponse(res, error.message, 409);
+    }
+    return customResponse(res, error.message || ErrorMessages.SERVER_ERROR, 400);
   }
 };

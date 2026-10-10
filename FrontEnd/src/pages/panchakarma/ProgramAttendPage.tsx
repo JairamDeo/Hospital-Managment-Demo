@@ -3,7 +3,8 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { NumericInput } from '@/components/ui/NumericInput';
-import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
+import { formInputClass, formLabelClass } from '@/components/ui/formStyles';
+import { TherapyTypeMultiSelect } from '@/components/panchakarma/TherapyTypeMultiSelect';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -14,13 +15,17 @@ import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin
 import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES, patientDetailPath } from '@/constants/routes';
 import {
-  THERAPY_OPTIONS,
   type ProgramAttendPayload,
   type ScheduleProgramDailySession,
   type TherapyType,
 } from '@/types/panchakarma.types';
 import type { HmsPanchakarmaProgram } from '@/types/api.types';
-import { isTherapistAssignedToProgram, programNeedsAttend } from '@/utils/panchakarmaHelpers';
+import {
+  isTherapistAssignedToProgram,
+  joinTherapyTypes,
+  parseTherapyTypes,
+  programNeedsAttend,
+} from '@/utils/panchakarmaHelpers';
 
 const addDaysIso = (base: string, days: number) => {
   const d = new Date(base);
@@ -28,16 +33,12 @@ const addDaysIso = (base: string, days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-const emptyDailyRow = (
-  dayNumber: number,
-  startDate: string,
-  therapy: TherapyType
-): ScheduleProgramDailySession => ({
+const emptyDailyRow = (dayNumber: number, startDate: string): ScheduleProgramDailySession => ({
   dayNumber,
   sessionDate: addDaysIso(startDate, dayNumber - 1),
   time: '10:00',
   duration: '45 min',
-  panchakarmaType: therapy,
+  panchakarmaType: '',
   medicineContent: '',
 });
 
@@ -62,9 +63,13 @@ export const ProgramAttendPage = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { user } = useAuth();
-  const { staffRole, staffCode, canView } = usePermissions();
+  const { staffRole, staffCode, canView, canEdit, isAdmin } = usePermissions();
 
   const isTherapist = staffRole === 'Therapist' && Boolean(staffCode);
+  const isDoctor = staffRole === 'Doctor';
+  const canScheduleDetails =
+    isAdmin || (isDoctor && canEdit('panchakarma'));
+  const viewOnly = isTherapist && canView('panchakarma');
 
   const [program, setProgram] = useState<HmsPanchakarmaProgram | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,15 +144,29 @@ export const ProgramAttendPage = () => {
         const loaded = res.data.res?.program ?? null;
         setProgram(loaded);
         if (loaded) {
-          const therapy = loaded.therapy as TherapyType;
           const startDate = loaded.startDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
-          setTreatmentName(loaded.treatmentName?.trim() || loaded.therapy);
+          setTreatmentName(loaded.treatmentName?.trim() || '');
           setTotalFees(loaded.totalFees ?? 0);
-          const rows: ScheduleProgramDailySession[] = [];
-          for (let i = 0; i < loaded.totalDays; i++) {
-            rows.push(emptyDailyRow(i + 1, startDate, therapy));
+          if (loaded.dailySessions?.length) {
+            setDailyRows(
+              loaded.dailySessions.map((s) => ({
+                dayNumber: s.dayNumber,
+                sessionDate: s.sessionDate
+                  ? String(s.sessionDate).slice(0, 10)
+                  : addDaysIso(startDate, s.dayNumber - 1),
+                time: s.time || '10:00',
+                duration: s.duration || '45 min',
+                panchakarmaType: s.panchakarmaType || '',
+                medicineContent: s.medicineContent || '',
+              }))
+            );
+          } else {
+            const rows: ScheduleProgramDailySession[] = [];
+            for (let i = 0; i < loaded.totalDays; i++) {
+              rows.push(emptyDailyRow(i + 1, startDate));
+            }
+            setDailyRows(rows);
           }
-          setDailyRows(rows);
           setExpandedDays(new Set([1]));
         }
       })
@@ -155,7 +174,6 @@ export const ProgramAttendPage = () => {
       .finally(() => setLoading(false));
   }, [programCode, showToast]);
 
-  const therapy = (program?.therapy ?? 'Vamana') as TherapyType;
   const startDate = program?.startDate?.slice(0, 10) ?? '';
 
   useEffect(() => {
@@ -163,18 +181,20 @@ export const ProgramAttendPage = () => {
     setDailyRows((prev) => {
       const next: ScheduleProgramDailySession[] = [];
       for (let i = 0; i < program.totalDays; i++) {
-        next.push(prev[i] ?? emptyDailyRow(i + 1, startDate, therapy));
+        next.push(prev[i] ?? emptyDailyRow(i + 1, startDate));
       }
       return next;
     });
-  }, [program, startDate, therapy, dailyRows.length]);
+  }, [program, startDate, dailyRows.length]);
 
   const canAccess = useMemo(() => {
-    if (!isTherapist || !canView('panchakarma') || !program || !staffCode) return false;
-    return isTherapistAssignedToProgram(program, staffCode);
-  }, [isTherapist, canView, program, staffCode]);
+    if (!canView('panchakarma') || !program) return false;
+    if (canScheduleDetails) return true;
+    if (viewOnly && staffCode) return isTherapistAssignedToProgram(program, staffCode);
+    return false;
+  }, [canView, program, canScheduleDetails, viewOnly, staffCode]);
 
-  if (!isTherapist || !canView('panchakarma')) {
+  if (!canView('panchakarma') || (!canScheduleDetails && !viewOnly)) {
     return <Navigate to={ROUTES.ADMIN_PANCHAKARMA} replace />;
   }
 
@@ -182,17 +202,12 @@ export const ProgramAttendPage = () => {
     return <Navigate to={ROUTES.ADMIN_PANCHAKARMA} replace />;
   }
 
-  if (!loading && program && !programNeedsAttend(program)) {
-    return (
-      <Navigate
-        to={patientDetailPath(program.patientCode ?? program.patientId)}
-        replace
-        state={{ activeTab: 'panchakarma' as const }}
-      />
-    );
-  }
+  const programLocked =
+    program?.status === 'Complete' || program?.status === 'Cancelled';
+  const readOnly = viewOnly || !canScheduleDetails || programLocked;
 
   const updateRow = (index: number, patch: Partial<ScheduleProgramDailySession>) => {
+    if (readOnly) return;
     setDailyRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   };
 
@@ -214,6 +229,7 @@ export const ProgramAttendPage = () => {
   };
 
   const handleSubmit = async () => {
+    if (readOnly) return;
     if (!programCode || !treatmentName.trim()) {
       showToast('Enter treatment / program name', 'error');
       return;
@@ -234,7 +250,7 @@ export const ProgramAttendPage = () => {
       const { data } = await panchakarmaAdminService.attendProgram(programCode, payload);
       if (data.status_code === 200) {
         clearDraftAfterSubmit(programCode ? draftContextKeys.program(programCode) : undefined);
-        showToast('Treatment plan saved', 'success');
+        showToast('Program details saved', 'success');
         const patientId = program?.patientCode ?? program?.patientId;
         if (patientId) {
           navigate(patientDetailPath(patientId), { state: { activeTab: 'panchakarma' as const } });
@@ -261,6 +277,8 @@ export const ProgramAttendPage = () => {
     return <p className="py-12 text-center text-sm text-ink-soft">Program not found.</p>;
   }
 
+  const needsPlan = programNeedsAttend(program);
+
   return (
     <div className="mx-auto w-full max-w-3xl pb-8">
       <Link
@@ -271,13 +289,17 @@ export const ProgramAttendPage = () => {
         Back to patient
       </Link>
 
-      <h1 className="font-serif text-2xl font-bold text-sage-deep">Attend program</h1>
+      <h1 className="font-serif text-2xl font-bold text-sage-deep">
+        {readOnly ? 'Program schedule' : needsPlan ? 'Program details' : 'Edit program details'}
+      </h1>
       <p className="mt-1 text-sm text-ink-soft">
-        {user?.name ?? 'Therapist'} · add treatment details for {program.patientName}
+        {readOnly
+          ? `${program.patientName} · view day-wise plan and medicines`
+          : `${user?.name ?? 'Staff'} · day-wise treatment plan for ${program.patientName}`}
       </p>
 
       <div className="mt-5 space-y-4">
-        {hasDrafts ? (
+        {!readOnly && hasDrafts ? (
           <FormDraftPanel
             drafts={drafts}
             activeDraftId={activeDraftId}
@@ -290,7 +312,7 @@ export const ProgramAttendPage = () => {
         ) : null}
 
         <div className="rounded-xl border border-border-sage bg-cream/30 p-4 shadow-sm">
-          <h2 className="mb-3 font-serif text-lg font-semibold text-ink">Scheduled by admin</h2>
+          <h2 className="mb-3 font-serif text-lg font-semibold text-ink">Schedule</h2>
           <dl className="grid gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">Patient</dt>
@@ -301,16 +323,16 @@ export const ProgramAttendPage = () => {
               <dd className="text-ink">{program.programCode}</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">Therapy</dt>
-              <dd className="text-ink">{program.therapy}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">Duration</dt>
+              <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">
+                Number of days
+              </dt>
               <dd className="text-ink">{program.totalDays} days</dd>
             </div>
             <div>
-              <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">Room</dt>
-              <dd className="text-ink">{program.room}</dd>
+              <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">
+                Therapist
+              </dt>
+              <dd className="text-ink">{program.therapistName}</dd>
             </div>
             <div>
               <dt className="text-xs font-bold uppercase tracking-wider text-ink-ghost">Start date</dt>
@@ -331,7 +353,8 @@ export const ProgramAttendPage = () => {
                 value={treatmentName}
                 onChange={(e) => setTreatmentName(e.target.value)}
                 className={formInputClass}
-                placeholder="e.g. Vamana detox — 7 day plan"
+                placeholder="e.g. 7-day detox program"
+                disabled={readOnly}
               />
             </label>
             <label className="sm:col-span-2">
@@ -342,6 +365,7 @@ export const ProgramAttendPage = () => {
                 min={0}
                 allowDecimal
                 placeholder="Enter amount"
+                disabled={readOnly}
               />
             </label>
           </div>
@@ -352,7 +376,9 @@ export const ProgramAttendPage = () => {
             <div>
               <h2 className="font-serif text-lg font-semibold text-ink">Daily schedule</h2>
               <p className="mt-1 text-sm text-ink-soft">
-                Set date, time, and medicine/content for each day of the program.
+                {readOnly
+                  ? 'Therapies and medicines for each day.'
+                  : 'Set date, therapies (multi-select), and medicine for each day.'}
               </p>
             </div>
             {dailyRows.length > 1 ? (
@@ -378,6 +404,7 @@ export const ProgramAttendPage = () => {
           <div className="space-y-2">
             {dailyRows.map((row, index) => {
               const isOpen = expandedDays.has(row.dayNumber);
+              const selectedTherapies = parseTherapyTypes(row.panchakarmaType);
               return (
                 <div
                   key={row.dayNumber}
@@ -411,6 +438,7 @@ export const ProgramAttendPage = () => {
                             value={row.sessionDate}
                             onChange={(e) => updateRow(index, { sessionDate: e.target.value })}
                             className={formInputClass}
+                            disabled={readOnly}
                           />
                         </label>
                         <label>
@@ -420,6 +448,7 @@ export const ProgramAttendPage = () => {
                             value={row.time}
                             onChange={(e) => updateRow(index, { time: e.target.value })}
                             className={formInputClass}
+                            disabled={readOnly}
                           />
                         </label>
                         <label>
@@ -430,22 +459,18 @@ export const ProgramAttendPage = () => {
                             onChange={(e) => updateRow(index, { duration: e.target.value })}
                             className={formInputClass}
                             placeholder="45 min"
+                            disabled={readOnly}
                           />
                         </label>
-                        <label>
-                          <span className={formLabelClass}>Therapy type</span>
-                          <select
-                            value={row.panchakarmaType}
-                            onChange={(e) => updateRow(index, { panchakarmaType: e.target.value })}
-                            className={formSelectClass}
-                          >
-                            {THERAPY_OPTIONS.map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
+                        <div className="sm:col-span-2">
+                          <TherapyTypeMultiSelect
+                            value={selectedTherapies}
+                            onChange={(next: TherapyType[]) =>
+                              updateRow(index, { panchakarmaType: joinTherapyTypes(next) })
+                            }
+                            disabled={readOnly}
+                          />
+                        </div>
                         <label className="sm:col-span-2">
                           <span className={formLabelClass}>Medicine / session notes</span>
                           <textarea
@@ -454,6 +479,7 @@ export const ProgramAttendPage = () => {
                             rows={2}
                             className={`${formInputClass} resize-none`}
                             placeholder="Oils, herbs, procedure notes…"
+                            disabled={readOnly}
                           />
                         </label>
                       </div>
@@ -466,19 +492,33 @@ export const ProgramAttendPage = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void handleSubmit()} disabled={submitting}>
-            {submitting ? 'Saving…' : 'Save & start program'}
-          </Button>
-          <Button type="button" variant="secondary" onClick={handleSaveDraft} disabled={submitting}>
-            Save as draft
-          </Button>
-          {activeDraftId ? (
-            <Button type="button" variant="secondary" onClick={handleSaveNewDraft} disabled={submitting}>
-              Save as new draft
-            </Button>
+          {!readOnly ? (
+            <>
+              <Button onClick={() => void handleSubmit()} disabled={submitting}>
+                {submitting ? 'Saving…' : 'Save program details'}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleSaveDraft}
+                disabled={submitting}
+              >
+                Save as draft
+              </Button>
+              {activeDraftId ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSaveNewDraft}
+                  disabled={submitting}
+                >
+                  Save as new draft
+                </Button>
+              ) : null}
+            </>
           ) : null}
           <Button variant="secondary" onClick={() => navigate(backTo)} disabled={submitting}>
-            Cancel
+            {readOnly ? 'Back' : 'Cancel'}
           </Button>
         </div>
       </div>

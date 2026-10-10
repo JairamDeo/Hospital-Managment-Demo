@@ -110,6 +110,23 @@ export const physicalMeasurementSchema = new Schema(
   { _id: false }
 );
 
+export const menstrualHistorySchema = new Schema(
+  {
+    ageAtMenarche: trimStr,
+    lmp: trimStr,
+    cycleInterval: trimStr,
+    durationOfFlow: trimStr,
+    amountOfFlow: trimStr,
+    cycleRegularity: trimStr,
+    padsPerDay: trimStr,
+    clots: trimStr,
+    painSymptoms: { type: [String], default: [] },
+    flowSymptoms: { type: [String], default: [] },
+    associatedSymptoms: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
 export const presentComplaintSchema = new Schema(
   {
     complaint: { type: String, trim: true, default: '' },
@@ -127,6 +144,7 @@ export const clinicalProfileSchema = new Schema(
     eatingHabits: eatingHabitsSchema,
     physicalActivity: physicalActivitySchema,
     physicalMeasurement: physicalMeasurementSchema,
+    menstrualHistory: menstrualHistorySchema,
     updatedAt: { type: Date },
   },
   { _id: false }

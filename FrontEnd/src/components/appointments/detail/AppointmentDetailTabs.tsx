@@ -1,31 +1,42 @@
-import { Activity, ClipboardList, FileText, History, Stethoscope } from 'lucide-react';
+import { Activity, Stethoscope } from 'lucide-react';
 import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type {
-  AppointmentDetail,
-  AppointmentDetailTab,
-} from '@/types/appointmentDetail.types';
-import { AppointmentActivityItem } from './AppointmentActivityItem';
+import type { AppointmentDetail, AppointmentDetailTab } from '@/types/appointmentDetail.types';
+import type { AppointmentDoctor } from '@/types/appointment.types';
 import {
-  AppointmentDocumentsTab,
-  AppointmentNotesTab,
   AppointmentOverviewTab,
   AppointmentVitalsTab,
+  type VisitClinicalForm,
 } from './tabs/AppointmentTabPanels';
 
 const TABS: { id: AppointmentDetailTab; label: string; icon: LucideIcon }[] = [
   { id: 'overview', label: 'Overview', icon: Stethoscope },
   { id: 'vitals', label: 'Vitals', icon: Activity },
-  { id: 'notes', label: 'Notes', icon: ClipboardList },
-  { id: 'activity', label: 'Activity', icon: History },
-  { id: 'documents', label: 'Documents', icon: FileText },
 ];
 
 interface Props {
   appointment: AppointmentDetail;
+  form: VisitClinicalForm;
+  doctors: AppointmentDoctor[];
+  canEdit: boolean;
+  canChangeDoctor?: boolean;
+  errors?: { chiefComplaint?: string };
+  vitalsEditing: boolean;
+  onVitalsEditingChange: (editing: boolean) => void;
+  onChange: (patch: Partial<VisitClinicalForm>) => void;
 }
 
-export const AppointmentDetailTabs = ({ appointment }: Props) => {
+export const AppointmentDetailTabs = ({
+  appointment,
+  form,
+  doctors,
+  canEdit,
+  canChangeDoctor = true,
+  errors,
+  vitalsEditing,
+  onVitalsEditingChange,
+  onChange,
+}: Props) => {
   const [activeTab, setActiveTab] = useState<AppointmentDetailTab>('overview');
 
   return (
@@ -55,26 +66,28 @@ export const AppointmentDetailTabs = ({ appointment }: Props) => {
       </div>
 
       <div className="p-4 sm:p-5">
-        {activeTab === 'overview' ? <AppointmentOverviewTab appointment={appointment} /> : null}
-        {activeTab === 'vitals' ? <AppointmentVitalsTab vitals={appointment.vitals} /> : null}
-        {activeTab === 'notes' ? <AppointmentNotesTab appointment={appointment} /> : null}
-        {activeTab === 'activity' ? (
-          appointment.activityLog.length === 0 ? (
-            <p className="py-8 text-center text-sm text-ink-soft">No activity recorded yet.</p>
-          ) : (
-            <div className="space-y-0">
-              {appointment.activityLog.map((record, i) => (
-                <AppointmentActivityItem
-                  key={record.id}
-                  record={record}
-                  isLast={i === appointment.activityLog.length - 1}
-                />
-              ))}
-            </div>
-          )
+        {activeTab === 'overview' ? (
+          <AppointmentOverviewTab
+            appointment={appointment}
+            form={form}
+            doctors={doctors}
+            canEdit={canEdit}
+            canChangeDoctor={canChangeDoctor}
+            errors={errors}
+            onChange={onChange}
+          />
         ) : null}
-        {activeTab === 'documents' ? (
-          <AppointmentDocumentsTab documents={appointment.documents} />
+        {activeTab === 'vitals' ? (
+          <AppointmentVitalsTab
+            vitals={appointment.vitals}
+            formVitals={form.visitVitals}
+            canEdit={canEdit}
+            editing={vitalsEditing}
+            onStartEdit={() => onVitalsEditingChange(true)}
+            onChangeVitals={(patch) =>
+              onChange({ visitVitals: { ...form.visitVitals, ...patch } })
+            }
+          />
         ) : null}
       </div>
     </div>

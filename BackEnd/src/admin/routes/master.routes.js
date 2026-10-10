@@ -39,11 +39,18 @@ import {
   postAppointmentSlotRange,
   patchAppointmentSlot,
   deleteAppointmentSlot,
+  getChuranCombinationList,
+  postChuranCombination,
+  patchChuranCombination,
 } from '../controllers/master.controller.js';
 import {
   createPharmacySpoonSchema,
   updatePharmacySpoonSchema,
 } from '../validators/pharmacySpoon.validator.js';
+import {
+  createChuranCombinationSchema,
+  updateChuranCombinationSchema,
+} from '../validators/churanCombination.validator.js';
 import { createRoomSchema, updateRoomSchema } from '../validators/room.validator.js';
 import { createLabTestSchema, updateLabTestSchema } from '../validators/labTest.validator.js';
 
@@ -97,5 +104,17 @@ router.post(
 );
 router.patch('/appointment-slots/:id', validateRequest(masterTimeUpdateSchema), patchAppointmentSlot);
 router.delete('/appointment-slots/:id', deleteAppointmentSlot);
+
+router.get('/churan-combinations', getChuranCombinationList);
+router.post(
+  '/churan-combinations',
+  validateRequest(createChuranCombinationSchema),
+  postChuranCombination
+);
+router.patch(
+  '/churan-combinations/:id',
+  validateRequest(updateChuranCombinationSchema),
+  patchChuranCombination
+);
 
 export default router;

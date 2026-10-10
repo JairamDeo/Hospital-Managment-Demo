@@ -90,6 +90,20 @@ export interface PhysicalMeasurement {
   whr: string;
 }
 
+export interface MenstrualHistory {
+  ageAtMenarche: string;
+  lmp: string;
+  cycleInterval: string;
+  durationOfFlow: string;
+  amountOfFlow: string;
+  cycleRegularity: string;
+  padsPerDay: string;
+  clots: string;
+  painSymptoms: string[];
+  flowSymptoms: string[];
+  associatedSymptoms: string[];
+}
+
 export interface PatientClinicalProfile {
   presentComplaint: PresentComplaint;
   generalExamination: GeneralExamination;
@@ -99,6 +113,7 @@ export interface PatientClinicalProfile {
   eatingHabits: EatingHabits;
   physicalActivity: PhysicalActivity;
   physicalMeasurement: PhysicalMeasurement;
+  menstrualHistory: MenstrualHistory;
   updatedAt: string | null;
 }
 
@@ -110,4 +125,5 @@ export type ClinicalSectionKey =
   | 'metabolicDisorder'
   | 'eatingHabits'
   | 'physicalActivity'
-  | 'physicalMeasurement';
+  | 'physicalMeasurement'
+  | 'menstrualHistory';

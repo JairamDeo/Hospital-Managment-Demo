@@ -44,6 +44,22 @@ const hmsAppointmentSchema = new Schema({
     index: true,
   },
   notes: { type: String, trim: true, default: '' },
+  chiefComplaint: { type: String, trim: true, default: '' },
+  symptoms: { type: String, trim: true, default: '' },
+  diagnosis: { type: String, trim: true, default: '' },
+  visitVitals: {
+    type: new Schema(
+      {
+        temp: { type: String, trim: true, default: '' },
+        bp: { type: String, trim: true, default: '' },
+        pulse: { type: String, trim: true, default: '' },
+        spo2: { type: String, trim: true, default: '' },
+        weight: { type: String, trim: true, default: '' },
+      },
+      { _id: false }
+    ),
+    default: () => ({}),
+  },
   status: {
     type: String,
     enum: ['Upcoming', 'Completed', 'Cancelled'],

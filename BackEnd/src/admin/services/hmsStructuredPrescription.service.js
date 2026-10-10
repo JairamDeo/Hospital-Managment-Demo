@@ -56,9 +56,20 @@ const formatPrescription = (doc) => {
       itemCode: m.itemCode || '',
       isManual: Boolean(m.isManual),
       packQuantity: m.packQuantity ?? 1,
+      mlIntake: m.mlIntake ?? 0,
+      isLiquid: Boolean(m.isLiquid),
+      durationDays: m.durationDays ?? 1,
+      frequency: m.frequency === 'weekly' ? 'weekly' : 'daily',
       timing: m.timing ?? {},
       totalQuantity: m.totalQuantity,
-      intakeInstructions: m.intakeInstructions || buildIntakeInstructions(m.timing),
+      intakeInstructions:
+        m.intakeInstructions ||
+        buildIntakeInstructions(m.timing, {
+          isLiquid: m.isLiquid,
+          mlIntake: m.mlIntake,
+          durationDays: m.durationDays,
+          frequency: m.frequency,
+        }),
     })),
     churans: (row.churans ?? []).map((c) => ({
       id: String(c._id),
@@ -226,19 +237,34 @@ export const createStructuredPrescription = async (patientCode, payload, req) =>
   const medicines = (payload.medicines ?? []).map((m) => {
     const timing = m.timing ?? {};
     const packQuantity = Number(m.packQuantity) || 1;
+    const mlIntake = Number(m.mlIntake) || 0;
+    const isLiquid = Boolean(m.isLiquid);
+    const durationDays = Math.max(1, Number(m.durationDays) || 1);
+    const frequency = m.frequency === 'weekly' ? 'weekly' : 'daily';
     const totalQuantity =
       Number(m.totalQuantity) > 0
         ? Number(m.totalQuantity)
-        : computeMedicineTotalQty(packQuantity, timing);
+        : computeMedicineTotalQty(packQuantity, timing, {
+            durationDays,
+            frequency,
+            mlIntake,
+            isLiquid,
+          });
 
     return {
       name: m.name.trim(),
       itemCode: m.itemCode?.trim() || '',
       isManual: Boolean(m.isManual),
-      packQuantity,
+      packQuantity: isLiquid ? 1 : packQuantity,
+      mlIntake: isLiquid ? Math.max(0, mlIntake) : 0,
+      isLiquid,
+      durationDays,
+      frequency,
       timing,
       totalQuantity,
-      intakeInstructions: m.intakeInstructions?.trim() || buildIntakeInstructions(timing),
+      intakeInstructions:
+        m.intakeInstructions?.trim() ||
+        buildIntakeInstructions(timing, { isLiquid, mlIntake, durationDays, frequency }),
     };
   });
 

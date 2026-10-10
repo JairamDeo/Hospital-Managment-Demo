@@ -61,6 +61,28 @@ class AppointmentAdminService {
     );
   }
 
+  saveVisitClinical(
+    appointmentCode: string,
+    payload: {
+      chiefComplaint: string;
+      symptoms?: string;
+      diagnosis?: string;
+      staffCode?: string;
+      visitVitals?: {
+        temp?: string;
+        bp?: string;
+        pulse?: string;
+        spo2?: string;
+        weight?: string;
+      };
+    }
+  ) {
+    return axiosInstance.patch<ApiResponse<{ appointment: HmsAppointment }>>(
+      `/admin/appointments/${encodeURIComponent(appointmentCode)}/visit-clinical`,
+      payload
+    );
+  }
+
   create(values: AppointmentFormValues) {
     return axiosInstance.post<ApiResponse<{ appointment: HmsAppointment }>>('/admin/appointments', {
       patientCode: values.patientId,

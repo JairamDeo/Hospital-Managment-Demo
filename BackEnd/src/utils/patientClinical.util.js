@@ -85,6 +85,19 @@ export const emptyClinicalProfile = () => ({
     bmi: '',
     whr: '',
   },
+  menstrualHistory: {
+    ageAtMenarche: '',
+    lmp: '',
+    cycleInterval: '',
+    durationOfFlow: '',
+    amountOfFlow: '',
+    cycleRegularity: '',
+    padsPerDay: '',
+    clots: '',
+    painSymptoms: [],
+    flowSymptoms: [],
+    associatedSymptoms: [],
+  },
   updatedAt: null,
 });
 
@@ -131,6 +144,17 @@ const mergeSection = (defaults, incoming) => {
   return base;
 };
 
+const mergeMenstrualHistory = (defaults, incoming) => {
+  const base = mergeSection(defaults, incoming);
+  const patch = toPlain(incoming);
+  base.painSymptoms = Array.isArray(patch.painSymptoms) ? patch.painSymptoms : defaults.painSymptoms;
+  base.flowSymptoms = Array.isArray(patch.flowSymptoms) ? patch.flowSymptoms : defaults.flowSymptoms;
+  base.associatedSymptoms = Array.isArray(patch.associatedSymptoms)
+    ? patch.associatedSymptoms
+    : defaults.associatedSymptoms;
+  return base;
+};
+
 export const formatClinicalProfile = (clinical) => {
   const empty = emptyClinicalProfile();
   if (!clinical) return empty;
@@ -149,6 +173,7 @@ export const formatClinicalProfile = (clinical) => {
     physicalMeasurement: enrichPhysicalMeasurement(
       mergeSection(empty.physicalMeasurement, raw.physicalMeasurement)
     ),
+    menstrualHistory: mergeMenstrualHistory(empty.menstrualHistory, raw.menstrualHistory),
     updatedAt: raw.updatedAt ? new Date(raw.updatedAt).toISOString() : null,
   };
 };
@@ -191,6 +216,10 @@ export const mergeClinicalProfile = (existing, payload) => {
         current.physicalMeasurement,
         payload.physicalMeasurement ?? empty.physicalMeasurement
       )
+    ),
+    menstrualHistory: mergeMenstrualHistory(
+      current.menstrualHistory,
+      payload.menstrualHistory ?? empty.menstrualHistory
     ),
     updatedAt: new Date(),
   };

@@ -1,5 +1,13 @@
 import axiosInstance from '../http/axiosInstance';
-import type { ApiResponse, MasterItem, PharmacySpoonItem, RoomMasterItem, AppointmentSlotItem } from '@/types/api.types';
+import type {
+  ApiResponse,
+  MasterItem,
+  PharmacySpoonItem,
+  RoomMasterItem,
+  AppointmentSlotItem,
+  ChuranCombinationItem,
+  ChuranCombinationPowder,
+} from '@/types/api.types';
 
 class MasterService {
   listPrakriti() {
@@ -223,6 +231,44 @@ class MasterService {
   deleteAppointmentSlot(id: string) {
     return axiosInstance.delete<ApiResponse<{ item: AppointmentSlotItem }>>(
       `/admin/master/appointment-slots/${id}`
+    );
+  }
+
+  listChuranCombinations(activeOnly = false, q = '') {
+    const params = new URLSearchParams();
+    if (activeOnly) params.set('active', 'true');
+    if (q.trim()) params.set('q', q.trim());
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return axiosInstance.get<ApiResponse<{ items: ChuranCombinationItem[] }>>(
+      `/admin/master/churan-combinations${query}`
+    );
+  }
+
+  createChuranCombination(payload: {
+    name: string;
+    powders: ChuranCombinationPowder[];
+    combination?: string;
+    howToIntake?: string;
+  }) {
+    return axiosInstance.post<ApiResponse<{ item: ChuranCombinationItem }>>(
+      '/admin/master/churan-combinations',
+      payload
+    );
+  }
+
+  updateChuranCombination(
+    id: string,
+    payload: Partial<{
+      name: string;
+      powders: ChuranCombinationPowder[];
+      combination: string;
+      howToIntake: string;
+      active: boolean;
+    }>
+  ) {
+    return axiosInstance.patch<ApiResponse<{ item: ChuranCombinationItem }>>(
+      `/admin/master/churan-combinations/${id}`,
+      payload
     );
   }
 

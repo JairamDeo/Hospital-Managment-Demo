@@ -13,6 +13,7 @@ interface Props {
 }
 
 const emptyForm = (): PatientVitalsPayload => ({
+  temp: '',
   bp: '',
   pulse: '',
   spo2: '',
@@ -40,7 +41,7 @@ export const AddVitalsModal = ({ open, submitting = false, onClose, onSubmit }: 
       open={open}
       onClose={onClose}
       title="Record vitals"
-      subtitle="Blood pressure, pulse, SpO₂, glucose, and weight"
+      subtitle="Temperature, blood pressure, pulse, SpO₂, glucose, and weight"
       size="md"
       footer={
         <>
@@ -58,6 +59,16 @@ export const AddVitalsModal = ({ open, submitting = false, onClose, onSubmit }: 
         Latest reading updates the patient sidebar vitals
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
+        <label>
+          <span className={formLabelClass}>Temperature (°F)</span>
+          <input
+            type="text"
+            value={form.temp ?? ''}
+            onChange={(e) => set('temp', e.target.value)}
+            placeholder="98.6"
+            className={formInputClass}
+          />
+        </label>
         <label>
           <span className={formLabelClass}>Blood pressure</span>
           <input

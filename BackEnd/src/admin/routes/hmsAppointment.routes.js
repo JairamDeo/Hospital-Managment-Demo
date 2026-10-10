@@ -7,6 +7,7 @@ import {
   attendAppointmentSchema,
   cancelAppointmentSchema,
   rescheduleAppointmentSchema,
+  saveVisitClinicalSchema,
 } from '../validators/hmsAppointment.validator.js';
 import {
   getAppointments,
@@ -17,6 +18,7 @@ import {
   getDoctorsForBooking,
   getAppointment,
   patchAttendAppointment,
+  patchVisitClinical,
   patchCancelAppointment,
   patchRescheduleAppointment,
 } from '../controllers/hmsAppointment.controller.js';
@@ -35,6 +37,11 @@ router.patch(
   '/:appointmentCode/attend',
   validateRequest(attendAppointmentSchema),
   patchAttendAppointment
+);
+router.patch(
+  '/:appointmentCode/visit-clinical',
+  validateRequest(saveVisitClinicalSchema),
+  patchVisitClinical
 );
 router.patch(
   '/:appointmentCode/cancel',

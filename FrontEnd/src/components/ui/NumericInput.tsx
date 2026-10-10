@@ -13,6 +13,7 @@ type NumericInputProps = {
   className?: string;
   placeholder?: string;
   id?: string;
+  disabled?: boolean;
   'aria-label'?: string;
 };
 
@@ -28,6 +29,7 @@ export const NumericInput = ({
   className = '',
   placeholder,
   id,
+  disabled = false,
   'aria-label': ariaLabel,
 }: NumericInputProps) => {
   const [draft, setDraft] = useState(String(value));
@@ -59,6 +61,9 @@ export const NumericInput = ({
     setDraft(String(next));
   };
 
+  const hasWidth = /\bw-/.test(className);
+  const baseClass = hasWidth ? formInputClass.replace(/\bw-full\b/, '').trim() : formInputClass;
+
   return (
     <input
       id={id}
@@ -67,6 +72,7 @@ export const NumericInput = ({
       aria-label={ariaLabel}
       placeholder={placeholder}
       value={draft}
+      disabled={disabled}
       onFocus={() => setFocused(true)}
       onBlur={() => {
         setFocused(false);
@@ -81,7 +87,7 @@ export const NumericInput = ({
           e.currentTarget.blur();
         }
       }}
-      className={`${formInputClass} ${formNoSpinnerClass} ${className}`.trim()}
+      className={`${baseClass} ${formNoSpinnerClass} ${className}`.trim()}
     />
   );
 };

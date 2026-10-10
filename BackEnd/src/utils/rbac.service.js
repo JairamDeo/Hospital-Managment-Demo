@@ -27,6 +27,9 @@ export const seedRbacIfEmpty = async () => {
  * - add newly introduced module keys that are absent in DB
  * Never overwrites admin-saved view/edit flags (persistence).
  */
+/** Roles whose panchakarma flags must match product defaults (Doctor schedule; Therapist view). */
+const SYNC_PANCHAKARMA_ROLES = new Set(['Doctor', 'Therapist']);
+
 export const mergeRbacDefaults = async () => {
   for (const [role, defaults] of Object.entries(DEFAULT_RBAC_BY_ROLE)) {
     const row = await RbacRoleConfig.findOne({ role });
@@ -43,6 +46,19 @@ export const mergeRbacDefaults = async () => {
         changed = true;
       }
     }
+
+    if (SYNC_PANCHAKARMA_ROLES.has(role) && defaults.panchakarma) {
+      const next = {
+        view: Boolean(defaults.panchakarma.view),
+        edit: Boolean(defaults.panchakarma.edit),
+      };
+      const cur = modules.panchakarma;
+      if (!cur || Boolean(cur.view) !== next.view || Boolean(cur.edit) !== next.edit) {
+        modules.panchakarma = next;
+        changed = true;
+      }
+    }
+
     if (changed) {
       row.set('modules', modules);
       row.markModified('modules');

@@ -48,6 +48,25 @@ export interface PharmacySpoonItem {
   active?: boolean;
 }
 
+export interface ChuranCombinationPowder {
+  itemCode?: string;
+  name: string;
+  quantitySpoons: number;
+  spoonGrams: number;
+  quantityGrams: number;
+}
+
+export interface ChuranCombinationItem {
+  _id: string;
+  id?: string;
+  code: string;
+  name: string;
+  powders: ChuranCombinationPowder[];
+  combination: string;
+  howToIntake?: string;
+  active?: boolean;
+}
+
 export interface MasterItem {
   _id: string;
   code: string;
@@ -136,6 +155,8 @@ export interface HmsPatient {
   treatmentName: string | null;
   treatment: string | null;
   lastVisit?: string;
+  lastVisitRaw?: string;
+  createdAt?: string;
   recordStatus: string;
   status: string;
   createdByAdmin?: boolean;
@@ -205,6 +226,16 @@ export interface HmsAppointment {
   status: 'Upcoming' | 'Completed' | 'Cancelled';
   adminStatus?: 'Soon' | 'In' | 'Done' | 'Cancelled';
   notes?: string;
+  chiefComplaint?: string;
+  symptoms?: string;
+  diagnosis?: string;
+  visitVitals?: {
+    temp?: string;
+    bp?: string;
+    pulse?: string;
+    spo2?: string;
+    weight?: string;
+  };
   createdBy?: {
     type: 'admin' | 'patient';
     name?: string;

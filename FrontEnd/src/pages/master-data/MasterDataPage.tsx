@@ -1,12 +1,23 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { CalendarPlus, DoorOpen, FlaskConical, Leaf, Pencil, Plus, Soup, Stethoscope } from 'lucide-react';
+import {
+  CalendarPlus,
+  DoorOpen,
+  FlaskConical,
+  Leaf,
+  Pencil,
+  Plus,
+  Soup,
+  Stethoscope,
+  Blend,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ContentLoader } from '@/components/ui/Loader';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { LabMasterPanel } from '@/components/master-data/LabMasterPanel';
+import { ChuranMasterPanel } from '@/components/master-data/ChuranMasterPanel';
 import { useToast } from '@/hooks/useToast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { masterService } from '@/services/master/master.service';
@@ -14,7 +25,14 @@ import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES } from '@/constants/routes';
 import type { MasterItem, PharmacySpoonItem, RoomMasterItem, AppointmentSlotItem } from '@/types/api.types';
 
-type Tab = 'prakriti' | 'treatment' | 'pharmacySpoon' | 'room' | 'lab' | 'appointmentSlot';
+type Tab =
+  | 'prakriti'
+  | 'treatment'
+  | 'pharmacySpoon'
+  | 'room'
+  | 'lab'
+  | 'appointmentSlot'
+  | 'churan';
 
 import { Trash2 } from 'lucide-react';
 
@@ -179,6 +197,7 @@ const TAB_LABELS: Record<Tab, string> = {
   room: 'Room',
   lab: 'Lab Tests',
   appointmentSlot: 'Appointment Slot',
+  churan: 'Churan',
 };
 
 const emptyRoomForm = () => ({
@@ -473,6 +492,7 @@ export const MasterDataPage = () => {
     { id: 'treatment', label: 'Treatment', icon: Stethoscope },
     { id: 'room', label: 'Room', icon: DoorOpen },
     { id: 'pharmacySpoon', label: 'Spoon Size', icon: Soup },
+    { id: 'churan', label: 'Churan', icon: Blend },
     { id: 'appointmentSlot', label: 'Slots', icon: CalendarPlus },
     { id: 'lab', label: 'Lab Tests', icon: FlaskConical },
   ];
@@ -527,10 +547,10 @@ export const MasterDataPage = () => {
             Master Data
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Prakriti, treatments, rooms, spoon sizes, slots, and lab test catalog
+            Prakriti, treatments, rooms, spoon sizes, churan mixes, slots, and lab tests
           </p>
         </div>
-        {tab !== 'lab' && canEdit('masterData') ? (
+        {tab !== 'lab' && tab !== 'churan' && canEdit('masterData') ? (
           <Button className="gap-2 rounded-lg px-4 py-2" onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" strokeWidth={2} />
             Add {TAB_LABELS[tab]}
@@ -576,6 +596,8 @@ export const MasterDataPage = () => {
 
       {tab === 'lab' ? (
         <LabMasterPanel />
+      ) : tab === 'churan' ? (
+        <ChuranMasterPanel />
       ) : loading ? (
         <ContentLoader size="md" className="min-h-[240px]" />
       ) : tab === 'pharmacySpoon' ? (

@@ -61,8 +61,10 @@ interface PrescriptionProps {
 
 interface PanchakarmaProps {
   patientCode: string;
+  patientName?: string;
   programs: HmsPanchakarmaProgram[];
   loading: boolean;
+  onRefresh?: () => void | Promise<void>;
 }
 
 interface TreatmentHistoryProps {
@@ -191,6 +193,7 @@ export const PatientDetailTabs = ({
                         <tr className="border-b border-border-sage bg-cream/50 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
                           {[
                             'Date',
+                            'Temp',
                             'BP',
                             'Pulse',
                             'SpO₂',
@@ -211,6 +214,7 @@ export const PatientDetailTabs = ({
                         {vitalsHistory.map((row) => (
                           <tr key={row.id} className="border-b border-border-sage/60 last:border-0">
                             <td className="px-3 py-2 text-ink-soft">{row.date}</td>
+                            <td className="px-3 py-2">{row.temp || '—'}</td>
                             <td className="px-3 py-2">{row.bp || '—'}</td>
                             <td className="px-3 py-2">{row.pulse || '—'}</td>
                             <td className="px-3 py-2">{row.spo2 || '—'}</td>
@@ -265,8 +269,10 @@ export const PatientDetailTabs = ({
         {activeTab === 'panchakarma' && panchakarma ? (
           <PatientPanchakarmaTab
             patientCode={panchakarma.patientCode}
+            patientName={panchakarma.patientName}
             programs={panchakarma.programs}
             loading={panchakarma.loading}
+            onRefresh={panchakarma.onRefresh}
           />
         ) : null}
 

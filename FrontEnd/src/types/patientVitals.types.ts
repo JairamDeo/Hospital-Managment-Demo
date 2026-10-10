@@ -1,6 +1,7 @@
 export interface PatientVitalsEntry {
   id: string;
   date: string;
+  temp: string;
   bp: string;
   pulse: string;
   spo2: string;
@@ -12,6 +13,7 @@ export interface PatientVitalsEntry {
 }
 
 export interface PatientVitalsPayload {
+  temp?: string;
   bp?: string;
   pulse?: string;
   spo2?: string;

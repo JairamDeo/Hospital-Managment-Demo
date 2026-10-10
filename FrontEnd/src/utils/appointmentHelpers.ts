@@ -121,39 +121,71 @@ const departmentForType = (type: AppointmentType): string => {
   }
 };
 
-export const buildAppointmentDetail = (appt: Appointment, patient?: Patient): AppointmentDetail => ({
-  ...appt,
-  formattedDate: formatDateLabel(appt.date),
-  formattedTime: formatTimeLabel(appt.time),
-  duration: durationForType(appt.type),
-  doctor: appt.doctorName,
-  doctorId: appt.staffCode,
-  room: '—',
-  department: departmentForType(appt.type),
-  chiefComplaint: appt.notes?.trim() || '—',
-  symptoms: [],
-  patientPhone: patient?.mobile ?? '—',
-  patientAge: patient ? `${patient.age} yrs` : '—',
-  patientPrakriti: patient?.prakriti,
-  checkInTime: appt.status === 'In' ? formatTimeLabel(appt.time) : undefined,
-  clinicalNotes: [
-    { label: 'Prakriti', value: patient?.prakriti ?? '—' },
-    { label: 'Treatment', value: patient?.treatment ?? '—' },
-    { label: 'Last Visit', value: patient?.lastVisit ?? '—' },
-  ],
-  doctorNotes: appt.notes,
-  prepInstructions: [],
-  activityLog: [
-    {
-      id: `${appt.id}-scheduled`,
-      title: 'Appointment Scheduled',
-      date: `${formatDateLabel(appt.date)} · ${formatTimeLabel(appt.time)}`,
-      description: `${appt.type} for ${appt.patientName} with ${appt.doctorName}.`,
-      actor: appt.doctorName,
-    },
-  ],
-  documents: [],
-});
+export const buildAppointmentDetail = (
+  appt: Appointment,
+  patient?: Patient,
+  row?: HmsAppointment
+): AppointmentDetail => {
+  const chief =
+    row?.chiefComplaint?.trim() ||
+    (appt.notes?.trim() && appt.notes.trim() !== '—' ? appt.notes.trim() : '') ||
+    '';
+  const symptomsText = row?.symptoms?.trim() || '';
+  const vitals = row?.visitVitals;
+  const hasVitals = Boolean(
+    vitals?.temp || vitals?.bp || vitals?.pulse || vitals?.spo2 || vitals?.weight
+  );
+
+  return {
+    ...appt,
+    formattedDate: formatDateLabel(appt.date),
+    formattedTime: formatTimeLabel(appt.time),
+    duration: durationForType(appt.type),
+    doctor: appt.doctorName,
+    doctorId: appt.staffCode,
+    room: '—',
+    department: departmentForType(appt.type),
+    chiefComplaint: chief,
+    symptomsText,
+    symptoms: symptomsText
+      ? symptomsText
+          .split(/[,;\n]+/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+    diagnosis: row?.diagnosis?.trim() || '',
+    patientPhone: patient?.mobile ?? '—',
+    patientAge: patient ? `${patient.age} yrs` : '—',
+    patientPrakriti: patient?.prakriti,
+    checkInTime: appt.status === 'In' ? formatTimeLabel(appt.time) : undefined,
+    clinicalNotes: [
+      { label: 'Prakriti', value: patient?.prakriti ?? '—' },
+      { label: 'Treatment', value: patient?.treatment ?? '—' },
+      { label: 'Last Visit', value: patient?.lastVisit ?? '—' },
+    ],
+    doctorNotes: appt.notes,
+    prepInstructions: [],
+    vitals: hasVitals
+      ? {
+          temp: vitals?.temp || '—',
+          bp: vitals?.bp || '—',
+          pulse: vitals?.pulse || '—',
+          spo2: vitals?.spo2 || '—',
+          weight: vitals?.weight || undefined,
+        }
+      : undefined,
+    activityLog: [
+      {
+        id: `${appt.id}-scheduled`,
+        title: 'Appointment Scheduled',
+        date: `${formatDateLabel(appt.date)} · ${formatTimeLabel(appt.time)}`,
+        description: `${appt.type} for ${appt.patientName} with ${appt.doctorName}.`,
+        actor: appt.doctorName,
+      },
+    ],
+    documents: [],
+  };
+};
 
 export const buildCalendarDots = (
   appointments: Appointment[],

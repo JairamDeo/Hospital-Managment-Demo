@@ -56,9 +56,9 @@ export interface TreatmentRoom {
 
 export interface ScheduleProgramFormValues {
   patientId: string;
-  therapy: TherapyType;
+  therapy?: TherapyType;
   totalDays: number;
-  roomCode: string;
+  roomCode?: string;
   therapistId: string;
   startDate: string;
   treatmentName?: string;

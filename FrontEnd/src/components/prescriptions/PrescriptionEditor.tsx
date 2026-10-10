@@ -8,6 +8,7 @@ import { RecommendLabTestsModal } from '@/components/prescriptions/RecommendLabT
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useFormDraft } from '@/hooks/useFormDraft';
 import { useToast } from '@/hooks/useToast';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
 import { pharmacyService } from '@/services/pharmacy/pharmacy.service';
 import { masterService } from '@/services/master/master.service';
@@ -22,6 +23,8 @@ import { getStockBaseUnits, getUnitsPerPack, saleUnitLabel } from '@/utils/pharm
 import {
   buildChuranCombination,
   computeMedicineTotalQty,
+  countMedicineDoses,
+  isLiquidMedicine,
   maxSpoonsForPowderStock,
   powderGramsFromSpoons,
   TIMING_LABELS,
@@ -32,7 +35,7 @@ import {
   type RecommendedLabTest,
   type StructuredPrescription,
 } from '@/types/structuredPrescription.types';
-import type { PharmacySpoonItem } from '@/types/api.types';
+import type { ChuranCombinationItem, PharmacySpoonItem } from '@/types/api.types';
 import type { PharmacyItemApi } from '@/types/pharmacy.types';
 
 const emptyTiming = (): MedicineTiming => ({});
@@ -117,14 +120,29 @@ const getMaxSpoonsForPowderLine = (
   return maxSpoonsForPowderStock(availableGrams, spoonGrams);
 };
 
-const pharmacyMedicine = (item: PharmacyItemApi): PrescriptionMedicine => ({
-  name: item.name,
-  itemCode: item.itemCode,
-  isManual: false,
-  packQuantity: 1,
-  timing: emptyTiming(),
-  totalQuantity: 0,
-});
+const pharmacyMedicine = (item: PharmacyItemApi): PrescriptionMedicine => {
+  const liquid = isLiquidMedicine(item);
+  return {
+    name: item.name,
+    itemCode: item.itemCode,
+    isManual: false,
+    packQuantity: 1,
+    mlIntake: liquid ? 10 : 0,
+    isLiquid: liquid,
+    durationDays: 1,
+    frequency: 'daily',
+    timing: emptyTiming(),
+    totalQuantity: 0,
+  };
+};
+
+const medTotalQty = (m: PrescriptionMedicine) =>
+  computeMedicineTotalQty(m.packQuantity, m.timing, {
+    durationDays: m.durationDays,
+    frequency: m.frequency,
+    mlIntake: m.mlIntake,
+    isLiquid: m.isLiquid,
+  });
 
 const emptyChuran = (): PrescriptionChuran => ({
   name: '',
@@ -182,19 +200,19 @@ const QtyStepper = ({
 }) => {
   const atMax = max != null && value >= max;
   const btnClass = compact
-    ? 'cursor-pointer px-1 py-0.5 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40'
+    ? 'cursor-pointer px-0.5 py-0.5 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40'
     : 'cursor-pointer rounded-l-lg px-2 py-1 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40';
   const btnClassRight = compact
-    ? 'cursor-pointer px-1 py-0.5 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40'
+    ? 'cursor-pointer px-0.5 py-0.5 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40'
     : 'cursor-pointer rounded-r-lg px-2 py-1 text-ink-soft hover:bg-sage-mist/50 disabled:opacity-40';
   const inputClass = compact
-    ? 'w-8 border-x border-border-sage border-y-0 rounded-none px-0.5 py-0.5 text-center text-xs shadow-none focus:ring-0'
-    : 'w-12 border-x border-border-sage border-y-0 rounded-none px-1 py-1 text-center text-sm shadow-none focus:ring-0';
-  const iconClass = compact ? 'h-3 w-3' : 'h-3.5 w-3.5';
+    ? 'w-6 min-w-0 border-x border-border-sage border-y-0 rounded-none px-0 py-0.5 text-center text-[11px] shadow-none focus:ring-0'
+    : 'w-10 border-x border-border-sage border-y-0 rounded-none px-1 py-1 text-center text-sm shadow-none focus:ring-0';
+  const iconClass = compact ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5';
 
   return (
     <div
-      className={`inline-flex items-center border border-border-sage bg-white ${compact ? 'rounded-md' : 'rounded-lg'}`}
+      className={`inline-flex w-fit items-center border border-border-sage bg-white ${compact ? 'rounded-md' : 'rounded-lg'}`}
     >
       <button
         type="button"
@@ -242,6 +260,9 @@ export const PrescriptionEditor = ({
   const debouncedSearch = useDebouncedValue(itemSearch, 300);
   const [medicines, setMedicines] = useState<PrescriptionMedicine[]>([]);
   const [churans, setChurans] = useState<PrescriptionChuran[]>(() => [emptyChuran()]);
+  const [churanMasters, setChuranMasters] = useState<ChuranCombinationItem[]>([]);
+  const [churanNameFocus, setChuranNameFocus] = useState<number | null>(null);
+  const [savingChuranMaster, setSavingChuranMaster] = useState<number | null>(null);
   const [recommendedTests, setRecommendedTests] = useState<RecommendedLabTest[]>([]);
   const [labModalOpen, setLabModalOpen] = useState(false);
   const [diagnosis, setDiagnosis] = useState('');
@@ -319,14 +340,27 @@ export const PrescriptionEditor = ({
     Promise.all([
       pharmacyService.getBillingItems(),
       masterService.listPharmacySpoons(true),
+      masterService.listChuranCombinations(true),
     ])
-      .then(([pharmacyRes, spoonRes]) => {
+      .then(([pharmacyRes, spoonRes, churanRes]) => {
         setPharmacyItems(pharmacyRes.data.res?.items ?? []);
         setSpoonSizes(spoonRes.data.res?.items ?? []);
+        setChuranMasters(churanRes.data.res?.items ?? []);
       })
       .catch((err) => showToast(getApiErrorMessage(err), 'error'))
       .finally(() => setLoading(false));
   }, [showToast]);
+
+  useEffect(() => {
+    if (!appointmentCode) return;
+    void appointmentAdminService
+      .get(appointmentCode)
+      .then(({ data }) => {
+        const d = data.res?.appointment?.diagnosis?.trim();
+        if (d) setDiagnosis(d);
+      })
+      .catch(() => undefined);
+  }, [appointmentCode]);
 
   const searchResults = useMemo(
     () => searchPharmacyItems(pharmacyItems, debouncedSearch, PHARMACY_SEARCH_MAX_RESULTS, {
@@ -361,11 +395,17 @@ export const PrescriptionEditor = ({
         if (i !== index) return m;
         const next = { ...m, ...patch };
         const item = m.itemCode ? itemByCode.get(m.itemCode) : undefined;
-        if (item && patch.packQuantity != null) {
+        if (item && !next.isLiquid && patch.packQuantity != null) {
           const max = getMaxPackStock(item);
           next.packQuantity = Math.min(Math.max(1, patch.packQuantity), max || 1);
         }
-        next.totalQuantity = computeMedicineTotalQty(next.packQuantity, next.timing);
+        if (patch.mlIntake != null) {
+          next.mlIntake = Math.max(1, patch.mlIntake);
+        }
+        if (patch.durationDays != null) {
+          next.durationDays = Math.max(1, patch.durationDays);
+        }
+        next.totalQuantity = medTotalQty(next);
         return next;
       })
     );
@@ -376,11 +416,8 @@ export const PrescriptionEditor = ({
       prev.map((m, i) => {
         if (i !== index) return m;
         const timing = { ...m.timing, [key]: !m.timing[key] };
-        return {
-          ...m,
-          timing,
-          totalQuantity: computeMedicineTotalQty(m.packQuantity, timing),
-        };
+        const next = { ...m, timing };
+        return { ...next, totalQuantity: medTotalQty(next) };
       })
     );
   };
@@ -468,6 +505,75 @@ export const PrescriptionEditor = ({
     );
   };
 
+  const applyChuranMaster = (churanIndex: number, master: ChuranCombinationItem) => {
+    setChurans((prev) =>
+      prev.map((ch, i) => {
+        if (i !== churanIndex) return ch;
+        const powders: ChuranPowderComponent[] = (master.powders ?? []).map((p) => ({
+          itemCode: p.itemCode || '',
+          name: p.name,
+          quantitySpoons: p.quantitySpoons,
+          spoonGrams: p.spoonGrams,
+          quantityGrams: p.quantityGrams,
+        }));
+        return {
+          ...ch,
+          name: master.name,
+          powders,
+          combination: master.combination || buildChuranCombination(powders),
+          intakeNote: master.howToIntake || '',
+          howToIntake: master.howToIntake || '',
+        };
+      })
+    );
+    setChuranNameFocus(null);
+    showToast(`Loaded “${master.name}” combination`, 'success');
+  };
+
+  const saveChuranToMaster = async (churanIndex: number) => {
+    const ch = churans[churanIndex];
+    if (!ch?.name.trim()) {
+      showToast('Enter churan name first', 'error');
+      return;
+    }
+    if (!(ch.powders?.length)) {
+      showToast('Add at least one powder before saving', 'error');
+      return;
+    }
+    setSavingChuranMaster(churanIndex);
+    try {
+      const { data } = await masterService.createChuranCombination({
+        name: ch.name.trim(),
+        powders: ch.powders,
+        combination: ch.combination?.trim() || buildChuranCombination(ch.powders),
+        howToIntake: ch.intakeNote?.trim() || '',
+      });
+      if (data.res?.item) {
+        setChuranMasters((prev) =>
+          [...prev, data.res!.item!].sort((a, b) => a.name.localeCompare(b.name))
+        );
+      }
+      showToast('Churan combination saved to master data', 'success');
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSavingChuranMaster(null);
+    }
+  };
+
+  const matchingChuranMasters = (query: string) => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 1) return churanMasters.slice(0, 8);
+    return churanMasters
+      .filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.combination.toLowerCase().includes(q) ||
+          m.code.toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+  };
+
   const handleSave = async () => {
     const validMeds = medicines.filter((m) => m.name.trim());
     const validChurans = churans
@@ -485,12 +591,20 @@ export const PrescriptionEditor = ({
     }
 
     for (const med of validMeds) {
-      if (!med.itemCode) continue;
+      if (countMedicineDoses(med.timing) < 1) {
+        showToast(`${med.name}: select at least one timing`, 'error');
+        return;
+      }
+      if (med.isLiquid && !(Number(med.mlIntake) > 0)) {
+        showToast(`${med.name}: enter ML intake`, 'error');
+        return;
+      }
+      if (!med.itemCode || med.isLiquid) continue;
       const item = itemByCode.get(med.itemCode);
       if (!item) continue;
       const max = getMaxPackStock(item);
       if (med.packQuantity > max) {
-        showToast(`${med.name}: only ${max} pack(s) in stock`, 'error');
+        showToast(`${med.name}: only ${max} in stock`, 'error');
         return;
       }
     }
@@ -519,11 +633,13 @@ export const PrescriptionEditor = ({
     try {
       const { data } = await patientAdminService.createStructuredPrescription(patientCode, {
         appointmentCode: appointmentCode || undefined,
-        diagnosis: diagnosis.trim(),
+        diagnosis: diagnosis.trim() || undefined,
         remarks: remarks.trim(),
         medicines: validMeds.map((m) => ({
           ...m,
-          totalQuantity: computeMedicineTotalQty(m.packQuantity, m.timing),
+          durationDays: m.durationDays ?? 1,
+          frequency: m.frequency ?? 'daily',
+          totalQuantity: medTotalQty(m),
         })),
         churans: validChurans,
         recommendedTests: recommendedTests.length ? recommendedTests : undefined,
@@ -558,6 +674,24 @@ export const PrescriptionEditor = ({
 
   return (
     <div className={compact ? 'space-y-4' : 'space-y-5'}>
+      <div className="rounded-xl border border-border-sage/80 bg-gradient-to-r from-sage-mist/50 to-cream/40 px-3 py-2.5">
+        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+          Timing guide
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {TIMING_LABELS.map(({ label, title }) => (
+            <span
+              key={label}
+              className="inline-flex items-center gap-1 rounded-full border border-border-sage/70 bg-white/90 px-2 py-0.5 text-[11px] text-ink"
+            >
+              <span className="font-bold text-sage-deep">{label}</span>
+              <span className="text-ink-ghost">·</span>
+              <span className="text-ink-soft">{title}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
       {hasDrafts ? (
         <FormDraftPanel
           drafts={drafts}
@@ -639,45 +773,99 @@ export const PrescriptionEditor = ({
           <div className="space-y-2">
             {medicines.map((med, index) => {
               const item = med.itemCode ? itemByCode.get(med.itemCode) : undefined;
-              const maxPacks = item ? getMaxPackStock(item) : undefined;
+              const liquid = Boolean(med.isLiquid ?? (item ? isLiquidMedicine(item, med.name) : false));
+              const maxPacks = !liquid && item ? getMaxPackStock(item) : undefined;
               const atLimit = maxPacks != null && med.packQuantity >= maxPacks;
+              const daysLabel = med.frequency === 'weekly' ? 'Weeks' : 'Days';
               return (
                 <div
                   key={med.itemCode ?? index}
                   className="rounded-lg border border-border-sage bg-cream/20 px-2.5 py-2"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="w-[9.5rem] shrink-0 truncate text-sm font-semibold text-ink sm:w-[11rem]">
-                      {med.name}
-                    </p>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-ghost">
-                        Pack
-                      </span>
-                      <QtyStepper
-                        value={med.packQuantity}
-                        onChange={(v) => updateMedicine(index, { packQuantity: v })}
-                        max={maxPacks}
-                        compact
-                      />
+                    <div className="min-w-[8.5rem] shrink-0 sm:min-w-[10rem]">
+                      <p className="truncate text-sm font-semibold text-ink">{med.name}</p>
+                      {liquid ? (
+                        <p className="text-[10px] font-semibold text-sage-deep">Liquid · ML dose</p>
+                      ) : item && maxPacks != null ? (
+                        <p
+                          className={`text-[10px] font-semibold ${atLimit ? 'text-danger' : 'text-sage-deep'}`}
+                        >
+                          Using {med.packQuantity} of {maxPacks}
+                        </p>
+                      ) : null}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+
+                    {liquid ? (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-ghost">
+                          ML
+                        </span>
+                        <QtyStepper
+                          value={med.mlIntake || 1}
+                          onChange={(v) => updateMedicine(index, { mlIntake: v, isLiquid: true })}
+                          min={1}
+                          compact
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-ghost">
+                          Qty
+                        </span>
+                        <QtyStepper
+                          value={med.packQuantity}
+                          onChange={(v) => updateMedicine(index, { packQuantity: v })}
+                          max={maxPacks}
+                          compact
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                       {TIMING_LABELS.map(({ key: timingKey, label, title }) => (
                         <label
                           key={timingKey}
                           title={title}
-                          className="inline-flex w-[2.35rem] shrink-0 cursor-pointer items-center justify-start gap-1 text-[11px] font-bold leading-none text-ink"
+                          className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-[11px] font-bold leading-none text-ink"
                         >
                           <input
                             type="checkbox"
                             checked={Boolean(med.timing[timingKey])}
                             onChange={() => toggleTiming(index, timingKey)}
-                            className="h-3.5 w-3.5 shrink-0 accent-sage-deep"
+                            className="h-5 w-5 shrink-0 accent-sage-deep"
                           />
                           {label}
                         </label>
                       ))}
                     </div>
+
+                    <div className="flex shrink-0 items-center gap-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-ghost">
+                        {daysLabel}
+                      </span>
+                      <QtyStepper
+                        value={med.durationDays || 1}
+                        onChange={(v) => updateMedicine(index, { durationDays: v })}
+                        min={1}
+                        compact
+                      />
+                    </div>
+
+                    <select
+                      value={med.frequency || 'daily'}
+                      onChange={(e) =>
+                        updateMedicine(index, {
+                          frequency: e.target.value === 'weekly' ? 'weekly' : 'daily',
+                        })
+                      }
+                      className="h-7 rounded-md border border-border-sage bg-white px-1.5 text-[11px] font-semibold text-ink outline-none focus:border-sage"
+                      aria-label="Frequency"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                    </select>
+
                     <button
                       type="button"
                       onClick={() => removeMedicine(index)}
@@ -687,13 +875,6 @@ export const PrescriptionEditor = ({
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
-                  {item && maxPacks != null ? (
-                    <p
-                      className={`mt-1.5 text-[11px] font-semibold ${atLimit ? 'text-danger' : 'text-sage-deep'}`}
-                    >
-                      Using {med.packQuantity} of {maxPacks}
-                    </p>
-                  ) : null}
                 </div>
               );
             })}
@@ -717,16 +898,53 @@ export const PrescriptionEditor = ({
                   key={churanIndex}
                   className="space-y-2 rounded-lg border border-border-sage/60 bg-cream/20 p-3"
                 >
-                  <div className="grid gap-2 lg:grid-cols-[minmax(110px,1fr)_minmax(180px,1.6fr)_minmax(140px,1fr)_auto] lg:items-end">
-                    <label className="block min-w-0">
+                  <div className="grid gap-2 lg:grid-cols-[minmax(140px,1.1fr)_minmax(180px,1.6fr)_minmax(140px,1fr)_auto] lg:items-end">
+                    <label className="relative block min-w-0">
                       <span className={fieldLabelClass}>Churan name</span>
-                      <input
-                        type="text"
-                        value={ch.name}
-                        onChange={(e) => updateChuranField(churanIndex, { name: e.target.value })}
-                        placeholder="Name"
-                        className={`${formInputClass} py-1.5 text-sm`}
-                      />
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-ghost" />
+                        <input
+                          type="search"
+                          value={ch.name}
+                          onChange={(e) => updateChuranField(churanIndex, { name: e.target.value })}
+                          onFocus={() => setChuranNameFocus(churanIndex)}
+                          onBlur={() => {
+                            window.setTimeout(() => {
+                              setChuranNameFocus((prev) =>
+                                prev === churanIndex ? null : prev
+                              );
+                            }, 150);
+                          }}
+                          placeholder="Search saved / type new"
+                          className={`${formInputClass} py-1.5 pl-8 text-sm`}
+                          autoComplete="off"
+                        />
+                      </div>
+                      {churanNameFocus === churanIndex ? (
+                        <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-40 overflow-y-auto rounded-lg border border-border-sage bg-white shadow-lg">
+                          {matchingChuranMasters(ch.name).length === 0 ? (
+                            <li className="px-3 py-2 text-xs text-ink-ghost">
+                              No saved combination — create below & save to master
+                            </li>
+                          ) : (
+                            matchingChuranMasters(ch.name).map((m) => (
+                              <li key={m._id}>
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => applyChuranMaster(churanIndex, m)}
+                                  className="flex w-full flex-col px-3 py-2 text-left hover:bg-sage-mist/40"
+                                >
+                                  <span className="text-sm font-semibold text-ink">{m.name}</span>
+                                  <span className="line-clamp-1 text-[11px] text-ink-ghost">
+                                    {m.combination || m.code}
+                                  </span>
+                                </button>
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      ) : null}
                     </label>
                     <label className="block min-w-0">
                       <span className={fieldLabelClass}>Choose powder</span>
@@ -893,6 +1111,17 @@ export const PrescriptionEditor = ({
                       {ch.combination ? (
                         <p className="text-[10px] text-ink-soft">Mix: {ch.combination}</p>
                       ) : null}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="gap-1 text-xs"
+                        disabled={savingChuranMaster === churanIndex}
+                        onClick={() => void saveChuranToMaster(churanIndex)}
+                      >
+                        {savingChuranMaster === churanIndex
+                          ? 'Saving…'
+                          : 'Save combination to master'}
+                      </Button>
                     </div>
                   ) : null}
                 </div>
@@ -956,15 +1185,14 @@ export const PrescriptionEditor = ({
       />
 
       <div className="grid gap-3">
-        <label className="block">
-          <span className={formLabelClass}>Diagnosis</span>
-          <input
-            type="text"
-            value={diagnosis}
-            onChange={(e) => setDiagnosis(e.target.value)}
-            className={formInputClass}
-          />
-        </label>
+        {diagnosis.trim() ? (
+          <div className="rounded-xl border border-border-sage bg-cream/40 px-3.5 py-2.5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-ink-ghost">
+              Diagnosis
+            </p>
+            <p className="mt-0.5 text-sm text-ink">{diagnosis}</p>
+          </div>
+        ) : null}
         <label className="block">
           <span className={formLabelClass}>Remarks</span>
           <textarea

@@ -47,6 +47,7 @@ export const formatPatientCare = (care) => {
     vitalsHistory: (c.vitalsHistory ?? []).map((v, index) => ({
       id: String(v._id ?? `vh-${index}`),
       date: v.date || '',
+      temp: v.temp || '',
       bp: v.bp || '',
       pulse: v.pulse || '',
       spo2: v.spo2 || '',

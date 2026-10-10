@@ -6,9 +6,11 @@ import PharmacySpoonMaster from '../../models/pharmacySpoonMaster.model.js';
 import RoomMaster from '../../models/roomMaster.model.js';
 import LabTestCategoryMaster from '../../models/labTestCategoryMaster.model.js';
 import LabTestMaster from '../../models/labTestMaster.model.js';
+import ChuranCombinationMaster from '../../models/churanCombinationMaster.model.js';
 import moment from 'moment';
 import AppointmentSlotMaster from '../../models/appointmentSlotMaster.model.js';
 import { MASTER_MESSAGES } from '../../utils/constants.js';
+import { buildChuranCombination, powderGramsFromSpoons } from '../../utils/prescription.util.js';
 
 /** Normalize to "hh:mm AM/PM" e.g. 07:00 AM */
 const formatSlotTimeLabel = (input) => {
@@ -483,4 +485,119 @@ export const ensureSlotMaxAppointments = async () => {
     row.endTime = start.clone().add(30, 'minutes').format('hh:mm A');
     await row.save();
   }
+};
+
+const nextChuranCode = async () => {
+  const count = await ChuranCombinationMaster.countDocuments();
+  return `CHU-${String(count + 1).padStart(4, '0')}`;
+};
+
+const normalizeMasterPowders = (powders = []) =>
+  (powders ?? [])
+    .map((p) => {
+      const name = String(p?.name || '').trim();
+      if (!name) return null;
+      const spoonGrams = Number(p.spoonGrams) > 0 ? Number(p.spoonGrams) : 1.5;
+      const quantitySpoons = Number(p.quantitySpoons) > 0 ? Number(p.quantitySpoons) : 1;
+      const quantityGrams =
+        Number(p.quantityGrams) > 0
+          ? Number(p.quantityGrams)
+          : powderGramsFromSpoons(quantitySpoons, spoonGrams);
+      if (!(quantityGrams > 0)) return null;
+      return {
+        itemCode: String(p.itemCode || '').trim(),
+        name,
+        quantitySpoons,
+        spoonGrams,
+        quantityGrams,
+      };
+    })
+    .filter(Boolean);
+
+const formatChuranMaster = (doc) => {
+  const row = doc.toObject ? doc.toObject() : { ...doc };
+  return {
+    _id: String(row._id),
+    id: String(row._id),
+    code: row.code,
+    name: row.name,
+    powders: row.powders ?? [],
+    combination: row.combination || '',
+    howToIntake: row.howToIntake || '',
+    active: row.active !== false,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+};
+
+export const listChuranCombinations = async (activeOnly = false, q = '') => {
+  const filter = {};
+  if (activeOnly) filter.active = true;
+  const query = String(q || '').trim();
+  if (query) {
+    filter.$or = [
+      { name: new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+      { combination: new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+      { code: new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') },
+    ];
+  }
+  const rows = await ChuranCombinationMaster.find(filter).sort({ name: 1 }).lean();
+  return rows.map(formatChuranMaster);
+};
+
+export const createChuranCombination = async (payload) => {
+  const name = String(payload.name || '').trim();
+  if (!name) throw new Error('Churan name is required');
+  const powders = normalizeMasterPowders(payload.powders);
+  if (!powders.length) throw new Error('Add at least one medicine / powder');
+
+  const exists = await ChuranCombinationMaster.findOne({
+    name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+  });
+  if (exists) throw new Error(MASTER_MESSAGES.CHURAN_EXISTS);
+
+  const combination =
+    String(payload.combination || '').trim() || buildChuranCombination(powders);
+
+  const row = await ChuranCombinationMaster.create({
+    code: await nextChuranCode(),
+    name,
+    powders,
+    combination,
+    howToIntake: String(payload.howToIntake || '').trim(),
+    active: true,
+  });
+  return formatChuranMaster(row);
+};
+
+export const updateChuranCombination = async (id, payload) => {
+  const item = await ChuranCombinationMaster.findById(id);
+  if (!item) throw new Error(MASTER_MESSAGES.NOT_FOUND);
+
+  if (payload.name !== undefined) {
+    const name = String(payload.name || '').trim();
+    if (!name) throw new Error('Churan name is required');
+    const exists = await ChuranCombinationMaster.findOne({
+      _id: { $ne: item._id },
+      name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+    });
+    if (exists) throw new Error(MASTER_MESSAGES.CHURAN_EXISTS);
+    item.name = name;
+  }
+  if (payload.powders !== undefined) {
+    const powders = normalizeMasterPowders(payload.powders);
+    if (!powders.length) throw new Error('Add at least one medicine / powder');
+    item.powders = powders;
+    item.combination =
+      String(payload.combination || '').trim() || buildChuranCombination(powders);
+  } else if (payload.combination !== undefined) {
+    item.combination = String(payload.combination || '').trim();
+  }
+  if (payload.howToIntake !== undefined) {
+    item.howToIntake = String(payload.howToIntake || '').trim();
+  }
+  if (payload.active !== undefined) item.active = Boolean(payload.active);
+
+  await item.save();
+  return formatChuranMaster(item);
 };

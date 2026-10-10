@@ -604,3 +604,71 @@ export const attendAppointmentWithFollowUp = async (appointmentCode, payload, re
 
   return formatHmsAppointment(row);
 };
+
+/**
+ * Save clinical fields before completing the visit (Attend overview step).
+ * Does not mark the appointment Completed.
+ */
+export const saveVisitClinical = async (appointmentCode, payload, req) => {
+  const staffRole = req.staff?.role;
+  if (req.accountType === 'staff' && staffRole !== 'Doctor' && staffRole !== 'Support') {
+    throw new Error(ErrorMessages.ACCESS_DENIED);
+  }
+
+  const doctorScope =
+    req.accountType === 'staff' && staffRole === 'Doctor' ? req.staff.staffCode : null;
+
+  const query = { appointmentCode };
+  if (doctorScope) query.staffCode = doctorScope;
+
+  const row = await HmsAppointment.findOne(query);
+  if (!row) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
+  if (row.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
+
+  const chiefComplaint = String(payload.chiefComplaint ?? '').trim();
+  if (!chiefComplaint) {
+    throw new Error('Chief complaint is required');
+  }
+
+  row.chiefComplaint = chiefComplaint;
+  row.symptoms = String(payload.symptoms ?? '').trim();
+  row.diagnosis = String(payload.diagnosis ?? '').trim();
+
+  if (payload.visitVitals && typeof payload.visitVitals === 'object') {
+    row.visitVitals = {
+      temp: String(payload.visitVitals.temp ?? '').trim(),
+      bp: String(payload.visitVitals.bp ?? '').trim(),
+      pulse: String(payload.visitVitals.pulse ?? '').trim(),
+      spo2: String(payload.visitVitals.spo2 ?? '').trim(),
+      weight: String(payload.visitVitals.weight ?? '').trim(),
+    };
+    row.markModified('visitVitals');
+  }
+
+  const nextStaffCode = payload.staffCode?.trim?.();
+  if (nextStaffCode && nextStaffCode !== row.staffCode) {
+    if (req.accountType === 'staff' && staffRole === 'Doctor') {
+      throw new Error(ErrorMessages.ACCESS_DENIED);
+    }
+    const doctor = await resolveDoctor(nextStaffCode);
+    const conflict = await findDoctorSlotConflict({
+      staffCode: doctor.staffCode,
+      date: formatAppointmentDateIso(row.appointmentDate),
+      timeSlot: row.timeSlot,
+      excludeId: row._id,
+    });
+    if (conflict) {
+      throw new Error(
+        conflict.maxAppointments > 1
+          ? `This time slot is full for the selected doctor (${conflict.count}/${conflict.maxAppointments})`
+          : APPOINTMENT_MESSAGES.DOCTOR_SLOT_UNAVAILABLE
+      );
+    }
+    row.staffCode = doctor.staffCode;
+    row.staff = doctor._id;
+    row.doctorName = doctor.name;
+  }
+
+  await row.save();
+  return formatHmsAppointment(row);
+};

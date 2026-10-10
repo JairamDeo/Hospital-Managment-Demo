@@ -8,22 +8,20 @@ export const generatePrescriptionCode = async () => {
   return `RX-${seq}/${String(month).padStart(2, '0')}-${year}`;
 };
 
-export const countMedicineDoses = (timing = {}) => {
-  const keys = [
-    'morningBefore',
-    'morningAfter',
-    'afternoonBefore',
-    'afternoonAfter',
-    'eveningBefore',
-    'eveningAfter',
-    'nightBefore',
-    'nightAfter',
-    'bedtime',
-  ];
-  return keys.reduce((sum, key) => sum + (timing[key] ? 1 : 0), 0);
-};
+/** Active slots used for dosing (evening removed from UI) */
+const ACTIVE_TIMING_KEYS = [
+  'morningBefore',
+  'morningAfter',
+  'afternoonBefore',
+  'nightBefore',
+  'nightAfter',
+  'bedtime',
+];
 
-export const buildIntakeInstructions = (timing = {}) => {
+export const countMedicineDoses = (timing = {}) =>
+  ACTIVE_TIMING_KEYS.reduce((sum, key) => sum + (timing[key] ? 1 : 0), 0);
+
+export const buildIntakeInstructions = (timing = {}, extras = {}) => {
   const parts = [];
   const slot = (label, before, after) => {
     const bits = [];
@@ -32,17 +30,33 @@ export const buildIntakeInstructions = (timing = {}) => {
     if (bits.length) parts.push(`${label}: ${bits.join(', ')}`);
   };
   slot('Morning', timing.morningBefore, timing.morningAfter);
-  slot('Afternoon', timing.afternoonBefore, timing.afternoonAfter);
-  slot('Evening', timing.eveningBefore, timing.eveningAfter);
+  if (timing.afternoonBefore) parts.push('Afternoon: before meal');
+  if (timing.afternoonAfter) parts.push('Afternoon: after meal');
   slot('Night', timing.nightBefore, timing.nightAfter);
   if (timing.bedtime) parts.push('Bedtime');
+
+  if (extras.isLiquid && Number(extras.mlIntake) > 0) {
+    parts.unshift(`${Number(extras.mlIntake)} ml per dose`);
+  }
+  const days = Math.max(1, Number(extras.durationDays) || 1);
+  const frequency = extras.frequency === 'weekly' ? 'weekly' : 'daily';
+  parts.push(frequency === 'weekly' ? `${days} week(s)` : `${days} day(s)`);
+
   return parts.join(' · ');
 };
 
-export const computeMedicineTotalQty = (packQuantity, timing = {}) => {
+export const computeMedicineTotalQty = (
+  packQuantity,
+  timing = {},
+  { durationDays = 1, frequency = 'daily', mlIntake, isLiquid } = {}
+) => {
   const perDay = countMedicineDoses(timing);
-  const packs = Number(packQuantity) || 1;
-  return Math.max(1, perDay * packs);
+  const duration = Math.max(1, Number(durationDays) || 1);
+  const qty = isLiquid
+    ? Math.max(1, Number(mlIntake) || 1)
+    : Math.max(1, Number(packQuantity) || 1);
+  void frequency;
+  return Math.max(1, perDay * qty * duration);
 };
 
 export const buildChuranCombination = (powders = []) =>
@@ -66,9 +80,10 @@ export const buildChuranIntakeText = (intakeSpoons, intakeSpoonGrams, note = '')
   if (!Number.isFinite(spoons) || spoons <= 0) return String(note || '').trim();
 
   const spoonLabel = spoons === 1 ? 'spoon' : 'spoons';
-  const base = Number.isFinite(grams) && grams > 0
-    ? `Take ${spoons} ${spoonLabel} (${grams}g each)`
-    : `Take ${spoons} ${spoonLabel}`;
+  const base =
+    Number.isFinite(grams) && grams > 0
+      ? `Take ${spoons} ${spoonLabel} (${grams}g each)`
+      : `Take ${spoons} ${spoonLabel}`;
   const extra = String(note || '').trim();
   return extra ? `${base}. ${extra}` : base;
 };

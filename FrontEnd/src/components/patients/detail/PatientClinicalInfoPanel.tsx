@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
   Apple,
+  CalendarHeart,
   Dumbbell,
   Droplets,
   HeartPulse,
@@ -17,6 +18,12 @@ import { Button } from '@/components/ui/Button';
 import { ContentLoader } from '@/components/ui/Loader';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
 import { GENERAL_EXAMINATION_OPTIONS } from '@/constants/patientGeneralExaminationOptions';
+import {
+  MENSTRUAL_ASSOCIATED_SYMPTOMS,
+  MENSTRUAL_DETAIL_FIELDS,
+  MENSTRUAL_FLOW_SYMPTOMS,
+  MENSTRUAL_PAIN_SYMPTOMS,
+} from '@/constants/patientMenstrualOptions';
 import type { MasterItem } from '@/types/api.types';
 import type {
   ClinicalSectionKey,
@@ -35,6 +42,8 @@ type SectionDef = {
   title: string;
   description: string;
   icon: LucideIcon;
+  /** Only show for these genders (empty = everyone) */
+  onlyForGenders?: string[];
 };
 
 const SECTIONS: SectionDef[] = [
@@ -51,6 +60,14 @@ const SECTIONS: SectionDef[] = [
     title: 'Disease history',
     description: 'Past illnesses and conditions',
     icon: Stethoscope,
+  },
+  {
+    id: 'menstrualHistory',
+    label: 'Menstrual',
+    title: 'Menstrual details',
+    description: 'Cycle history and menstrual symptoms (female patients)',
+    icon: CalendarHeart,
+    onlyForGenders: ['Female'],
   },
   {
     id: 'diabetesHistory',
@@ -93,8 +110,6 @@ const GENERAL_FIELDS: {
   key: keyof PatientClinicalProfile['generalExamination'];
   label: string;
   placeholder: string;
-  /** Hide for these genders */
-  hideForGenders?: string[];
 }[] = [
   { key: 'prakriti', label: 'Prakriti (प्रकृति)', placeholder: 'Select prakriti' },
   { key: 'nadi', label: 'Nadi — Pulse (नाड़ी)', placeholder: 'Select nadi' },
@@ -109,12 +124,6 @@ const GENERAL_FIELDS: {
     label: 'Food intolerance (असहिष्णुता)',
     placeholder: 'Select food intolerance',
   },
-  {
-    key: 'periods',
-    label: 'Periods — Rajah (मासिक धर्म)',
-    placeholder: 'Select periods status',
-    hideForGenders: ['Male'],
-  },
 ];
 
 const DISEASE_FIELDS: { key: keyof PatientClinicalProfile['diseaseHistory']; label: string }[] = [
@@ -125,12 +134,16 @@ const DISEASE_FIELDS: { key: keyof PatientClinicalProfile['diseaseHistory']; lab
   { key: 'bronchitis', label: 'Bronchitis' },
   { key: 'anorectal', label: 'Anorectal' },
   { key: 'amlaPitta', label: 'Amla pitta / acidity' },
-  { key: 'menstrual', label: 'Menstrual' },
   { key: 'bowel', label: 'Bowel' },
   { key: 'addiction', label: 'Addiction' },
   { key: 'geneticDisorder', label: 'Genetic disorder' },
   { key: 'accidentalHistory', label: 'Accidental history' },
 ];
+
+const isFemalePatient = (gender?: string) =>
+  String(gender || '')
+    .trim()
+    .toLowerCase() === 'female';
 
 const DIABETES_TYPE_OPTIONS = [
   'Type 1',
@@ -383,6 +396,48 @@ const YesNoToggle = ({
   </div>
 );
 
+const SymptomCheckboxGroup = ({
+  title,
+  options,
+  selected,
+  readOnly,
+  onToggle,
+}: {
+  title: string;
+  options: readonly { id: string; label: string }[];
+  selected: string[];
+  readOnly?: boolean;
+  onToggle: (id: string, checked: boolean) => void;
+}) => (
+  <div className="rounded-xl border border-border-sage/70 bg-white p-4 shadow-sm">
+    <p className="mb-3 text-xs font-bold uppercase tracking-wide text-sage-deep">{title}</p>
+    <div className="grid gap-2 sm:grid-cols-2">
+      {options.map((opt) => {
+        const checked = selected.includes(opt.id);
+        return (
+          <label
+            key={opt.id}
+            className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
+              checked
+                ? 'border-sage/40 bg-sage-mist/50 text-ink'
+                : 'border-border-sage/60 bg-cream/30 text-ink-soft'
+            } ${readOnly ? 'cursor-default opacity-90' : 'hover:border-sage/50'}`}
+          >
+            <input
+              type="checkbox"
+              checked={checked}
+              disabled={readOnly}
+              onChange={(e) => onToggle(opt.id, e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-sage-deep"
+            />
+            <span className="leading-snug">{opt.label}</span>
+          </label>
+        );
+      })}
+    </div>
+  </div>
+);
+
 /** Length input with per-field cm/in toggle. Value is always stored in cm. */
 const LengthField = ({
   label,
@@ -491,6 +546,14 @@ export const PatientClinicalInfoPanel = ({
   onSave,
 }: Props) => {
   const readOnly = !editing;
+  const female = isFemalePatient(patientGender);
+  const visibleSections = useMemo(
+    () =>
+      SECTIONS.filter(
+        (s) => !s.onlyForGenders?.length || (female && s.onlyForGenders.includes('Female'))
+      ),
+    [female]
+  );
   const [activeSection, setActiveSection] = useState<ClinicalSectionKey>('generalExamination');
   const [metabolicEnabled, setMetabolicEnabled] = useState<Record<string, boolean>>({});
   const [diseaseEnabled, setDiseaseEnabled] = useState<Record<string, boolean>>({});
@@ -500,6 +563,12 @@ export const PatientClinicalInfoPanel = ({
       setActiveSection('generalExamination');
     }
   }, [loading]);
+
+  useEffect(() => {
+    if (!female && activeSection === 'menstrualHistory') {
+      setActiveSection('generalExamination');
+    }
+  }, [female, activeSection]);
 
   useEffect(() => {
     // Sync Yes/No from saved values when viewing (not while editing empty Yes cards)
@@ -548,24 +617,34 @@ export const PatientClinicalInfoPanel = ({
     patch('physicalMeasurement', withComputedMeasurements({ ...clinical.physicalMeasurement, [field]: value }));
   };
 
-  const activeMeta = SECTIONS.find((s) => s.id === activeSection) ?? SECTIONS[0];
+  const activeMeta = visibleSections.find((s) => s.id === activeSection) ?? visibleSections[0];
+
+  const toggleMenstrualSymptom = (
+    field: 'painSymptoms' | 'flowSymptoms' | 'associatedSymptoms',
+    id: string,
+    checked: boolean
+  ) => {
+    const current = clinical.menstrualHistory[field] ?? [];
+    const next = checked
+      ? current.includes(id)
+        ? current
+        : [...current, id]
+      : current.filter((x) => x !== id);
+    patchNested('menstrualHistory', field, next);
+  };
 
   const renderForm = () => {
     switch (activeSection) {
       case 'generalExamination': {
-        const gender = String(patientGender || '').trim();
         const prakritiOptions = prakritiMasters.map((m) => m.name);
-        const visibleFields = GENERAL_FIELDS.filter(
-          (f) => !f.hideForGenders?.includes(gender)
-        );
         return (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visibleFields.map((f) => {
+            {GENERAL_FIELDS.map((f) => {
               const value = clinical.generalExamination[f.key];
               const options =
                 f.key === 'prakriti'
                   ? prakritiOptions
-                  : GENERAL_EXAMINATION_OPTIONS[f.key as Exclude<typeof f.key, 'prakriti'>];
+                  : GENERAL_EXAMINATION_OPTIONS[f.key as Exclude<typeof f.key, 'prakriti' | 'periods'>];
               return (
                 <SelectField
                   key={f.key}
@@ -583,14 +662,9 @@ export const PatientClinicalInfoPanel = ({
       }
 
       case 'diseaseHistory': {
-        const gender = String(patientGender || '').trim();
-        const diseaseFields =
-          gender === 'Male'
-            ? DISEASE_FIELDS.filter((f) => f.key !== 'menstrual')
-            : DISEASE_FIELDS;
         return (
           <div className="grid gap-3 sm:grid-cols-2">
-            {diseaseFields.map((f) => {
+            {DISEASE_FIELDS.map((f) => {
               const enabled = Boolean(diseaseEnabled[f.key]);
               const raw = String(clinical.diseaseHistory[f.key] ?? '').trim();
               const details =
@@ -800,11 +874,85 @@ export const PatientClinicalInfoPanel = ({
           </div>
         );
 
+      case 'menstrualHistory': {
+        if (!female) return null;
+        const mh = clinical.menstrualHistory;
+        return (
+          <div className="space-y-5">
+            <div>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-sage-deep">
+                A. Menstrual details
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {MENSTRUAL_DETAIL_FIELDS.map((f) =>
+                  f.options ? (
+                    <SelectField
+                      key={f.key}
+                      label={f.label}
+                      value={mh[f.key]}
+                      options={[...f.options]}
+                      onChange={(v) => patchNested('menstrualHistory', f.key, v)}
+                      readOnly={readOnly}
+                      placeholder={f.placeholder}
+                    />
+                  ) : (
+                    <Field
+                      key={f.key}
+                      label={f.label}
+                      value={mh[f.key]}
+                      onChange={(v) => patchNested('menstrualHistory', f.key, v)}
+                      readOnly={readOnly}
+                      placeholder={f.placeholder}
+                    />
+                  )
+                )}
+              </div>
+            </div>
+            <div>
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-sage-deep">
+                Menstrual symptoms (माहवारी से संबंधित लक्षण)
+              </p>
+              <div className="space-y-3">
+                <SymptomCheckboxGroup
+                  title="Pain & discomfort (दर्द एवं तकलीफ)"
+                  options={MENSTRUAL_PAIN_SYMPTOMS}
+                  selected={mh.painSymptoms}
+                  readOnly={readOnly}
+                  onToggle={(id, checked) => toggleMenstrualSymptom('painSymptoms', id, checked)}
+                />
+                <SymptomCheckboxGroup
+                  title="Menstrual flow abnormalities (रक्तस्राव की समस्या)"
+                  options={MENSTRUAL_FLOW_SYMPTOMS}
+                  selected={mh.flowSymptoms}
+                  readOnly={readOnly}
+                  onToggle={(id, checked) => toggleMenstrualSymptom('flowSymptoms', id, checked)}
+                />
+                <SymptomCheckboxGroup
+                  title="Associated symptoms (अन्य लक्षण)"
+                  options={MENSTRUAL_ASSOCIATED_SYMPTOMS}
+                  selected={mh.associatedSymptoms}
+                  readOnly={readOnly}
+                  onToggle={(id, checked) =>
+                    toggleMenstrualSymptom('associatedSymptoms', id, checked)
+                  }
+                />
+              </div>
+              <p className="mt-3 text-xs text-ink-ghost">
+                Selected symptoms:{' '}
+                {(mh.painSymptoms?.length ?? 0) +
+                  (mh.flowSymptoms?.length ?? 0) +
+                  (mh.associatedSymptoms?.length ?? 0)}
+              </p>
+            </div>
+          </div>
+        );
+      }
+
       case 'physicalActivity': {
         const isActive = clinical.physicalActivity.active === true;
         const detailReadOnly = readOnly || !isActive;
         return (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <LabelText label="Physical activity" />
               <div className="mt-1">
@@ -818,7 +966,6 @@ export const PatientClinicalInfoPanel = ({
                         physicalActivity: {
                           ...clinical.physicalActivity,
                           active: false,
-                          workPattern: '',
                           walk: '',
                           yoga: '',
                           exercise: '',
@@ -837,7 +984,7 @@ export const PatientClinicalInfoPanel = ({
               value={clinical.physicalActivity.workPattern}
               options={WORK_PATTERN_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'workPattern', v)}
-              readOnly={detailReadOnly}
+              readOnly={readOnly}
               placeholder="Select work pattern"
             />
             <SelectField
@@ -990,7 +1137,7 @@ export const PatientClinicalInfoPanel = ({
 
       <div className="overflow-hidden rounded-xl border border-border-sage/80 bg-sage-mist/30 p-1">
         <div className="flex gap-1 overflow-x-auto scrollbar-thin pb-0.5">
-          {SECTIONS.map((tab) => {
+          {visibleSections.map((tab) => {
             const active = activeSection === tab.id;
             const Icon = tab.icon;
             return (

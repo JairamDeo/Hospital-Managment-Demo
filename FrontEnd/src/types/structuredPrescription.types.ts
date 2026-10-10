@@ -1,3 +1,5 @@
+import type { PharmacyItemApi } from '@/types/pharmacy.types';
+
 export interface MedicineTiming {
   morningBefore?: boolean;
   morningAfter?: boolean;
@@ -10,12 +12,20 @@ export interface MedicineTiming {
   bedtime?: boolean;
 }
 
+export type MedicineFrequency = 'daily' | 'weekly';
+
 export interface PrescriptionMedicine {
   id?: string;
   name: string;
   itemCode?: string;
   isManual?: boolean;
+  /** Packs/units for solid meds; unused for liquids (see mlIntake) */
   packQuantity: number;
+  /** Dose in ml when medicine is liquid */
+  mlIntake?: number;
+  isLiquid?: boolean;
+  durationDays: number;
+  frequency: MedicineFrequency;
   timing: MedicineTiming;
   totalQuantity: number;
   intakeInstructions?: string;
@@ -43,7 +53,12 @@ export interface PrescriptionChuran {
 export const powderGramsFromSpoons = (quantitySpoons: number, spoonGrams: number) =>
   Math.round(quantitySpoons * spoonGrams * 1000) / 1000;
 
-export const buildChuranCombination = (powders: ChuranPowderComponent[] = []) =>
+type ChuranCombinationSource = Pick<
+  ChuranPowderComponent,
+  'name' | 'quantitySpoons' | 'spoonGrams' | 'quantityGrams'
+>;
+
+export const buildChuranCombination = (powders: ChuranCombinationSource[] = []) =>
   powders
     .filter((p) => p.name.trim() && p.quantityGrams > 0)
     .map((p) => {
@@ -115,23 +130,45 @@ export interface StructuredPrescriptionPayload {
   recommendedTests?: RecommendedLabTest[];
 }
 
+/** Active timing slots shown in the editor (evening removed) */
 export const TIMING_LABELS: { key: keyof MedicineTiming; label: string; title: string }[] = [
-  { key: 'morningBefore', label: 'MB', title: 'Morning before meal' },
-  { key: 'morningAfter', label: 'MA', title: 'Morning after meal' },
-  { key: 'afternoonBefore', label: 'AB', title: 'Afternoon before meal' },
-  { key: 'afternoonAfter', label: 'AA', title: 'Afternoon after meal' },
-  { key: 'eveningBefore', label: 'EB', title: 'Evening before meal' },
-  { key: 'eveningAfter', label: 'EA', title: 'Evening after meal' },
-  { key: 'nightBefore', label: 'NB', title: 'Night before meal' },
-  { key: 'nightAfter', label: 'NA', title: 'Night after meal' },
-  { key: 'bedtime', label: 'BT', title: 'Bedtime' },
+  { key: 'morningBefore', label: 'MBM', title: 'Morning before meal' },
+  { key: 'morningAfter', label: 'MAM', title: 'Morning after meal' },
+  { key: 'afternoonBefore', label: 'ABM', title: 'Afternoon before meal' },
+  { key: 'nightBefore', label: 'NBM', title: 'Night before meal' },
+  { key: 'nightAfter', label: 'NAM', title: 'Night after meal' },
+  { key: 'bedtime', label: 'BTM', title: 'Bedtime' },
 ];
+
+export const isLiquidMedicine = (item?: PharmacyItemApi | null, name = '') => {
+  const text = [
+    item?.name,
+    name,
+    item?.unitSize,
+    item?.subtitle,
+    item?.category,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return /\b(ml|juice|kwath|kwatha|arishta|asava|syrup|oil|liquid|decoction|kadha|tonic|ghrita)\b/.test(
+    text
+  );
+};
 
 export const countMedicineDoses = (timing: MedicineTiming = {}) =>
   TIMING_LABELS.reduce((sum, { key }) => sum + (timing[key] ? 1 : 0), 0);
 
-export const computeMedicineTotalQty = (packQuantity: number, timing: MedicineTiming = {}) => {
+export const computeMedicineTotalQty = (
+  packQuantity: number,
+  timing: MedicineTiming = {},
+  options?: { durationDays?: number; frequency?: MedicineFrequency; mlIntake?: number; isLiquid?: boolean }
+) => {
   const perDay = countMedicineDoses(timing);
-  const packs = packQuantity || 1;
-  return Math.max(1, perDay * packs);
+  const duration = Math.max(1, Number(options?.durationDays) || 1);
+  const qty = options?.isLiquid
+    ? Math.max(1, Number(options.mlIntake) || 1)
+    : Math.max(1, Number(packQuantity) || 1);
+  // daily: every day for N days; weekly: once a week for N weeks
+  return Math.max(1, perDay * qty * duration);
 };

@@ -49,3 +49,17 @@ export const attendAppointmentSchema = Joi.object({
   markPaid: Joi.boolean().optional(),
   paymentMethod: Joi.string().valid('Cash', 'UPI', 'Card').optional(),
 });
+
+export const saveVisitClinicalSchema = Joi.object({
+  chiefComplaint: Joi.string().trim().min(1).max(2000).required(),
+  symptoms: Joi.string().trim().max(2000).allow('', null).optional(),
+  diagnosis: Joi.string().trim().max(2000).allow('', null).optional(),
+  staffCode: Joi.string().min(3).max(20).optional(),
+  visitVitals: Joi.object({
+    temp: Joi.string().trim().max(40).allow('', null).optional(),
+    bp: Joi.string().trim().max(40).allow('', null).optional(),
+    pulse: Joi.string().trim().max(40).allow('', null).optional(),
+    spo2: Joi.string().trim().max(40).allow('', null).optional(),
+    weight: Joi.string().trim().max(40).allow('', null).optional(),
+  }).optional(),
+});

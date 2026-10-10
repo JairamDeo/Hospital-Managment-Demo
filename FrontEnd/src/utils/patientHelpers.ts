@@ -41,6 +41,13 @@ export const parseVisitToInput = (display: string) => {
   return d.toISOString().slice(0, 10);
 };
 
+const toIsoDate = (value?: string | Date | null) => {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10);
+};
+
 export const hmsToPatient = (p: HmsPatient): Patient => ({
   id: p.patientCode,
   name: p.name,
@@ -54,7 +61,9 @@ export const hmsToPatient = (p: HmsPatient): Patient => ({
   prakriti: p.prakritiName ?? p.prakriti ?? '—',
   treatmentId: p.treatmentId ?? '',
   treatment: p.treatmentName ?? p.treatment ?? '—',
-  lastVisit: formatVisitDate(p.lastVisit),
+  lastVisit: formatVisitDate(p.lastVisitRaw ?? p.lastVisit),
+  lastVisitIso: toIsoDate(p.lastVisitRaw ?? p.lastVisit),
+  createdAtIso: toIsoDate(p.createdAt),
   status: (p.recordStatus ?? p.status ?? 'Active') as PatientStatus,
   initials: getInitialsFromName(p.name),
   avatarClass: pickAvatarClass(p.name),
@@ -167,9 +176,15 @@ export const sortPatients = (list: Patient[], sort: SortOption): Patient[] => {
       case 'age-desc':
         return b.age - a.age;
       case 'visit-newest':
-        return new Date(b.lastVisit).getTime() - new Date(a.lastVisit).getTime();
+        return (
+          new Date(b.lastVisitIso || b.lastVisit).getTime() -
+          new Date(a.lastVisitIso || a.lastVisit).getTime()
+        );
       case 'visit-oldest':
-        return new Date(a.lastVisit).getTime() - new Date(b.lastVisit).getTime();
+        return (
+          new Date(a.lastVisitIso || a.lastVisit).getTime() -
+          new Date(b.lastVisitIso || b.lastVisit).getTime()
+        );
       case 'status':
         return statusOrder[a.status] - statusOrder[b.status];
       default:

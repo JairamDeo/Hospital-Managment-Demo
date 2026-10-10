@@ -160,22 +160,52 @@ export const listRoomsStatus = async () => {
   }));
 };
 
+const resolveOptionalRoom = async (roomCode) => {
+  if (roomCode?.trim()) {
+    const room = await assertRoomHasCapacity(roomCode.trim(), 'Panchakarma');
+    return { roomCode: room.code, room: room.name };
+  }
+  const availableRooms = await listRoomsWithOccupancy({
+    roomType: 'Panchakarma',
+    activeOnly: true,
+  });
+  const room = availableRooms.find((r) => r.available > 0);
+  if (!room) return { roomCode: '', room: '' };
+  return { roomCode: room.code, room: room.name };
+};
+
+const firstTherapyFromSessions = (dailySessions, fallback = 'Basti') => {
+  for (const row of dailySessions) {
+    const raw = String(row.panchakarmaType || '')
+      .split(',')
+      .map((s) => s.trim())
+      .find(Boolean);
+    if (raw && PANCHAKARMA_THERAPIES.includes(raw)) return raw;
+  }
+  return fallback;
+};
+
 export const createProgram = async (payload, createdBy) => {
   const [patient, therapist] = await Promise.all([
     resolvePatient(payload.patientCode),
     resolveTherapist(payload.staffCode),
   ]);
 
-  const room = await assertRoomHasCapacity(payload.roomCode, 'Panchakarma');
+  const roomInfo = await resolveOptionalRoom(payload.roomCode);
 
   const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
     dayNumber: Number(row.dayNumber) || index + 1,
     sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
     time: row.time?.trim() || '',
     duration: row.duration?.trim() || '',
-    panchakarmaType: row.panchakarmaType?.trim() || payload.therapy,
+    panchakarmaType: row.panchakarmaType?.trim() || '',
     medicineContent: row.medicineContent?.trim() || '',
   }));
+
+  const therapy =
+    (payload.therapy && PANCHAKARMA_THERAPIES.includes(payload.therapy)
+      ? payload.therapy
+      : null) || firstTherapyFromSessions(dailySessions, 'Basti');
 
   const program = await HmsPanchakarmaProgram.create({
     programCode: await generatePanchakarmaCode(),
@@ -185,13 +215,13 @@ export const createProgram = async (payload, createdBy) => {
     staffCode: therapist.staffCode,
     staff: therapist._id,
     therapistName: therapist.name,
-    therapy: payload.therapy,
-    treatmentName: payload.treatmentName?.trim() || payload.therapy,
+    therapy,
+    treatmentName: payload.treatmentName?.trim() || '',
     totalFees: Number(payload.totalFees) || 0,
     totalDays: payload.totalDays,
     currentDay: 1,
-    roomCode: room.code,
-    room: room.name,
+    roomCode: roomInfo.roomCode,
+    room: roomInfo.room,
     startDate: normalizeProgramStartDate(payload.startDate),
     dailySessions,
     status: dailySessions.length > 0 ? 'Ongoing' : 'Starting',
@@ -206,15 +236,14 @@ export const createProgram = async (payload, createdBy) => {
 };
 
 export const attendPanchakarmaProgram = async (programCode, payload, req) => {
-  if (req.accountType !== 'staff' || req.staff?.role !== 'Therapist') {
+  const isAdmin = req.accountType === 'admin';
+  const isDoctor = req.accountType === 'staff' && req.staff?.role === 'Doctor';
+  if (!isAdmin && !isDoctor) {
     throw new Error(ErrorMessages.ACCESS_DENIED);
   }
 
   const program = await HmsPanchakarmaProgram.findOne({ programCode });
   if (!program) throw new Error(PANCHAKARMA_MESSAGES.NOT_FOUND);
-  if (program.staffCode !== req.staff.staffCode) {
-    throw new Error(ErrorMessages.ACCESS_DENIED);
-  }
   if (program.status === 'Cancelled' || program.status === 'Complete') {
     throw new Error('This program cannot be updated');
   }
@@ -224,7 +253,7 @@ export const attendPanchakarmaProgram = async (programCode, payload, req) => {
     sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
     time: row.time?.trim() || '',
     duration: row.duration?.trim() || '',
-    panchakarmaType: row.panchakarmaType?.trim() || program.therapy,
+    panchakarmaType: row.panchakarmaType?.trim() || '',
     medicineContent: row.medicineContent?.trim() || '',
   }));
 
@@ -233,12 +262,13 @@ export const attendPanchakarmaProgram = async (programCode, payload, req) => {
   }
 
   program.treatmentName =
-    payload.treatmentName?.trim() || program.treatmentName?.trim() || program.therapy;
+    payload.treatmentName?.trim() || program.treatmentName?.trim() || 'Panchakarma program';
   if (payload.totalFees == null || Number.isNaN(Number(payload.totalFees))) {
     throw new Error('Total fees is required');
   }
   program.totalFees = Number(payload.totalFees);
   program.dailySessions = dailySessions;
+  program.therapy = firstTherapyFromSessions(dailySessions, program.therapy || 'Basti');
   program.status = 'Ongoing';
   program.currentDay = program.currentDay || 1;
   await program.save();
@@ -279,17 +309,11 @@ const syncPanchakarmaTreatmentHistory = async (program) => {
 };
 
 export const createTreatmentPlanFromAppointment = async (appointmentCode, payload, req) => {
-  if (req.accountType === 'staff' && req.staff?.role !== 'Therapist') {
+  if (req.accountType === 'staff' && req.staff?.role === 'Therapist') {
     throw new Error(ErrorMessages.ACCESS_DENIED);
   }
 
-  const staffCode =
-    req.accountType === 'staff' && req.staff?.role === 'Therapist' ? req.staff.staffCode : null;
-
-  const apptQuery = { appointmentCode };
-  if (staffCode) apptQuery.staffCode = staffCode;
-
-  const appointment = await HmsAppointment.findOne(apptQuery);
+  const appointment = await HmsAppointment.findOne({ appointmentCode });
   if (!appointment) throw new Error(APPOINTMENT_MESSAGES.NOT_FOUND);
   if (appointment.status === 'Cancelled') throw new Error(APPOINTMENT_MESSAGES.ALREADY_CANCELLED);
 
@@ -303,29 +327,17 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
   if (!totalDays || totalDays < 1) throw new Error('Number of days is required');
   if (!Number.isFinite(totalFees) || totalFees < 0) throw new Error('Treatment fees are required');
 
-  const therapyType = payload.therapy?.trim() || payload.panchakarmaType?.trim() || 'Basti';
-  const allowed = PANCHAKARMA_THERAPIES.includes(therapyType) ? therapyType : 'Basti';
-
   const dailySessions = (payload.dailySessions ?? []).map((row, index) => ({
     dayNumber: Number(row.dayNumber) || index + 1,
     sessionDate: row.sessionDate ? new Date(row.sessionDate) : null,
     time: row.time?.trim() || '',
     duration: row.duration?.trim() || '',
-    panchakarmaType: row.panchakarmaType?.trim() || therapyType,
+    panchakarmaType: row.panchakarmaType?.trim() || '',
     medicineContent: row.medicineContent?.trim() || '',
   }));
 
-  let room;
-  if (payload.roomCode) {
-    room = await assertRoomHasCapacity(payload.roomCode, 'Panchakarma');
-  } else {
-    const availableRooms = await listRoomsWithOccupancy({
-      roomType: 'Panchakarma',
-      activeOnly: true,
-    });
-    room = availableRooms.find((r) => r.available > 0);
-    if (!room) throw new Error(PANCHAKARMA_MESSAGES.ROOM_UNAVAILABLE);
-  }
+  const allowed = firstTherapyFromSessions(dailySessions, 'Basti');
+  const roomInfo = await resolveOptionalRoom(payload.roomCode);
 
   let program = await HmsPanchakarmaProgram.findOne({ appointmentCode });
   if (program) {
@@ -333,6 +345,7 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
     program.totalFees = totalFees;
     program.totalDays = totalDays;
     program.dailySessions = dailySessions;
+    program.therapy = allowed;
     program.status = 'Ongoing';
     await program.save();
   } else {
@@ -345,13 +358,13 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
       staff: therapist._id,
       therapistName: therapist.name,
       therapy: allowed,
-      treatmentName: payload.treatmentName?.trim() || therapyType,
+      treatmentName: payload.treatmentName?.trim() || 'Panchakarma program',
       totalFees,
       amountPaid: 0,
       totalDays,
       currentDay: 1,
-      roomCode: room.code,
-      room: room.name,
+      roomCode: roomInfo.roomCode,
+      room: roomInfo.room,
       startDate: normalizeProgramStartDate(payload.startDate || new Date()),
       appointmentCode,
       dailySessions,
@@ -360,7 +373,7 @@ export const createTreatmentPlanFromAppointment = async (appointmentCode, payloa
         type: req.accountType === 'admin' ? 'admin' : 'patient',
         adminId: req.admin?._id,
         patientCode: appointment.patientCode,
-        name: therapist.name,
+        name: req.admin?.name || req.staff?.name || therapist.name,
       },
     });
   }

@@ -61,12 +61,12 @@ class PanchakarmaAdminService {
   create(values: ScheduleProgramFormValues) {
     const payload: Record<string, unknown> = {
       patientCode: values.patientId,
-      therapy: values.therapy,
       totalDays: values.totalDays,
-      roomCode: values.roomCode,
       startDate: values.startDate,
     };
     if (values.therapistId) payload.staffCode = values.therapistId;
+    if (values.therapy) payload.therapy = values.therapy;
+    if (values.roomCode) payload.roomCode = values.roomCode;
     if (values.treatmentName?.trim()) payload.treatmentName = values.treatmentName.trim();
     if (values.totalFees?.trim()) payload.totalFees = Number(values.totalFees);
     return axiosInstance.post<ApiResponse<{ program: HmsPanchakarmaProgram }>>(

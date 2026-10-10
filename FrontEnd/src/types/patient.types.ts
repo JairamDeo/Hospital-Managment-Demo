@@ -37,6 +37,10 @@ export interface Patient extends Omit<PatientFormValues, 'age'> {
   initials: string;
   avatarClass: string;
   lastVisit: string;
+  /** ISO date for filtering/sorting */
+  lastVisitIso?: string;
+  /** ISO registration date for filtering */
+  createdAtIso?: string;
 }
 
 export interface PatientStats {

@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formInputClass, formLabelClass, formSelectClass } from '@/components/ui/formStyles';
+import { TherapyTypeMultiSelect } from '@/components/panchakarma/TherapyTypeMultiSelect';
 import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
 import { useToast } from '@/hooks/useToast';
@@ -11,7 +12,8 @@ import { FormDraftPanel } from '@/components/ui/FormDraftPanel';
 import { FORM_DRAFT_CATEGORIES, draftContextKeys } from '@/store/formDraftStorage';
 import { getApiErrorMessage } from '@/utils/helpers';
 import { ROUTES, patientDetailPath } from '@/constants/routes';
-import { THERAPY_OPTIONS, type TherapyType } from '@/types/panchakarma.types';
+import type { TherapyType } from '@/types/panchakarma.types';
+import { joinTherapyTypes, parseTherapyTypes } from '@/utils/panchakarmaHelpers';
 import {
   OFFLINE_PAYMENT_METHOD_OPTIONS,
   type OfflinePaymentMethodType,
@@ -33,7 +35,6 @@ interface PanchakarmaTreatmentDraft {
   treatmentName: string;
   totalFees: string;
   totalDays: string;
-  therapy: TherapyType;
   startDate: string;
   dailyRows: DailyRow[];
   markPaid: boolean;
@@ -57,7 +58,6 @@ export const PanchakarmaTreatmentPage = () => {
   const [treatmentName, setTreatmentName] = useState('');
   const [totalFees, setTotalFees] = useState('');
   const [totalDays, setTotalDays] = useState('7');
-  const [therapy, setTherapy] = useState<TherapyType>('Basti');
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [dailyRows, setDailyRows] = useState<DailyRow[]>([]);
   const [markPaid, setMarkPaid] = useState(false);
@@ -65,7 +65,7 @@ export const PanchakarmaTreatmentPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<OfflinePaymentMethodType>('Cash');
 
   const buildDraftLabel = useCallback((draft: PanchakarmaTreatmentDraft) => {
-    const name = draft.treatmentName.trim() || draft.therapy;
+    const name = draft.treatmentName.trim() || 'Treatment plan';
     return `${draft.patientName || 'Patient'} · ${name}`;
   }, []);
 
@@ -88,7 +88,6 @@ export const PanchakarmaTreatmentPage = () => {
     treatmentName,
     totalFees,
     totalDays,
-    therapy,
     startDate,
     dailyRows,
     markPaid,
@@ -100,7 +99,6 @@ export const PanchakarmaTreatmentPage = () => {
     setTreatmentName(draft.treatmentName);
     setTotalFees(draft.totalFees);
     setTotalDays(draft.totalDays);
-    setTherapy(draft.therapy);
     setStartDate(draft.startDate);
     setDailyRows(draft.dailyRows);
     setMarkPaid(draft.markPaid);
@@ -154,14 +152,14 @@ export const PanchakarmaTreatmentPage = () => {
             sessionDate: addDaysIso(startDate, i),
             time: '10:00',
             duration: '45 min',
-            panchakarmaType: therapy,
+            panchakarmaType: '',
             medicineContent: '',
           }
         );
       }
       return next;
     });
-  }, [totalDays, startDate, therapy]);
+  }, [totalDays, startDate]);
 
   if (!appointmentId) {
     return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
@@ -197,7 +195,6 @@ export const PanchakarmaTreatmentPage = () => {
         treatmentName: treatmentName.trim(),
         totalFees: fees,
         totalDays: days,
-        therapy,
         startDate,
         dailySessions: dailyRows.map((row) => ({
           dayNumber: row.dayNumber,
@@ -288,20 +285,6 @@ export const PanchakarmaTreatmentPage = () => {
               />
             </label>
             <label>
-              <span className={formLabelClass}>Primary therapy</span>
-              <select
-                value={therapy}
-                onChange={(e) => setTherapy(e.target.value as TherapyType)}
-                className={formSelectClass}
-              >
-                {THERAPY_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
               <span className={formLabelClass}>Start date</span>
               <input
                 type="date"
@@ -347,21 +330,14 @@ export const PanchakarmaTreatmentPage = () => {
                       className={formInputClass}
                     />
                   </label>
-                  <label>
-                    <span className={formLabelClass}>Panchakarma</span>
-                    <select
-                      value={row.panchakarmaType}
-                      onChange={(e) => updateRow(index, { panchakarmaType: e.target.value })}
-                      className={formSelectClass}
-                    >
-                      {THERAPY_OPTIONS.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                      <option value="Other">Other (manual below)</option>
-                    </select>
-                  </label>
+                  <div className="sm:col-span-2">
+                    <TherapyTypeMultiSelect
+                      value={parseTherapyTypes(row.panchakarmaType)}
+                      onChange={(next: TherapyType[]) =>
+                        updateRow(index, { panchakarmaType: joinTherapyTypes(next) })
+                      }
+                    />
+                  </div>
                   <label className="sm:col-span-2">
                     <span className={formLabelClass}>Medicine / content</span>
                     <textarea

@@ -3,12 +3,12 @@ import { PANCHAKARMA_THERAPIES } from '../../utils/panchakarma.util.js';
 
 export const createPanchakarmaProgramSchema = Joi.object({
   patientCode: Joi.string().min(3).max(40).required(),
-  staffCode: Joi.string().min(3).max(20).optional(),
+  staffCode: Joi.string().min(3).max(20).required(),
   therapy: Joi.string()
     .valid(...PANCHAKARMA_THERAPIES)
-    .required(),
+    .optional(),
   totalDays: Joi.number().integer().min(1).max(30).required(),
-  roomCode: Joi.string().min(3).max(20).required(),
+  roomCode: Joi.string().min(3).max(20).allow('', null).optional(),
   startDate: Joi.string().required(),
   treatmentName: Joi.string().trim().max(120).allow('', null).optional(),
   totalFees: Joi.number().min(0).optional(),
@@ -19,7 +19,7 @@ export const createPanchakarmaProgramSchema = Joi.object({
         sessionDate: Joi.string().allow('', null).optional(),
         time: Joi.string().max(20).allow('', null).optional(),
         duration: Joi.string().max(40).allow('', null).optional(),
-        panchakarmaType: Joi.string().max(40).allow('', null).optional(),
+        panchakarmaType: Joi.string().max(80).allow('', null).optional(),
         medicineContent: Joi.string().max(500).allow('', null).optional(),
       })
     )
@@ -36,7 +36,7 @@ export const attendPanchakarmaProgramSchema = Joi.object({
         sessionDate: Joi.string().allow('', null).optional(),
         time: Joi.string().max(20).allow('', null).optional(),
         duration: Joi.string().max(40).allow('', null).optional(),
-        panchakarmaType: Joi.string().max(40).allow('', null).optional(),
+        panchakarmaType: Joi.string().max(80).allow('', null).optional(),
         medicineContent: Joi.string().max(500).allow('', null).optional(),
       })
     )

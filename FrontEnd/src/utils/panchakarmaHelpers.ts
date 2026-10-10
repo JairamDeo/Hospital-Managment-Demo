@@ -5,6 +5,7 @@ import type {
   ScheduleProgramFormValues,
   TherapistOnDuty,
   TherapySummary,
+  TherapyType,
 } from '@/types/panchakarma.types';
 import { THERAPY_SUMMARY_META, THERAPY_OPTIONS } from '@/types/panchakarma.types';
 import { getInitials, pickAvatarClass } from '@/utils/staffHelpers';
@@ -12,12 +13,20 @@ import type { StaffAssignment } from '@/pages/staff/data/mockStaffDetails';
 
 export const emptyScheduleProgramForm = (): ScheduleProgramFormValues => ({
   patientId: '',
-  therapy: 'Vamana',
   totalDays: 7,
-  roomCode: '',
   therapistId: '',
   startDate: new Date().toISOString().slice(0, 10),
 });
+
+export const parseTherapyTypes = (value?: string | null): TherapyType[] => {
+  if (!value?.trim()) return [];
+  return value
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s): s is TherapyType => (THERAPY_OPTIONS as string[]).includes(s));
+};
+
+export const joinTherapyTypes = (types: TherapyType[]) => types.join(', ');
 
 export const hmsToActiveProgram = (p: HmsPanchakarmaProgram): ActiveProgram => ({
   id: p.programCode ?? p.id,

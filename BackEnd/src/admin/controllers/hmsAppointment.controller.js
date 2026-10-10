@@ -13,6 +13,7 @@ import {
   attendAppointmentWithFollowUp,
   cancelAppointment,
   rescheduleAppointment,
+  saveVisitClinical,
 } from '../services/hmsAppointment.service.js';
 
 const decodeParam = (param) => decodeURIComponent(param ?? '');
@@ -170,6 +171,34 @@ export const patchAttendAppointment = async (req, res) => {
       return customResponse(res, error.message, status);
     }
     logger.error('Attend appointment error:', error);
+    return customResponse(res, resolveApiErrorMessage(error), 500);
+  }
+};
+
+export const patchVisitClinical = async (req, res) => {
+  try {
+    const appointment = await saveVisitClinical(
+      decodeParam(req.params.appointmentCode),
+      req.body,
+      req
+    );
+    return customResponse(res, 'Visit clinical details saved', 200, { appointment });
+  } catch (error) {
+    if (error.message === 'Chief complaint is required') {
+      return customResponse(res, error.message, 400);
+    }
+    const status = appointmentErrorStatus(error.message);
+    if (status !== 500) {
+      return customResponse(res, error.message, status);
+    }
+    if (
+      error.message?.includes('full') ||
+      error.message?.includes('unavailable') ||
+      error.message?.includes('slot')
+    ) {
+      return customResponse(res, error.message, 409);
+    }
+    logger.error('Save visit clinical error:', error);
     return customResponse(res, resolveApiErrorMessage(error), 500);
   }
 };

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
-import { panchakarmaTreatmentPath, appointmentFollowUpPath } from '@/constants/routes';
+import { panchakarmaTreatmentPath, appointmentDetailPath } from '@/constants/routes';
 import type { PatientAppointment } from '@/types/patientDetail.types';
 
 const isPanchakarmaAppointment = (type: string) =>
@@ -9,12 +9,12 @@ const isPanchakarmaAppointment = (type: string) =>
 const appointmentCodeOf = (a: PatientAppointment) =>
   String(a.appointmentCode || a.id || '').trim();
 
-/** Attend → same prescription / follow-up visit page as Appointments list */
+/** Attend → clinical overview first, then Continue to prescription */
 const attendPathFor = (a: PatientAppointment) => {
   const code = appointmentCodeOf(a);
   return isPanchakarmaAppointment(a.type)
     ? panchakarmaTreatmentPath(code)
-    : appointmentFollowUpPath(code);
+    : appointmentDetailPath(code);
 };
 
 const APPT_STATUS_STYLE: Record<PatientAppointment['status'], string> = {

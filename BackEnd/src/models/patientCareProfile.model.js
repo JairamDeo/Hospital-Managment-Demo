@@ -26,6 +26,7 @@ const vitalsHistorySchema = new Schema({
   recordedAt: { type: Date, default: Date.now },
   recordedByName: { type: String, default: '' },
   date: { type: String, default: '' },
+  temp: { type: String, default: '' },
   bp: { type: String, default: '' },
   pulse: { type: String, default: '' },
   spo2: { type: String, default: '' },

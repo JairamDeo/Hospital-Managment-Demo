@@ -82,6 +82,19 @@ export const emptyClinicalProfile = (): PatientClinicalProfile => ({
     bmi: '',
     whr: '',
   },
+  menstrualHistory: {
+    ageAtMenarche: '',
+    lmp: '',
+    cycleInterval: '',
+    durationOfFlow: '',
+    amountOfFlow: '',
+    cycleRegularity: '',
+    padsPerDay: '',
+    clots: '',
+    painSymptoms: [],
+    flowSymptoms: [],
+    associatedSymptoms: [],
+  },
   updatedAt: null,
 });
 
@@ -166,6 +179,19 @@ export const mergeClinicalFromApi = (clinical?: Partial<PatientClinicalProfile> 
       ...empty.physicalMeasurement,
       ...clinical.physicalMeasurement,
     }),
+    menstrualHistory: {
+      ...empty.menstrualHistory,
+      ...clinical.menstrualHistory,
+      painSymptoms: Array.isArray(clinical.menstrualHistory?.painSymptoms)
+        ? clinical.menstrualHistory.painSymptoms
+        : [],
+      flowSymptoms: Array.isArray(clinical.menstrualHistory?.flowSymptoms)
+        ? clinical.menstrualHistory.flowSymptoms
+        : [],
+      associatedSymptoms: Array.isArray(clinical.menstrualHistory?.associatedSymptoms)
+        ? clinical.menstrualHistory.associatedSymptoms
+        : [],
+    },
     updatedAt: clinical.updatedAt ?? null,
   };
 };

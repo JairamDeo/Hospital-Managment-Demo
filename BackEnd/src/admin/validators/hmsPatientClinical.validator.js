@@ -90,6 +90,22 @@ const physicalMeasurementSchema = section({
   whr: trimStr,
 });
 
+const stringList = Joi.array().items(Joi.string().trim().allow('')).optional();
+
+const menstrualHistorySchema = section({
+  ageAtMenarche: trimStr,
+  lmp: trimStr,
+  cycleInterval: trimStr,
+  durationOfFlow: trimStr,
+  amountOfFlow: trimStr,
+  cycleRegularity: trimStr,
+  padsPerDay: trimStr,
+  clots: trimStr,
+  painSymptoms: stringList,
+  flowSymptoms: stringList,
+  associatedSymptoms: stringList,
+});
+
 export const adminUpdatePatientClinicalSchema = Joi.object({
   presentComplaint: section({ complaint: trimStr }),
   generalExamination: generalExaminationSchema,
@@ -99,4 +115,5 @@ export const adminUpdatePatientClinicalSchema = Joi.object({
   eatingHabits: eatingHabitsSchema,
   physicalActivity: physicalActivitySchema,
   physicalMeasurement: physicalMeasurementSchema,
+  menstrualHistory: menstrualHistorySchema,
 }).min(1);
