@@ -2,7 +2,7 @@ import HmsPatient from '../models/hmsPatient.model.js';
 import { buildPatientCode, getPatientCodePrefix } from './clinicSettings.util.js';
 
 /**
- * Patient code format: {PREFIX}-0001/mm-yy (sequence resets each calendar month)
+ * Patient code format: {PREFIX}-mm-yy/0001 (sequence resets each calendar month)
  */
 export const generateHmsPatientCode = async (date = new Date()) => {
   const prefix = await getPatientCodePrefix();
@@ -10,21 +10,26 @@ export const generateHmsPatientCode = async (date = new Date()) => {
   const yy = String(date.getFullYear()).slice(-2);
   const period = `${mm}-${yy}`;
   const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const escapedPeriod = period.replace('-', '\\-');
+  const escapedPeriod = period.replace(/-/g, '\\-');
 
-  // Match 3 or 4 digit sequences so old AH-001/... codes still increment correctly
-  const last = await HmsPatient.findOne({
-    patientCode: { $regex: new RegExp(`^${escapedPrefix}-\\d{3,4}/${escapedPeriod}$`) },
+  const newRe = new RegExp(`^${escapedPrefix}-${escapedPeriod}/(\\d{3,4})$`);
+  const legacyRe = new RegExp(`^${escapedPrefix}-(\\d{3,4})/${escapedPeriod}$`);
+
+  const rows = await HmsPatient.find({
+    patientCode: {
+      $regex: new RegExp(
+        `^(?:${escapedPrefix}-${escapedPeriod}/\\d{3,4}|${escapedPrefix}-\\d{3,4}/${escapedPeriod})$`
+      ),
+    },
   })
-    .sort({ patientCode: -1 })
     .select('patientCode')
     .lean();
 
-  let seq = 1;
-  if (last?.patientCode) {
-    const match = last.patientCode.match(new RegExp(`^${escapedPrefix}-(\\d{3,4})/`));
-    if (match) seq = parseInt(match[1], 10) + 1;
+  let maxSeq = 0;
+  for (const row of rows) {
+    const m = row.patientCode.match(newRe) || row.patientCode.match(legacyRe);
+    if (m) maxSeq = Math.max(maxSeq, parseInt(m[1], 10));
   }
 
-  return buildPatientCode(prefix, seq, date);
+  return buildPatientCode(prefix, maxSeq + 1, date);
 };

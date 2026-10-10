@@ -26,7 +26,7 @@ export const adminUpdatePatientSchema = Joi.object({
   address: Joi.string().max(250).allow('', null),
   city: Joi.string().max(120).allow('', null),
   prakritiId: Joi.string().hex().length(24).allow('', null).empty(''),
-  treatmentId: Joi.string().hex().length(24),
+  treatmentId: Joi.string().hex().length(24).allow('', null).empty(''),
   lastVisit: Joi.date(),
   recordStatus: Joi.string().valid('Active', 'Pending', 'Inactive'),
 }).min(1);

@@ -71,4 +71,5 @@ export const GENERAL_EXAMINATION_OPTIONS: Record<GeneralExamField, readonly stri
     'None',
     'Multiple / other',
   ],
+  periods: ['Normal', 'Abnormal'],
 };

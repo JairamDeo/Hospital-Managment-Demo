@@ -56,7 +56,7 @@ export const getClinicSettingsDto = async () => {
   return {
     name: row.name,
     patientCodePrefix: prefix,
-    patientCodeFormat: '{PREFIX}-0001/MM-YY',
+    patientCodeFormat: '{PREFIX}-MM-YY/0001',
     patientCodePreview: previewPatientCodeFormat(prefix),
   };
 };
@@ -91,7 +91,7 @@ export const updateClinicSettings = async ({
 };
 
 /**
- * Re-number all patients with PREFIX-###/MM-YY using each patient's createdAt month.
+ * Re-number all patients with PREFIX-MM-YY/### using each patient's createdAt month.
  */
 export const reassignAllPatientCodes = async (prefixInput) => {
   const prefix = normalizePatientCodePrefix(prefixInput || (await getClinicSettings()).patientCodePrefix);

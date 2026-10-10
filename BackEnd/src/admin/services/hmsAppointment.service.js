@@ -516,12 +516,14 @@ const performerFromReq = (req) => {
 };
 
 export const attendAppointmentWithFollowUp = async (appointmentCode, payload, req) => {
-  if (req.accountType === 'staff' && req.staff?.role !== 'Doctor') {
+  const staffRole = req.staff?.role;
+  if (req.accountType === 'staff' && staffRole !== 'Doctor' && staffRole !== 'Support') {
     throw new Error(ErrorMessages.ACCESS_DENIED);
   }
 
+  // Doctors only see/attend their own visits; Admin/Support can attend any
   const staffCode =
-    req.accountType === 'staff' && req.staff?.role === 'Doctor' ? req.staff.staffCode : null;
+    req.accountType === 'staff' && staffRole === 'Doctor' ? req.staff.staffCode : null;
 
   const query = { appointmentCode };
   if (staffCode) query.staffCode = staffCode;

@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom';
+import { CalendarCheck } from 'lucide-react';
 import { panchakarmaTreatmentPath, appointmentFollowUpPath } from '@/constants/routes';
 import type { PatientAppointment } from '@/types/patientDetail.types';
 
 const isPanchakarmaAppointment = (type: string) =>
   type.toLowerCase().includes('panchakarma');
 
+const appointmentCodeOf = (a: PatientAppointment) =>
+  String(a.appointmentCode || a.id || '').trim();
+
+/** Attend → same prescription / follow-up visit page as Appointments list */
 const attendPathFor = (a: PatientAppointment) => {
-  const code = a.appointmentCode ?? a.id;
+  const code = appointmentCodeOf(a);
   return isPanchakarmaAppointment(a.type)
     ? panchakarmaTreatmentPath(code)
     : appointmentFollowUpPath(code);
@@ -64,9 +69,11 @@ export const PatientAppointmentsTab = ({ appointments, canManageVisits = false }
         </thead>
         <tbody>
           {visible.map((a) => {
+            const code = appointmentCodeOf(a);
+            const canAttend = a.status === 'Upcoming' && Boolean(code);
             return (
               <tr
-                key={a.id}
+                key={code || a.id}
                 className="border-b border-border-sage/70 last:border-b-0 hover:bg-sage-mist/30"
               >
                 <td className="px-4 py-3">
@@ -86,11 +93,13 @@ export const PatientAppointmentsTab = ({ appointments, canManageVisits = false }
                 </td>
                 {canManageVisits ? (
                   <td className="px-4 py-3">
-                    {a.status === 'Upcoming' ? (
+                    {canAttend ? (
                       <Link
                         to={attendPathFor(a)}
-                        className="inline-flex cursor-pointer rounded-lg bg-sage-deep px-3 py-1.5 text-xs font-semibold text-white hover:bg-sage-deep/90"
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-sage-deep px-3 py-1.5 text-xs font-semibold text-white hover:bg-sage-deep/90"
+                        title="Open prescription / complete visit"
                       >
+                        <CalendarCheck className="h-3.5 w-3.5" strokeWidth={2.5} />
                         Attend
                       </Link>
                     ) : (

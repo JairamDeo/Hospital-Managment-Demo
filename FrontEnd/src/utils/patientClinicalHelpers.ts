@@ -12,6 +12,7 @@ export const emptyClinicalProfile = (): PatientClinicalProfile => ({
     digestion: '',
     sleep: '',
     intolerance: '',
+    periods: '',
   },
   diseaseHistory: {
     skin: '',

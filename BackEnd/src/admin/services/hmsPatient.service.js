@@ -76,7 +76,7 @@ export const updatePatientByAdmin = async (patientCode, payload, req) => {
   if (payload.address !== undefined) patient.address = String(payload.address).trim();
   if (payload.city !== undefined) patient.city = String(payload.city).trim() || 'India';
   if (payload.prakritiId !== undefined) patient.prakriti = payload.prakritiId || null;
-  if (payload.treatmentId !== undefined) patient.treatment = payload.treatmentId;
+  if (payload.treatmentId !== undefined) patient.treatment = payload.treatmentId || null;
   if (payload.recordStatus !== undefined) patient.recordStatus = payload.recordStatus;
   if (payload.lastVisit !== undefined) patient.lastVisit = new Date(payload.lastVisit);
 

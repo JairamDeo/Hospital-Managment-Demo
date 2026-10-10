@@ -86,7 +86,7 @@ class PatientAdminService {
         mobileNumber: values.mobile.replace(/\D/g, '').slice(0, 10),
         age: values.age === '' ? 0 : values.age,
         prakritiId: values.prakritiId || null,
-        treatmentId: values.treatmentId,
+        treatmentId: values.treatmentId || null,
         lastVisit: values.lastVisit,
         recordStatus: values.status,
       }
@@ -105,7 +105,7 @@ class PatientAdminService {
         bloodGroup: values.bloodGroup.trim(),
         city: values.city.trim() || 'India',
         prakritiId: values.prakritiId || null,
-        treatmentId: values.treatmentId,
+        treatmentId: values.treatmentId || null,
         recordStatus: values.status,
       }
     );

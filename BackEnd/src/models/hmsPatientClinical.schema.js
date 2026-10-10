@@ -13,6 +13,7 @@ export const generalExaminationSchema = new Schema(
     digestion: trimStr,
     sleep: trimStr,
     intolerance: trimStr,
+    periods: trimStr,
   },
   { _id: false }
 );

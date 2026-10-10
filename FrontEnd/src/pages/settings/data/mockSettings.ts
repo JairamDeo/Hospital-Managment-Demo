@@ -17,7 +17,7 @@ export interface ClinicSettings {
   email: string;
   registrationNo: string;
   timezone: string;
-  /** Short clinic prefix used in patient codes, e.g. AH → AH-0001/10-26 */
+  /** Short clinic prefix used in patient codes, e.g. AH → AH-10-26/0001 */
   patientCodePrefix: string;
 }
 

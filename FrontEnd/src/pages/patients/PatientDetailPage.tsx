@@ -39,8 +39,8 @@ export const PatientDetailPage = () => {
   const { isAdmin, isStaff, canEdit, staffRole, staffCode, canCreatePrescription, canView } =
     usePermissions();
   const canManageVisits =
-    (isAdmin && canEdit('appointments')) ||
-    (staffRole === 'Doctor' && canEdit('appointments'));
+    canEdit('appointments') &&
+    (isAdmin || staffRole === 'Doctor' || staffRole === 'Support');
   const canBookAppointment = canEdit('appointments');
   const canRecordVitals = isAdmin || staffRole === 'Doctor';
   const [loading, setLoading] = useState(true);

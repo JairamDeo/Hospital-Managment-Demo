@@ -13,6 +13,7 @@ const generalExaminationSchema = section({
   digestion: trimStr,
   sleep: trimStr,
   intolerance: trimStr,
+  periods: trimStr,
 });
 
 const diseaseHistorySchema = section({

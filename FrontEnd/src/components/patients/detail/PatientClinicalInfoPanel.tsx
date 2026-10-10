@@ -89,18 +89,33 @@ const SECTIONS: SectionDef[] = [
   },
 ];
 
-const GENERAL_FIELDS: { key: keyof PatientClinicalProfile['generalExamination']; label: string }[] =
-  [
-    { key: 'prakriti', label: 'Prakriti' },
-    { key: 'nadi', label: 'Nadi (pulse)' },
-    { key: 'jivha', label: 'Jivha (tongue)' },
-    { key: 'stool', label: 'Stool' },
-    { key: 'urine', label: 'Urine' },
-    { key: 'hunger', label: 'Hunger' },
-    { key: 'digestion', label: 'Digestion' },
-    { key: 'sleep', label: 'Sleep' },
-    { key: 'intolerance', label: 'Food intolerance' },
-  ];
+const GENERAL_FIELDS: {
+  key: keyof PatientClinicalProfile['generalExamination'];
+  label: string;
+  placeholder: string;
+  /** Hide for these genders */
+  hideForGenders?: string[];
+}[] = [
+  { key: 'prakriti', label: 'Prakriti (प्रकृति)', placeholder: 'Select prakriti' },
+  { key: 'nadi', label: 'Nadi — Pulse (नाड़ी)', placeholder: 'Select nadi' },
+  { key: 'jivha', label: 'Jivha — Tongue (जिह्वा)', placeholder: 'Select jivha' },
+  { key: 'stool', label: 'Stool — Mala (मल)', placeholder: 'Select stool' },
+  { key: 'urine', label: 'Urine — Mutra (मूत्र)', placeholder: 'Select urine' },
+  { key: 'hunger', label: 'Hunger — Kshudha (क्षुधा)', placeholder: 'Select hunger' },
+  { key: 'digestion', label: 'Digestion — Agni (पाचन)', placeholder: 'Select digestion' },
+  { key: 'sleep', label: 'Sleep — Nidra (निद्रा)', placeholder: 'Select sleep' },
+  {
+    key: 'intolerance',
+    label: 'Food intolerance (असहिष्णुता)',
+    placeholder: 'Select food intolerance',
+  },
+  {
+    key: 'periods',
+    label: 'Periods — Rajah (मासिक धर्म)',
+    placeholder: 'Select periods status',
+    hideForGenders: ['Male'],
+  },
+];
 
 const DISEASE_FIELDS: { key: keyof PatientClinicalProfile['diseaseHistory']; label: string }[] = [
   { key: 'skin', label: 'Skin disorders' },
@@ -220,11 +235,6 @@ const METABOLIC_PAIRS: {
     duration: 'neuropathyMedicineDurations',
   },
   { label: 'Obesity', medicine: 'obesityMedicine', duration: 'obesityMedicineDurations' },
-  {
-    label: 'Lifestyle disorder',
-    medicine: 'lifestyleMedicine',
-    duration: 'lifestyleMedicineDurations',
-  },
   { label: 'Other', medicine: 'otherMedicine', duration: 'otherMedicineDurations' },
 ];
 
@@ -305,7 +315,7 @@ const SelectField = ({
   options,
   onChange,
   readOnly,
-  placeholder = 'Choose...',
+  placeholder = 'Select an option',
   required,
 }: {
   label: string;
@@ -504,8 +514,8 @@ export const PatientClinicalInfoPanel = ({
 
     const nextDisease: Record<string, boolean> = {};
     for (const f of DISEASE_FIELDS) {
-      const raw = String(clinical.diseaseHistory[f.key] ?? '').trim();
-      nextDisease[f.key] = Boolean(raw) && raw.toLowerCase() !== 'no';
+      const raw = String(clinical.diseaseHistory[f.key] ?? '').trim().toLowerCase();
+      nextDisease[f.key] = Boolean(raw) && raw !== 'no';
     }
     setDiseaseEnabled(nextDisease);
   }, [editing, clinical.updatedAt, clinical.metabolicDisorder, clinical.diseaseHistory]);
@@ -543,15 +553,19 @@ export const PatientClinicalInfoPanel = ({
   const renderForm = () => {
     switch (activeSection) {
       case 'generalExamination': {
+        const gender = String(patientGender || '').trim();
         const prakritiOptions = prakritiMasters.map((m) => m.name);
+        const visibleFields = GENERAL_FIELDS.filter(
+          (f) => !f.hideForGenders?.includes(gender)
+        );
         return (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {GENERAL_FIELDS.map((f) => {
+            {visibleFields.map((f) => {
               const value = clinical.generalExamination[f.key];
               const options =
                 f.key === 'prakriti'
                   ? prakritiOptions
-                  : GENERAL_EXAMINATION_OPTIONS[f.key];
+                  : GENERAL_EXAMINATION_OPTIONS[f.key as Exclude<typeof f.key, 'prakriti'>];
               return (
                 <SelectField
                   key={f.key}
@@ -560,6 +574,7 @@ export const PatientClinicalInfoPanel = ({
                   options={[...options]}
                   onChange={(v) => patchNested('generalExamination', f.key, v)}
                   readOnly={readOnly}
+                  placeholder={f.placeholder}
                 />
               );
             })}
@@ -594,7 +609,7 @@ export const PatientClinicalInfoPanel = ({
                       disabled={readOnly}
                       onChange={(next) => {
                         setDiseaseEnabled((prev) => ({ ...prev, [f.key]: next }));
-                        patchNested('diseaseHistory', f.key, next ? 'Yes' : '');
+                        patchNested('diseaseHistory', f.key, next ? 'Yes' : 'No');
                       }}
                     />
                   </div>
@@ -606,10 +621,10 @@ export const PatientClinicalInfoPanel = ({
                         patchNested('diseaseHistory', f.key, v.trim() ? v : 'Yes')
                       }
                       readOnly={readOnly}
-                      placeholder="Optional notes / medicine"
+                      placeholder={`Enter ${f.label.toLowerCase()} details`}
                     />
                   ) : (
-                    <p className="text-xs text-ink-ghost">Select Yes to add details</p>
+                    <p className="text-xs font-medium text-ink-ghost">No</p>
                   )}
                 </div>
               );
@@ -627,37 +642,45 @@ export const PatientClinicalInfoPanel = ({
               options={DIABETES_TYPE_OPTIONS}
               onChange={(v) => patchNested('diabetesHistory', 'diabetesType', v)}
               readOnly={readOnly}
-              placeholder="Choose..."
+              placeholder="Select diabetes type"
             />
-            <Field
+            <SelectField
               label="Duration"
               value={clinical.diabetesHistory.typeDurations}
+              options={DURATION_OPTIONS}
               onChange={(v) => patchNested('diabetesHistory', 'typeDurations', v)}
               readOnly={readOnly}
+              placeholder="Select diabetes duration"
             />
             <Field
               label="Insulin"
               value={clinical.diabetesHistory.insulin}
               onChange={(v) => patchNested('diabetesHistory', 'insulin', v)}
               readOnly={readOnly}
+              placeholder="Enter insulin details"
             />
-            <Field
+            <SelectField
               label="Insulin duration"
               value={clinical.diabetesHistory.insulinDurations}
+              options={DURATION_OPTIONS}
               onChange={(v) => patchNested('diabetesHistory', 'insulinDurations', v)}
               readOnly={readOnly}
+              placeholder="Select insulin duration"
             />
             <Field
               label="Current medicine"
               value={clinical.diabetesHistory.currentMedicine}
               onChange={(v) => patchNested('diabetesHistory', 'currentMedicine', v)}
               readOnly={readOnly}
+              placeholder="Enter current medicine"
             />
-            <Field
+            <SelectField
               label="Current duration"
               value={clinical.diabetesHistory.currentMedicineDurations}
+              options={DURATION_OPTIONS}
               onChange={(v) => patchNested('diabetesHistory', 'currentMedicineDurations', v)}
               readOnly={readOnly}
+              placeholder="Select medicine duration"
             />
           </div>
         );
@@ -699,26 +722,30 @@ export const PatientClinicalInfoPanel = ({
                     />
                   </div>
                   {enabled ? (
-                    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-                      <Field
-                        label="Medicine / Details"
-                        value={clinical.metabolicDisorder[row.medicine]}
-                        onChange={(v) => patchNested('metabolicDisorder', row.medicine, v)}
-                        readOnly={readOnly}
-                        placeholder="Medicine / Details"
-                      />
-                      <SelectField
-                        label="Duration"
-                        value={clinical.metabolicDisorder[row.duration]}
-                        options={DURATION_OPTIONS}
-                        onChange={(v) => patchNested('metabolicDisorder', row.duration, v)}
-                        readOnly={readOnly}
-                        placeholder="Choose..."
-                        required
-                      />
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                      <div className="min-w-0 flex-1">
+                        <Field
+                          label="Medicine / Details"
+                          value={clinical.metabolicDisorder[row.medicine]}
+                          onChange={(v) => patchNested('metabolicDisorder', row.medicine, v)}
+                          readOnly={readOnly}
+                          placeholder={`Enter ${row.label.toLowerCase()} medicine or notes`}
+                        />
+                      </div>
+                      <div className="w-full shrink-0 sm:w-[12.5rem]">
+                        <SelectField
+                          label="Duration"
+                          value={clinical.metabolicDisorder[row.duration]}
+                          options={DURATION_OPTIONS}
+                          onChange={(v) => patchNested('metabolicDisorder', row.duration, v)}
+                          readOnly={readOnly}
+                          placeholder={`Select ${row.label.toLowerCase()} duration`}
+                          required
+                        />
+                      </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-ink-ghost">Select Yes to add details</p>
+                    <p className="text-xs font-medium text-ink-ghost">No</p>
                   )}
                 </div>
               );
@@ -736,7 +763,7 @@ export const PatientClinicalInfoPanel = ({
               options={FOOD_PREFERENCE_OPTIONS}
               onChange={(v) => patchNested('eatingHabits', 'preference', v)}
               readOnly={readOnly}
-              placeholder="Choose..."
+              placeholder="Select food preference"
             />
             <SelectField
               label="Meal quantity"
@@ -744,7 +771,7 @@ export const PatientClinicalInfoPanel = ({
               options={MEAL_QUANTITY_OPTIONS}
               onChange={(v) => patchNested('eatingHabits', 'quantity', v)}
               readOnly={readOnly}
-              placeholder="Choose..."
+              placeholder="Select meal quantity"
             />
             <SelectField
               label="Meal times"
@@ -752,7 +779,7 @@ export const PatientClinicalInfoPanel = ({
               options={MEAL_TIMES_OPTIONS}
               onChange={(v) => patchNested('eatingHabits', 'schedule', v)}
               readOnly={readOnly}
-              placeholder="Choose..."
+              placeholder="Select meal times"
             />
             <Field
               label="Likes"
@@ -811,7 +838,7 @@ export const PatientClinicalInfoPanel = ({
               options={WORK_PATTERN_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'workPattern', v)}
               readOnly={detailReadOnly}
-              placeholder="Choose..."
+              placeholder="Select work pattern"
             />
             <SelectField
               label="Walk"
@@ -819,7 +846,7 @@ export const PatientClinicalInfoPanel = ({
               options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'walk', v)}
               readOnly={detailReadOnly}
-              placeholder="Choose..."
+              placeholder="Select walk"
             />
             <SelectField
               label="Yoga"
@@ -827,7 +854,7 @@ export const PatientClinicalInfoPanel = ({
               options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'yoga', v)}
               readOnly={detailReadOnly}
-              placeholder="Choose..."
+              placeholder="Select yoga"
             />
             <SelectField
               label="Exercise"
@@ -835,7 +862,7 @@ export const PatientClinicalInfoPanel = ({
               options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'exercise', v)}
               readOnly={detailReadOnly}
-              placeholder="Choose..."
+              placeholder="Select exercise"
             />
             <SelectField
               label="Meditation"
@@ -843,7 +870,7 @@ export const PatientClinicalInfoPanel = ({
               options={YES_NO_OPTIONS}
               onChange={(v) => patchNested('physicalActivity', 'meditative', v)}
               readOnly={detailReadOnly}
-              placeholder="Choose..."
+              placeholder="Select meditation"
             />
           </div>
         );

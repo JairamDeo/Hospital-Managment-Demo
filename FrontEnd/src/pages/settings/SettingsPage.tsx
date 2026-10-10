@@ -24,7 +24,7 @@ const previewPatientCode = (prefix: string) => {
   const now = new Date();
   const mm = String(now.getMonth() + 1).padStart(2, '0');
   const yy = String(now.getFullYear()).slice(-2);
-  return `${cleaned}-0001/${mm}-${yy}`;
+  return `${cleaned}-${mm}-${yy}/0001`;
 };
 
 const Field = ({
@@ -203,7 +203,7 @@ export const SettingsPage = () => {
                     }
                   />
                   <p className="mt-1.5 text-xs text-ink-soft">
-                    Format: <span className="font-medium text-ink">{'{PREFIX}-0001/MM-YY'}</span>
+                    Format: <span className="font-medium text-ink">{'{PREFIX}-MM-YY/0001'}</span>
                     {' · '}
                     Preview: <span className="font-medium text-sage-deep">{patientCodePreview}</span>
                     . Saving also updates existing patients.

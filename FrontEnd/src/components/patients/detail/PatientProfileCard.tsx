@@ -100,10 +100,14 @@ export const PatientProfileCard = ({
             />
           </div>
         ) : (
-          <>
-            <h2 className="mt-3 break-words font-serif text-xl font-semibold text-ink">{patient.name}</h2>
-            <p className="mt-0.5 break-all text-xs font-medium text-ink-ghost">#{patient.id}</p>
-          </>
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5">
+            <h2 className="break-words font-serif text-xl font-semibold text-ink">
+              {patient.name}
+            </h2>
+            <span className="inline-flex max-w-full items-center truncate rounded-md border border-border-sage/80 bg-white/80 px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-sage-deep shadow-sm">
+              {patient.id}
+            </span>
+          </div>
         )}
         <div className="mt-2.5 flex flex-wrap items-center justify-center gap-2">
           {editing ? (

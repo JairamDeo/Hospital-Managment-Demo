@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Eye, SquarePen } from 'lucide-react';
 import type { Patient } from '@/types/patient.types';
 import { PatientStatusBadge } from './PatientStatusBadge';
@@ -7,6 +8,19 @@ interface Props {
   onView: (patient: Patient) => void;
   onEdit: (patient: Patient) => void;
 }
+
+const ActionTip = ({ label, children }: { label: string; children: ReactNode }) => (
+  <span className="group/tip relative inline-flex">
+    {children}
+    <span
+      role="tooltip"
+      className="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-[11px] font-semibold text-white opacity-0 shadow-lg transition-all duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
+    >
+      {label}
+      <span className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-ink" />
+    </span>
+  </span>
+);
 
 export const PatientTable = ({ patients, onView, onEdit }: Props) => (
   <div className="overflow-x-auto">
@@ -37,15 +51,17 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
               className="border-b border-border-sage/80 transition-colors last:border-b-0 hover:bg-sage-mist/40"
             >
               <td className="px-4 py-3.5">
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${p.avatarClass}`}
                   >
                     {p.initials}
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-ink">{p.name}</p>
-                    <p className="text-xs text-ink-ghost">#{p.id}</p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="truncate text-sm font-semibold text-ink">{p.name}</p>
+                    <span className="inline-flex max-w-full items-center truncate rounded-md border border-border-sage/80 bg-cream/70 px-2 py-0.5 font-mono text-[11px] font-semibold tracking-wide text-sage-deep">
+                      {p.id}
+                    </span>
                   </div>
                 </div>
               </td>
@@ -56,22 +72,26 @@ export const PatientTable = ({ patients, onView, onEdit }: Props) => (
               </td>
               <td className="px-4 py-3.5">
                 <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onView(p)}
-                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-ink-soft"
-                    aria-label={`View ${p.name}`}
-                  >
-                    <Eye className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onEdit(p)}
-                    className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-ink-soft"
-                    aria-label={`Edit ${p.name}`}
-                  >
-                    <SquarePen className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
+                  <ActionTip label="View patient">
+                    <button
+                      type="button"
+                      onClick={() => onView(p)}
+                      className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-ink-soft"
+                      aria-label="View patient"
+                    >
+                      <Eye className="h-4 w-4" strokeWidth={1.75} />
+                    </button>
+                  </ActionTip>
+                  <ActionTip label="Edit patient">
+                    <button
+                      type="button"
+                      onClick={() => onEdit(p)}
+                      className="cursor-pointer rounded-lg p-2 text-ink-ghost hover:bg-sage-mist hover:text-ink-soft"
+                      aria-label="Edit patient"
+                    >
+                      <SquarePen className="h-4 w-4" strokeWidth={1.75} />
+                    </button>
+                  </ActionTip>
                 </div>
               </td>
             </tr>

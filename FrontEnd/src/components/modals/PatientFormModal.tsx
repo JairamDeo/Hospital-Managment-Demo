@@ -44,7 +44,6 @@ export const PatientFormModal = ({
     if (!form.name.trim()) next.name = 'Name is required';
     if (form.age === '' || form.age < 1 || form.age > 120) next.age = 'Enter a valid age';
     if (mode === 'add' && !form.gender) next.gender = 'Gender is required';
-    if (mode === 'edit' && !form.treatmentId) next.treatmentId = 'Treatment is required';
     if (!/^[0-9]{10}$/.test(form.mobile.replace(/\D/g, '')))
       next.mobile = '10-digit mobile is required';
     if (form.email && !/\S+@\S+\.\S+/.test(form.email)) next.email = 'Invalid email';
@@ -203,13 +202,12 @@ export const PatientFormModal = ({
             </div>
             <div className="sm:col-span-2">
               <FormSelect
-                label="Treatment *"
+                label="Treatment"
                 value={form.treatmentId}
                 onChange={(v) => set('treatmentId', v)}
-                placeholder="Choose treatment"
+                placeholder="Select treatment (optional)"
                 options={treatmentOptions.map((o) => ({ value: o._id, label: o.name }))}
                 error={errors.treatmentId}
-                required
               />
             </div>
           </>

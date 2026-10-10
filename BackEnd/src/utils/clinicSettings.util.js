@@ -29,13 +29,13 @@ export const getPatientCodePrefix = async () => {
 };
 
 /**
- * Format: PREFIX-0001/MM-YY (sequence resets each calendar month)
- * Example: AH-0001/10-26
+ * Format: PREFIX-MM-YY/0001 (sequence resets each calendar month)
+ * Example: AH-10-26/0001
  */
 export const buildPatientCode = (prefix, seq, date = new Date()) => {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yy = String(date.getFullYear()).slice(-2);
-  return `${normalizePatientCodePrefix(prefix)}-${String(seq).padStart(4, '0')}/${mm}-${yy}`;
+  return `${normalizePatientCodePrefix(prefix)}-${mm}-${yy}/${String(seq).padStart(4, '0')}`;
 };
 
 export const previewPatientCodeFormat = (prefix, date = new Date()) =>

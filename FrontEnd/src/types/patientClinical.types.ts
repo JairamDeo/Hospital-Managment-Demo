@@ -12,6 +12,8 @@ export interface GeneralExamination {
   digestion: string;
   sleep: string;
   intolerance: string;
+  /** Female patients — Normal / Abnormal */
+  periods: string;
 }
 
 export interface DiseaseHistory {

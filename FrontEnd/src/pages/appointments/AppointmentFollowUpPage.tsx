@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { CalendarCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -31,13 +31,25 @@ export const AppointmentFollowUpPage = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { isAdmin, isStaff, staffCode, canEdit, canCreatePrescription } = usePermissions();
+  const { isAdmin, isStaff, staffRole, staffCode, canEdit, canCreatePrescription } =
+    usePermissions();
   const [appointment, setAppointment] = useState<HmsAppointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [followUpDate, setFollowUpDate] = useState('');
   const [followUpTimeSlot, setFollowUpTimeSlot] = useState('10:30');
-  const autoAttendStarted = useRef(false);
+
+  const canAttendVisit = useCallback(
+    (row: HmsAppointment) => {
+      if (!canEdit('appointments')) return false;
+      if (isAdmin) return true;
+      if (!isStaff) return false;
+      if (staffRole === 'Support') return true;
+      if (staffRole === 'Doctor' && staffCode && row.staffCode === staffCode) return true;
+      return false;
+    },
+    [canEdit, isAdmin, isStaff, staffRole, staffCode]
+  );
 
   const buildFollowUpDraftLabel = useCallback((draft: FollowUpDraft) => {
     const parts = [draft.patientName || 'Patient', draft.appointmentCode];
@@ -62,12 +74,8 @@ export const AppointmentFollowUpPage = () => {
 
   const canManage = useMemo(() => {
     if (!appointment) return false;
-    if (isAdmin) return canEdit('appointments');
-    if (isStaff && staffCode && appointment.staffCode === staffCode) {
-      return canEdit('appointments');
-    }
-    return false;
-  }, [appointment, isAdmin, isStaff, staffCode, canEdit]);
+    return canAttendVisit(appointment);
+  }, [appointment, canAttendVisit]);
 
   useEffect(() => {
     if (!appointmentId) return;
@@ -76,24 +84,7 @@ export const AppointmentFollowUpPage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const row = await loadAppointment();
-        if (cancelled || !row) return;
-
-        const canAttendThis =
-          (isAdmin && canEdit('appointments')) ||
-          (isStaff && staffCode && row.staffCode === staffCode && canEdit('appointments'));
-
-        if (
-          row.status === 'Upcoming' &&
-          canAttendThis &&
-          !autoAttendStarted.current
-        ) {
-          autoAttendStarted.current = true;
-          const { data } = await appointmentAdminService.attend(appointmentId, {});
-          if (!cancelled && data.res?.appointment) {
-            setAppointment(data.res.appointment);
-          }
-        }
+        await loadAppointment();
       } catch (err) {
         if (!cancelled) {
           showToast(getApiErrorMessage(err), 'error');
@@ -108,7 +99,7 @@ export const AppointmentFollowUpPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [appointmentId, loadAppointment, showToast, isAdmin, isStaff, staffCode, canEdit]);
+  }, [appointmentId, loadAppointment, showToast]);
 
   if (!appointmentId) {
     return <Navigate to={ROUTES.ADMIN_APPOINTMENTS} replace />;
@@ -124,6 +115,7 @@ export const AppointmentFollowUpPage = () => {
 
   const isCompleted = appointment.status === 'Completed';
   const isCancelled = appointment.status === 'Cancelled';
+  const isPending = appointment.status === 'Upcoming';
   const patientViewUrl = `${patientDetailPath(appointment.patientCode)}?tab=prescriptions`;
 
   const followUpDraftPayload = (): FollowUpDraft => ({
@@ -136,22 +128,64 @@ export const AppointmentFollowUpPage = () => {
     setFollowUpDate(draft.followUpDate);
   };
 
+  /** Mark visit complete only when doctor intentionally saves work */
+  const completeVisit = async (opts?: { followUp?: boolean }) => {
+    const { data } = await appointmentAdminService.attend(appointmentId, {
+      followUpDate: opts?.followUp && followUpDate ? followUpDate : undefined,
+      followUpTimeSlot:
+        opts?.followUp && followUpDate ? followUpTimeSlot : undefined,
+    });
+    if (data.res?.appointment) {
+      setAppointment(data.res.appointment);
+    }
+    return data.res?.appointment;
+  };
+
   const handleSaveFollowUp = async () => {
     setSubmitting(true);
     try {
-      const { data } = await appointmentAdminService.attend(appointmentId, {
-        followUpDate: followUpDate || undefined,
-        followUpTimeSlot: followUpDate ? followUpTimeSlot : undefined,
-      });
-      if (data.res?.appointment) {
-        followUpDraft.clearDraftAfterSubmit(
-          appointmentId ? draftContextKeys.appointment(appointmentId) : undefined
-        );
-        setAppointment(data.res.appointment);
-        if (followUpDate) {
-          showToast('Follow-up date saved', 'success');
-        }
+      await completeVisit({ followUp: true });
+      followUpDraft.clearDraftAfterSubmit(
+        appointmentId ? draftContextKeys.appointment(appointmentId) : undefined
+      );
+      if (followUpDate) {
+        showToast('Follow-up date saved', 'success');
       }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePrescriptionSaved = async () => {
+    const goToPatient = () => {
+      navigate(patientDetailPath(appointment.patientCode), {
+        state: { activeTab: 'prescriptions' as const },
+      });
+    };
+    try {
+      if (isPending) {
+        await completeVisit({ followUp: Boolean(followUpDate) });
+      } else if (followUpDate) {
+        await handleSaveFollowUp();
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      goToPatient();
+    }
+  };
+
+  const handleMarkCompleteOnly = async () => {
+    if (!confirm('Mark this visit as complete without a prescription?')) return;
+    setSubmitting(true);
+    try {
+      await completeVisit({ followUp: Boolean(followUpDate) });
+      showToast('Visit marked complete', 'success');
+      navigate(patientDetailPath(appointment.patientCode), {
+        state: { activeTab: 'appointments' as const },
+      });
     } catch (err) {
       showToast(getApiErrorMessage(err), 'error');
     } finally {
@@ -180,6 +214,15 @@ export const AppointmentFollowUpPage = () => {
             {formatDateLabel(appointment.date)} · {formatTimeLabel(appointment.time)}
             {appointment.doctorName ? ` · ${appointment.doctorName}` : ''}
           </p>
+          {isPending ? (
+            <p className="mt-2 inline-flex rounded-full border border-warning/40 bg-warning-bg px-2.5 py-0.5 text-[11px] font-semibold text-warning">
+              Pending — not marked done until you save
+            </p>
+          ) : isCompleted ? (
+            <p className="mt-2 inline-flex rounded-full border border-success/30 bg-success-bg px-2.5 py-0.5 text-[11px] font-semibold text-success">
+              Visit completed
+            </p>
+          ) : null}
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-border-sage bg-white px-3 py-2 text-sm shadow-sm">
           <CalendarCheck className="h-4 w-4 text-sage-deep" />
@@ -193,8 +236,6 @@ export const AppointmentFollowUpPage = () => {
         </p>
       ) : !canManage ? (
         <p className="text-sm text-ink-soft">You do not have permission to update this visit.</p>
-      ) : !isCompleted ? (
-        <p className="py-10 text-center text-sm text-ink-soft">Completing visit…</p>
       ) : (
         <div className="space-y-4">
           {followUpDraft.hasDrafts ? (
@@ -221,23 +262,23 @@ export const AppointmentFollowUpPage = () => {
                 patientCode={appointment.patientCode}
                 appointmentCode={appointment.appointmentCode}
                 onSaved={() => {
-                  const goToPatient = () => {
-                    navigate(patientDetailPath(appointment.patientCode), {
-                      state: { activeTab: 'prescriptions' as const },
-                    });
-                  };
-                  if (followUpDate) {
-                    void handleSaveFollowUp().finally(goToPatient);
-                  } else {
-                    goToPatient();
-                  }
+                  void handlePrescriptionSaved();
                 }}
               />
             </div>
           ) : (
-            <p className="rounded-xl border border-border-sage bg-white px-4 py-3 text-sm text-ink-soft">
-              Visit marked complete. You do not have permission to write a prescription.
-            </p>
+            <div className="rounded-xl border border-border-sage bg-white px-4 py-4 text-sm text-ink-soft">
+              <p>You do not have permission to write a prescription.</p>
+              {isPending ? (
+                <Button
+                  className="mt-3"
+                  onClick={() => void handleMarkCompleteOnly()}
+                  disabled={submitting}
+                >
+                  Mark visit complete
+                </Button>
+              ) : null}
+            </div>
           )}
 
           <div className="rounded-2xl border border-border-sage bg-white p-4 shadow-sm">
@@ -269,7 +310,7 @@ export const AppointmentFollowUpPage = () => {
               Patient receives an SMS/WhatsApp reminder 1 hour before the slot.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {followUpDate ? (
+              {followUpDate && isCompleted ? (
                 <Button
                   type="button"
                   variant="secondary"
