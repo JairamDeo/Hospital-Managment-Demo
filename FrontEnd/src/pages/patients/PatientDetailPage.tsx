@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { PanelLeftOpen } from 'lucide-react';
 import { PatientProfileCard } from '@/components/patients/detail/PatientProfileCard';
@@ -7,12 +7,16 @@ import { PatientActiveTreatmentCard } from '@/components/patients/detail/Patient
 import { PatientDetailTabs } from '@/components/patients/detail/PatientDetailTabs';
 import { AddVitalsModal } from '@/components/patients/detail/AddVitalsModal';
 import { AiConsultationModal } from '@/components/patients/detail/AiConsultationModal';
+import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
 import { ContentLoader } from '@/components/ui/Loader';
 import { useToast } from '@/hooks/useToast';
+import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants/routes';
 import { buildPatientDetail } from '@/utils/buildPatientDetail';
 import { mergeClinicalFromApi, emptyClinicalProfile } from '@/utils/patientClinicalHelpers';
+import { emptyAppointmentForm, localDateIso } from '@/utils/appointmentHelpers';
 import { patientAdminService } from '@/services/patient/patientAdmin.service';
+import { appointmentAdminService } from '@/services/appointment/appointmentAdmin.service';
 import { panchakarmaAdminService } from '@/services/panchakarma/panchakarmaAdmin.service';
 import { masterService } from '@/services/master/master.service';
 import { getApiErrorMessage } from '@/utils/helpers';
@@ -23,6 +27,7 @@ import type { StructuredPrescription } from '@/types/structuredPrescription.type
 import type { PatientVitalsEntry, PatientVitalsPayload } from '@/types/patientVitals.types';
 import type { PatientProfileFormValues } from '@/types/patient.types';
 import type { PatientDetail, PatientDetailTab, PatientTreatmentHistory } from '@/types/patientDetail.types';
+import type { AppointmentDoctor, AppointmentFormValues } from '@/types/appointment.types';
 import { usePermissions } from '@/hooks/usePermissions';
 
 export const PatientDetailPage = () => {
@@ -30,10 +35,13 @@ export const PatientDetailPage = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { showToast } = useToast();
-  const { isAdmin, canEdit, staffRole, canCreatePrescription, canView } = usePermissions();
+  const { user } = useAuth();
+  const { isAdmin, isStaff, canEdit, staffRole, staffCode, canCreatePrescription, canView } =
+    usePermissions();
   const canManageVisits =
     (isAdmin && canEdit('appointments')) ||
     (staffRole === 'Doctor' && canEdit('appointments'));
+  const canBookAppointment = canEdit('appointments');
   const canRecordVitals = isAdmin || staffRole === 'Doctor';
   const [loading, setLoading] = useState(true);
   const [clinicalLoading, setClinicalLoading] = useState(true);
@@ -65,6 +73,23 @@ export const PatientDetailPage = () => {
   const [vitalsSubmitting, setVitalsSubmitting] = useState(false);
   const [treatmentHistory, setTreatmentHistory] = useState<PatientTreatmentHistory | null>(null);
   const [treatmentHistoryLoading, setTreatmentHistoryLoading] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
+  const [bookSubmitting, setBookSubmitting] = useState(false);
+  const [bookFormInitial, setBookFormInitial] = useState(emptyAppointmentForm());
+  const [doctors, setDoctors] = useState<AppointmentDoctor[]>([]);
+
+  const lockedDoctor = useMemo((): AppointmentDoctor | null => {
+    if (!isStaff || staffRole !== 'Doctor' || !staffCode) return null;
+    const fromList = doctors.find((d) => d.staffCode === staffCode);
+    if (fromList) return fromList;
+    return {
+      staffCode,
+      id: staffCode,
+      name: user?.name ?? 'You',
+      title: user?.title ?? '',
+      role: 'Doctor',
+    };
+  }, [isStaff, staffRole, staffCode, doctors, user]);
 
   const loadPrescriptions = useCallback(async () => {
     if (!patientId) return;
@@ -301,6 +326,45 @@ export const PatientDetailPage = () => {
     }
   };
 
+  const openBookAppointment = async () => {
+    if (!patient || !canBookAppointment) {
+      showToast('You do not have permission to book appointments', 'error');
+      return;
+    }
+    try {
+      if (doctors.length === 0) {
+        const { data } = await appointmentAdminService.listDoctors();
+        setDoctors(data.res?.doctors ?? []);
+      }
+      setBookFormInitial({
+        ...emptyAppointmentForm(),
+        patientId: patient.id,
+        date: localDateIso(),
+        staffCode: lockedDoctor?.staffCode ?? '',
+      });
+      setBookOpen(true);
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    }
+  };
+
+  const handleBookAppointment = async (values: AppointmentFormValues) => {
+    setBookSubmitting(true);
+    try {
+      const { data } = await appointmentAdminService.create(values);
+      if (data.status_code === 201) {
+        setBookOpen(false);
+        showToast('Appointment scheduled successfully', 'success');
+        setActiveTab('appointments');
+        await load();
+      }
+    } catch (err) {
+      showToast(getApiErrorMessage(err), 'error');
+    } finally {
+      setBookSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <ContentLoader size="lg" className="min-h-[50vh]" />;
   }
@@ -321,7 +385,7 @@ export const PatientDetailPage = () => {
               profileForm={profileForm}
               treatmentMasters={treatmentMasters.filter((m) => m.active !== false)}
               onProfileFormChange={setProfileForm}
-              onBookAppt={() => showToast('Appointment booking — coming soon', 'success')}
+              onBookAppt={() => void openBookAppointment()}
               onAiSummary={() => setAiSummaryOpen(true)}
               onStartEdit={startProfileEdit}
               onCancelEdit={cancelProfileEdit}
@@ -413,6 +477,21 @@ export const PatientDetailPage = () => {
         patientCode={patient.id}
         patientName={patient.name}
       />
+
+      {canBookAppointment ? (
+        <NewAppointmentModal
+          key={bookOpen ? `book-${patient.id}` : 'book-closed'}
+          open={bookOpen}
+          initial={bookFormInitial}
+          patients={[patient]}
+          doctors={doctors}
+          lockedDoctor={lockedDoctor}
+          submitting={bookSubmitting}
+          title="Book Appointment"
+          onClose={() => setBookOpen(false)}
+          onSubmit={handleBookAppointment}
+        />
+      ) : null}
     </div>
   );
 };

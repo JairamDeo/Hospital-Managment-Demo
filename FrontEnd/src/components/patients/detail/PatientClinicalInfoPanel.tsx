@@ -135,6 +135,8 @@ const DURATION_OPTIONS = [
   '6 months',
   'More than 1 year',
   'More than 2 years',
+  'More than 5 years',
+  'More than 10 years',
 ];
 
 const FOOD_PREFERENCE_OPTIONS = [
@@ -481,6 +483,7 @@ export const PatientClinicalInfoPanel = ({
   const readOnly = !editing;
   const [activeSection, setActiveSection] = useState<ClinicalSectionKey>('generalExamination');
   const [metabolicEnabled, setMetabolicEnabled] = useState<Record<string, boolean>>({});
+  const [diseaseEnabled, setDiseaseEnabled] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (window.location.hash === '#patient-info') {
@@ -491,14 +494,21 @@ export const PatientClinicalInfoPanel = ({
   useEffect(() => {
     // Sync Yes/No from saved values when viewing (not while editing empty Yes cards)
     if (editing) return;
-    const next: Record<string, boolean> = {};
+    const nextMeta: Record<string, boolean> = {};
     for (const row of METABOLIC_PAIRS) {
       const med = String(clinical.metabolicDisorder[row.medicine] ?? '').trim();
       const dur = String(clinical.metabolicDisorder[row.duration] ?? '').trim();
-      next[row.medicine] = Boolean(med || dur);
+      nextMeta[row.medicine] = Boolean(med || dur);
     }
-    setMetabolicEnabled(next);
-  }, [editing, clinical.updatedAt, clinical.metabolicDisorder]);
+    setMetabolicEnabled(nextMeta);
+
+    const nextDisease: Record<string, boolean> = {};
+    for (const f of DISEASE_FIELDS) {
+      const raw = String(clinical.diseaseHistory[f.key] ?? '').trim();
+      nextDisease[f.key] = Boolean(raw) && raw.toLowerCase() !== 'no';
+    }
+    setDiseaseEnabled(nextDisease);
+  }, [editing, clinical.updatedAt, clinical.metabolicDisorder, clinical.diseaseHistory]);
 
   const patch = <K extends ClinicalSectionKey>(
     section: K,
@@ -564,17 +574,46 @@ export const PatientClinicalInfoPanel = ({
             ? DISEASE_FIELDS.filter((f) => f.key !== 'menstrual')
             : DISEASE_FIELDS;
         return (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {diseaseFields.map((f) => (
-              <Field
-                key={f.key}
-                label={f.label}
-                value={clinical.diseaseHistory[f.key]}
-                onChange={(v) => patchNested('diseaseHistory', f.key, v)}
-                readOnly={readOnly}
-                placeholder="Yes / No / details"
-              />
-            ))}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {diseaseFields.map((f) => {
+              const enabled = Boolean(diseaseEnabled[f.key]);
+              const raw = String(clinical.diseaseHistory[f.key] ?? '').trim();
+              const details =
+                enabled && raw.toLowerCase() !== 'yes' && raw.toLowerCase() !== 'no' ? raw : '';
+              return (
+                <div
+                  key={f.key}
+                  className="rounded-xl border border-border-sage/70 bg-white p-4 shadow-sm"
+                >
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-sage-deep">
+                      {f.label}
+                    </p>
+                    <YesNoToggle
+                      value={enabled}
+                      disabled={readOnly}
+                      onChange={(next) => {
+                        setDiseaseEnabled((prev) => ({ ...prev, [f.key]: next }));
+                        patchNested('diseaseHistory', f.key, next ? 'Yes' : '');
+                      }}
+                    />
+                  </div>
+                  {enabled ? (
+                    <Field
+                      label="Details"
+                      value={details}
+                      onChange={(v) =>
+                        patchNested('diseaseHistory', f.key, v.trim() ? v : 'Yes')
+                      }
+                      readOnly={readOnly}
+                      placeholder="Optional notes / medicine"
+                    />
+                  ) : (
+                    <p className="text-xs text-ink-ghost">Select Yes to add details</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         );
       }
@@ -660,16 +699,16 @@ export const PatientClinicalInfoPanel = ({
                     />
                   </div>
                   {enabled ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
                       <Field
-                        label=""
+                        label="Medicine / Details"
                         value={clinical.metabolicDisorder[row.medicine]}
                         onChange={(v) => patchNested('metabolicDisorder', row.medicine, v)}
                         readOnly={readOnly}
                         placeholder="Medicine / Details"
                       />
                       <SelectField
-                        label=""
+                        label="Duration"
                         value={clinical.metabolicDisorder[row.duration]}
                         options={DURATION_OPTIONS}
                         onChange={(v) => patchNested('metabolicDisorder', row.duration, v)}
